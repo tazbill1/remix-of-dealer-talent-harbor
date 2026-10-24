@@ -15,6 +15,13 @@
       "when": 1792876525353,
       "tag": "0001_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792877997747,
+      "tag": "0002_werkandme_admin_autogrant",
+      "breakpoints": true
     }
   ]
 }
