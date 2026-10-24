@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Mail, Phone, FileText, Star } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
@@ -41,7 +42,7 @@ function Applicants() {
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
   const current = data?.apps.find((a) => a.id === selected);
 
-  async function update(id: string, patch: Record<string, unknown>) {
+  async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
     const { error } = await supabase.from("applications").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: key });
@@ -98,7 +99,7 @@ function Applicants() {
 type App = { id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string };
 
-function Profile({ app, jobTitle, storeName, onUpdate }: { app: App; jobTitle: string; storeName: string; onUpdate: (p: Record<string, unknown>) => void }) {
+function Profile({ app, jobTitle, storeName, onUpdate }: { app: App; jobTitle: string; storeName: string; onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
