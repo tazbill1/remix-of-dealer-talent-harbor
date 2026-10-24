@@ -8,7 +8,7 @@ export function Logo({ light, className }: { light?: boolean; className?: string
     <img
       src={light ? logoLight.url : logo.url}
       alt="WerkandMe"
-      className={cn("h-7 w-auto", light && "mix-blend-screen", className)}
+      className={cn("h-7 w-auto", className)}
     />
   );
 }
