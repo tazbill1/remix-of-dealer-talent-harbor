@@ -35,11 +35,24 @@ A WerkandMe service that many dealer groups can sign up for. Each group (5, 15 o
     - **For recruiters / HR**: daily or weekly summary of each store's progress, slow spots, and standout applicants.
     - Every AI message is logged on the applicant's profile, and a person can take over at any time.
 11. **WerkandMe Admin console**: list of all dealer groups, their stores, usage and status.
+12. **Interviews**:
+    - One-tap "Record interview" button on the applicant profile for in-person interviews (phone or laptop mic), with the applicant's consent noted.
+    - Transcripts from Zoom, Google Meet and Microsoft Teams interviews, either pulled in automatically once those accounts are connected or uploaded by hand.
+    - AI grading from the transcript: score for each question and skill, strengths, concerns and a recommendation. Hiring managers can always change the grade.
+    - AI-made interview questions for each applicant, based on the job, their resume, questionnaire answers and their chats with the assistant.
+13. **Applicants always know where they stand**:
+    - Status moves forward automatically wherever possible (applied, questionnaire done, interview booked, interviewed, decision).
+    - A simple status page on the applicant's link, always up to date.
+    - The assistant checks in every few days even when nothing has changed ("We've had lots of interest and we're still reviewing, hang tight!") and asks light, fun questions to keep them excited.
+    - Check-ins stop when the applicant is hired, turned down, or asks to stop.
+14. **Open to other stores**: an applicant who isn't the right fit at one store can be flagged "open to contact" (with their OK). Other stores in the same group can then see and reach out to them. Never visible to other dealer groups.
 
 ## What you'll need to provide
 - **Email**: a domain you own (for example careers.yourgroup.com) to send from.
 - **Texting**: a Twilio account and phone number (I'll connect it when we get there).
+- **Video interviews**: Zoom, Google and Microsoft accounts for automatic transcripts. Until those are connected, transcripts can be uploaded by hand.
 - Posting straight to Indeed's paid sponsored listings isn't included; the free feed covers organic listings.
+- Recording laws vary by state; the app asks for consent before recording, but please check with your legal team.
 
 ## Design direction (WerkandMe style sheet)
 - Colors: Navy #1d224b for main text and dark panels, Sapphire #0052a4 for buttons and links, Lime #80cd60 for success and "Hired", Ultra-Marine #00bfe4 for highlights. Clean white backgrounds.
