@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu } from "lucide-react";
