@@ -6,6 +6,7 @@ import { Plus, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { ROLE_TEMPLATES, formatPay } from "@/lib/jobs";
+import { VoiceJobWriter } from "@/components/voice-job-writer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +72,21 @@ function Jobs() {
           <DialogTrigger asChild><Button disabled={!stores.length}><Plus />Post a job</Button></DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Post a job</DialogTitle></DialogHeader>
+            <VoiceJobWriter onDraft={(j) => setF((prev) => ({
+              ...prev, title: j.title, department: j.department, employment_type: j.employment_type,
+              pay_period: j.pay_period, description: j.description,
+              pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
+            }))} />
+            {f.description && (
+              <div className="rounded-xl border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</p>
+                <h3 className="mt-1 text-xl font-bold">{f.title || "Job title"}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {[f.department, f.employment_type.replace("_", " ").toLowerCase(), formatPay(f.pay_min ? Number(f.pay_min) : null, f.pay_max ? Number(f.pay_max) : null, f.pay_period)].filter(Boolean).join(" · ")}
+                </p>
+                <p className="mt-3 whitespace-pre-line text-sm">{f.description}</p>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
               {ROLE_TEMPLATES.map((t) => (
                 <button key={t.title} type="button" onClick={() => setF({ ...f, ...t })}
