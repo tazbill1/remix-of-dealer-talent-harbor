@@ -1,12 +1,20 @@
-# Dealer Group Applicant Tracking System
+# WerkandMe Hiring: Applicant Tracking for Dealer Groups
 
-One hub where a 40+ store dealer group posts jobs, sends them to job sites, and handles every applicant.
+A WerkandMe service that many dealer groups can sign up for. Each group (5, 15 or 40+ stores) gets its own private space to post jobs, send them to job sites, and handle every applicant.
 
 ## Who uses it
-- **Group admins**: see and manage every store, job, applicant, template and user.
+- **WerkandMe Admin**: one master login. Sees all dealer groups, approves new sign-ups, manages plans, and can step in to help any group.
+- **Group admins**: see and manage every store, job, applicant, template and user in their own group only.
 - **Dealership managers**: manage jobs, videos and staff for their own store.
 - **Hiring managers**: review and move applicants for the stores they're assigned to.
-- **Applicants**: no login. They browse the careers site and apply.
+- **Recruiters / HR**: follow progress across the group's stores.
+- **Applicants**: no login. They browse the group's careers site and apply.
+
+## Keeping each group's data separate
+- Every record (stores, jobs, applicants, videos, messages, AI chats) belongs to exactly one dealer group.
+- Access rules in the database block anyone from seeing another group's data, even by accident. Only the WerkandMe Admin can see across groups.
+- Each group gets its own careers site address and its own job feed.
+- Self sign-up: a dealer group creates an account, adds its stores, and invites its team.
 
 ## What gets built (phase 1)
 1. **Command center dashboard**: open jobs, new applicants today, time-to-hire, and a ranking of stores. Filter by store, brand, region or role.
@@ -21,6 +29,12 @@ One hub where a 40+ store dealer group posts jobs, sends them to job sites, and 
    - Editable templates for each stage (applied, interview, offer, not selected).
 8. **Applicant pipeline**: drag-and-drop board (New, Screening, Interview, Offer, Hired, Rejected) with an applicant profile showing resume, answers, intro video, notes, ratings and message history. One-click email or text replies.
 9. **Video library**: upload a welcome or thank-you video for each store, or one for the whole group.
+10. **An AI assistant for every store**: a bubbly, kind, organized "favorite HR assistant" personality. You can name it per store.
+    - **For applicants**: answers questions about the job and store, reminds them to finish the questionnaire or intro video, and confirms interview times, by text, email and on the job page. Each conversation is tied to one applicant, so it never mixes people up.
+    - **For hiring managers**: daily nudges ("3 applicants waiting over 48 hours"), reminders to give interview feedback, and a simple to-do list.
+    - **For recruiters / HR**: daily or weekly summary of each store's progress, slow spots, and standout applicants.
+    - Every AI message is logged on the applicant's profile, and a person can take over at any time.
+11. **WerkandMe Admin console**: list of all dealer groups, their stores, usage and status.
 
 ## What you'll need to provide
 - **Email**: a domain you own (for example careers.yourgroup.com) to send from.
@@ -35,10 +49,12 @@ One hub where a 40+ store dealer group posts jobs, sends them to job sites, and 
 - Dealership-focused photos; calm, uncluttered data screens for managers and a bright, friendly careers site. Works on phones from the start.
 
 ## Technical details
-- Lovable Cloud: database, sign-in (email/password), file storage for resumes and videos.
-- Roles live in a separate table (group_admin, dealer_manager, hiring_manager) and are assigned per store. Access rules make sure each person sees only their stores.
-- Tables: dealerships, jobs, job_templates, questionnaires, questions, applications, answers, messages, message_templates, videos, user_store_access.
-- Public routes: /careers, /careers/$jobId, /apply/$jobId, /q/$token (questionnaire plus video recording), /feed/jobs.xml (Indeed-format XML).
-- Signed-in area: /dashboard, /jobs, /applicants, /dealerships, /questionnaires, /templates, /videos, /team.
-- Lovable app emails and Twilio text messages are sent from the server when an application is submitted. Intro videos are recorded with the browser's MediaRecorder and uploaded to storage.
-- Build order: set up Cloud and roles, then stores and jobs, then the careers site and feed, then apply flow and questionnaires, then pipeline, then automated email and text messages.
+- Lovable Cloud: database, sign-in (email/password), file storage for resumes and videos (paths prefixed by organization id).
+- Multi-tenant: `organizations` table; every tenant table carries `organization_id`. RLS checks membership via security-definer functions (`is_org_member`, `has_org_role`, `is_platform_admin`).
+- Roles in separate tables: `platform_admins` (WerkandMe) and `org_members` (org_id, user_id, role: group_admin, dealer_manager, hiring_manager, recruiter) plus `member_store_access`.
+- Tables: organizations, dealerships, jobs, job_templates, questionnaires, questions, applications, answers, messages, message_templates, videos, ai_agents (per store: name, tone notes), ai_conversations (one per application), ai_tasks.
+- Public routes: /c/$orgSlug (careers), /c/$orgSlug/jobs/$jobId, /apply/$jobId, /q/$token (questionnaire, video recording, assistant chat), /feed/$orgSlug/jobs.xml.
+- Signed-in area: /dashboard, /jobs, /applicants, /dealerships, /questionnaires, /templates, /videos, /team, /assistant; /platform for the WerkandMe Admin.
+- AI: Lovable AI Gateway from server functions. Context is always loaded by application id + organization id, so an assistant only sees its own applicant. Scheduled server routes send manager nudges and HR summaries.
+- Lovable app emails and Twilio texts are sent from the server. Intro videos use the browser's MediaRecorder.
+- Build order: Cloud, organizations and roles, then sign-up and admin console, stores and jobs, careers site and feed, apply flow and questionnaires, pipeline, emails and texts, then AI assistants.
