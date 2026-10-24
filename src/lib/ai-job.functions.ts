@@ -75,7 +75,7 @@ ${data.final
   ? "This is the final version: return an empty questions array and the best complete posting."
   : "Return 2 to 5 short questions about important details still missing (for example experience needed, certifications like ASE, schedule/hours, pay, benefits, driver's license). Skip anything already covered. Also return your best draft so far."}`;
     const result = streamText({
-      model: provider.responses("openai/gpt-6-astra"),
+      model: provider.responses("openai/gpt-6-astra") as any,
       system,
       messages: [{ role: "user", content: `Spoken notes:\n${data.transcript}${answers ? `\n\nAnswers to follow-up questions:\n${answers}` : ""}` }],
       output: Output.object({ schema: jobSchema }),
