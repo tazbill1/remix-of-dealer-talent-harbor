@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu } from "lucide-react";
@@ -28,6 +28,8 @@ const nav = [
 function Layout() {
   const { data: me, isLoading } = useQuery(meQuery);
   const loc = useLocation();
+  // The route actually being rendered (stays in sync with <Outlet />, unlike the pending location).
+  const leafId = useMatches({ select: (m) => m[m.length - 1]?.routeId });
   const navigate = useNavigate();
   const [orgId, setOrgId] = useState<string | null>(null);
 
@@ -45,22 +47,23 @@ function Layout() {
 
   if (isLoading || !me) return <div className="p-10 text-muted-foreground">Loading...</div>;
 
-  if (loc.pathname === "/onboarding" || loc.pathname === "/platform") {
-    return <Shell me={me} org={null} onPick={setOrgId}><Outlet /></Shell>;
-  }
-  if (!membership) {
-    return <Shell me={me} org={null} onPick={setOrgId}>
-      <div className="p-8"><p>Pick a dealer group from the WerkandMe Admin console.</p>
-        <Button className="mt-4" asChild><Link to="/platform">Open admin console</Link></Button></div>
-    </Shell>;
-  }
-  const ctx: OrgCtx = {
+  const ctx: OrgCtx | null = membership ? {
     orgId: membership.org_id, orgName: membership.organizations?.name ?? "",
     orgSlug: membership.organizations?.slug ?? "", role: membership.role,
-  };
+  } : null;
+
+  // Group pages only render once a dealer group exists; onboarding and the admin console never need one.
+  const groupFree = leafId === "/_authenticated/onboarding" || leafId === "/_authenticated/platform";
+  let body: React.ReactNode = <Outlet />;
+  if (!ctx && !groupFree) {
+    body = needsOnboarding
+      ? <div className="p-10 text-muted-foreground">Setting things up...</div>
+      : <div className="p-8"><p>Pick a dealer group from the WerkandMe Admin console.</p>
+          <Button className="mt-4" asChild><Link to="/platform">Open admin console</Link></Button></div>;
+  }
   return (
     <OrgContext.Provider value={ctx}>
-      <Shell me={me} org={ctx} onPick={setOrgId}><Outlet /></Shell>
+      <Shell me={me} org={ctx} onPick={setOrgId}>{body}</Shell>
     </OrgContext.Provider>
   );
 }
