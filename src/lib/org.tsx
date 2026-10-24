@@ -17,11 +17,15 @@ export const meQuery = queryOptions({
       supabase.from("org_members").select("org_id, role, organizations(id, name, slug)").eq("user_id", user.id),
       supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
     ]);
-    return {
-      user: { id: user.id, email: user.email ?? "" },
-      memberships: (memberships ?? []) as Membership[],
-      isPlatformAdmin: !!admin,
-    };
+    let list = (memberships ?? []) as Membership[];
+    if (admin) {
+      // WerkandMe Admin can step into any dealer group.
+      const { data: orgs } = await supabase.from("organizations").select("id, name, slug").order("name");
+      const have = new Set(list.map((m) => m.org_id));
+      list = [...list, ...(orgs ?? []).filter((o) => !have.has(o.id))
+        .map((o) => ({ org_id: o.id, role: "group_admin" as const, organizations: o }))];
+    }
+    return { user: { id: user.id, email: user.email ?? "" }, memberships: list, isPlatformAdmin: !!admin };
   },
 });
 
