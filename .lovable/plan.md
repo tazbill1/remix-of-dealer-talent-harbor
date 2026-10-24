@@ -27,8 +27,12 @@ One hub where a 40+ store dealer group posts jobs, sends them to job sites, and 
 - **Texting**: a Twilio account and phone number (I'll connect it when we get there).
 - Posting straight to Indeed's paid sponsored listings isn't included; the free feed covers organic listings.
 
-## Design direction
-A clean, automotive-premium look: deep graphite with one bold signal-orange accent, a sharp modern typeface, dense but calm data screens for managers, and a bright, friendly careers site for applicants. Works on phones from the start.
+## Design direction (WerkandMe style sheet)
+- Colors: Navy #1d224b for main text and dark panels, Sapphire #0052a4 for buttons and links, Lime #80cd60 for success and "Hired", Ultra-Marine #00bfe4 for highlights. Clean white backgrounds.
+- Brand gradient (chartreuse to navy) used only on a few headline words, never as backgrounds.
+- Inter font: bold, simple headlines; regular body text.
+- WerkandMe logo in the header, brand icon as a small accent (app icon, loading). Light logo on navy areas.
+- Dealership-focused photos; calm, uncluttered data screens for managers and a bright, friendly careers site. Works on phones from the start.
 
 ## Technical details
 - Lovable Cloud: database, sign-in (email/password), file storage for resumes and videos.
