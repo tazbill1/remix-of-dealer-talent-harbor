@@ -26,7 +26,7 @@ export const transcribeJobAudio = createServerFn({ method: "POST" })
     const ext = data.mime.includes("mp4") ? "m4a" : data.mime.includes("ogg") ? "ogg" : data.mime.includes("wav") ? "wav" : "webm";
     const form = new FormData();
     form.append("model", "openai/gpt-transcribe");
-    form.append("file", new File([bytes], `job.${ext}`, { type: data.mime.split(";")[0] }));
+    form.append("file", new File([bytes], `job.${ext}`, { type: data.mime.split(";")[0] ?? data.mime }));
     form.append("response_format", "json");
     const res = await fetch(`${GATEWAY}/v1/audio/transcriptions`, {
       method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form,
