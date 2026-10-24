@@ -12,10 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedApplicantsRouteImport } from './routes/_authenticated/applicants'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
+import { Route as StatusTokenRouteImport } from './routes/status.$token'
+import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
+import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
+import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +36,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApplicantsRoute = AuthenticatedApplicantsRouteImport.update({
+  id: '/applicants',
+  path: '/applicants',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -46,58 +57,135 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
+  id: '/platform',
+  path: '/platform',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStoresRoute = AuthenticatedStoresRouteImport.update({
   id: '/stores',
   path: '/stores',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const StatusTokenRoute = StatusTokenRouteImport.update({
+  id: '/status/$token',
+  path: '/status/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
+  id: '/c/$orgSlug/',
+  path: '/c/$orgSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFeedOrgSlugRoute = ApiPublicFeedOrgSlugRouteImport.update({
+  id: '/api/public/feed/$orgSlug',
+  path: '/api/public/feed/$orgSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const COrgSlugJobsJobIdRoute = COrgSlugJobsJobIdRouteImport.update({
+  id: '/c/$orgSlug/jobs/$jobId',
+  path: '/c/$orgSlug/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/applicants': typeof AuthenticatedApplicantsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/status/$token': typeof StatusTokenRoute
+  '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/applicants': typeof AuthenticatedApplicantsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/status/$token': typeof StatusTokenRoute
+  '/c/$orgSlug': typeof COrgSlugIndexRoute
+  '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/applicants': typeof AuthenticatedApplicantsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
+  '/status/$token': typeof StatusTokenRoute
+  '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/jobs' | '/onboarding' | '/stores'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/applicants'
+    | '/dashboard'
+    | '/jobs'
+    | '/onboarding'
+    | '/platform'
+    | '/stores'
+    | '/status/$token'
+    | '/c/$orgSlug/'
+    | '/api/public/feed/$orgSlug'
+    | '/c/$orgSlug/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/jobs' | '/onboarding' | '/stores'
+  to:
+    | '/'
+    | '/auth'
+    | '/applicants'
+    | '/dashboard'
+    | '/jobs'
+    | '/onboarding'
+    | '/platform'
+    | '/stores'
+    | '/status/$token'
+    | '/c/$orgSlug'
+    | '/api/public/feed/$orgSlug'
+    | '/c/$orgSlug/jobs/$jobId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/applicants'
     | '/_authenticated/dashboard'
     | '/_authenticated/jobs'
     | '/_authenticated/onboarding'
+    | '/_authenticated/platform'
     | '/_authenticated/stores'
+    | '/status/$token'
+    | '/c/$orgSlug/'
+    | '/api/public/feed/$orgSlug'
+    | '/c/$orgSlug/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  StatusTokenRoute: typeof StatusTokenRoute
+  COrgSlugIndexRoute: typeof COrgSlugIndexRoute
+  ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
+  COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -123,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/applicants': {
+      id: '/_authenticated/applicants'
+      path: '/applicants'
+      fullPath: '/applicants'
+      preLoaderRoute: typeof AuthenticatedApplicantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -144,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/platform': {
+      id: '/_authenticated/platform'
+      path: '/platform'
+      fullPath: '/platform'
+      preLoaderRoute: typeof AuthenticatedPlatformRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/stores': {
       id: '/_authenticated/stores'
       path: '/stores'
@@ -151,20 +253,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/status/$token': {
+      id: '/status/$token'
+      path: '/status/$token'
+      fullPath: '/status/$token'
+      preLoaderRoute: typeof StatusTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$orgSlug/': {
+      id: '/c/$orgSlug/'
+      path: '/c/$orgSlug'
+      fullPath: '/c/$orgSlug/'
+      preLoaderRoute: typeof COrgSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/feed/$orgSlug': {
+      id: '/api/public/feed/$orgSlug'
+      path: '/api/public/feed/$orgSlug'
+      fullPath: '/api/public/feed/$orgSlug'
+      preLoaderRoute: typeof ApiPublicFeedOrgSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$orgSlug/jobs/$jobId': {
+      id: '/c/$orgSlug/jobs/$jobId'
+      path: '/c/$orgSlug/jobs/$jobId'
+      fullPath: '/c/$orgSlug/jobs/$jobId'
+      preLoaderRoute: typeof COrgSlugJobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedApplicantsRoute: typeof AuthenticatedApplicantsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedApplicantsRoute: AuthenticatedApplicantsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
 }
 
@@ -175,6 +309,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  StatusTokenRoute: StatusTokenRoute,
+  COrgSlugIndexRoute: COrgSlugIndexRoute,
+  ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
+  COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

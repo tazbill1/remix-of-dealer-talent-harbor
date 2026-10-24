@@ -30,6 +30,10 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => { if (data.user) navigate({ to: "/dashboard" }); });
+  }, [navigate]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
