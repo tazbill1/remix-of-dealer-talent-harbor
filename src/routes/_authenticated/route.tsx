@@ -1,0 +1,129 @@
+import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/brand";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { meQuery, OrgContext, type OrgCtx } from "@/lib/org";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw redirect({ to: "/auth" });
+  },
+  component: Layout,
+});
+
+const nav = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/applicants", label: "Applicants", icon: Users },
+  { to: "/jobs", label: "Jobs", icon: Briefcase },
+  { to: "/stores", label: "Stores", icon: Building2 },
+] as const;
+
+function Layout() {
+  const { data: me, isLoading } = useQuery(meQuery);
+  const loc = useLocation();
+  const navigate = useNavigate();
+  const [orgId, setOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("wm_org");
+    if (saved) setOrgId(saved);
+  }, []);
+
+  const membership = me?.memberships.find((m) => m.org_id === orgId) ?? me?.memberships[0];
+  const needsOnboarding = me && !membership && !me.isPlatformAdmin;
+
+  useEffect(() => {
+    if (needsOnboarding && loc.pathname !== "/onboarding") navigate({ to: "/onboarding" });
+  }, [needsOnboarding, loc.pathname, navigate]);
+
+  if (isLoading || !me) return <div className="p-10 text-muted-foreground">Loading...</div>;
+
+  if (loc.pathname === "/onboarding" || loc.pathname === "/platform") {
+    return <Shell me={me} org={null} onPick={setOrgId}><Outlet /></Shell>;
+  }
+  if (!membership) {
+    return <Shell me={me} org={null} onPick={setOrgId}>
+      <div className="p-8"><p>Pick a dealer group from the WerkandMe Admin console.</p>
+        <Button className="mt-4" asChild><Link to="/platform">Open admin console</Link></Button></div>
+    </Shell>;
+  }
+  const ctx: OrgCtx = {
+    orgId: membership.org_id, orgName: membership.organizations?.name ?? "",
+    orgSlug: membership.organizations?.slug ?? "", role: membership.role,
+  };
+  return (
+    <OrgContext.Provider value={ctx}>
+      <Shell me={me} org={ctx} onPick={setOrgId}><Outlet /></Shell>
+    </OrgContext.Provider>
+  );
+}
+
+type Me = NonNullable<Awaited<ReturnType<NonNullable<typeof meQuery.queryFn>>>>;
+
+function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void; children: React.ReactNode }) {
+  const sidebar = <SidebarBody me={me} org={org} onPick={onPick} />;
+  return (
+    <div className="flex min-h-screen bg-muted">
+      <aside className="hidden w-64 shrink-0 bg-sidebar text-sidebar-foreground md:block">{sidebar}</aside>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
+          <Logo className="h-6" />
+          <Sheet>
+            <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
+            <SheetContent side="left" className="w-64 border-0 bg-sidebar p-0 text-sidebar-foreground">{sidebar}</SheetContent>
+          </Sheet>
+        </header>
+        <main className="flex-1 p-4 md:p-8">{children}</main>
+      </div>
+    </div>
+  );
+}
+
+function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void }) {
+  const loc = useLocation();
+  return (
+    <div className="flex h-full min-h-screen flex-col p-4">
+      <Logo light className="mb-6 h-7 self-start" />
+      {me.memberships.length > 1 ? (
+        <select className="mb-4 rounded-md bg-sidebar-accent px-2 py-2 text-sm text-sidebar-accent-foreground"
+          value={org?.orgId ?? ""} onChange={(e) => { localStorage.setItem("wm_org", e.target.value); onPick(e.target.value); }}>
+          {me.memberships.map((m) => <option key={m.org_id} value={m.org_id}>{m.organizations?.name}</option>)}
+        </select>
+      ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
+      <nav className="space-y-1">
+        {org && nav.map((n) => (
+          <Link key={n.to} to={n.to}
+            className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
+              loc.pathname.startsWith(n.to) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+            <n.icon className="size-4" />{n.label}
+          </Link>
+        ))}
+        {org && (
+          <a href={`/c/${org.orgSlug}`} target="_blank" rel="noreferrer"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">
+            <Globe className="size-4" />Careers site
+          </a>
+        )}
+        {me.isPlatformAdmin && (
+          <Link to="/platform" className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
+            loc.pathname === "/platform" && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+            <Shield className="size-4 text-lime" />WerkandMe Admin
+          </Link>
+        )}
+      </nav>
+      <div className="mt-auto border-t border-sidebar-border pt-4 text-xs">
+        <div className="truncate px-2">{me.user.email}</div>
+        <button onClick={() => supabase.auth.signOut()} className="mt-2 flex items-center gap-2 px-2 py-1 hover:text-sidebar-accent-foreground">
+          <LogOut className="size-3.5" />Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
