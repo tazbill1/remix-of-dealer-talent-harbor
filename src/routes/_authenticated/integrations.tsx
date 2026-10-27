@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   Bot,
   CalendarDays,
-  FileSignature,
   Mail,
   MessageSquare,
   ShieldCheck,
@@ -15,16 +14,20 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { integrationStatus } from "@/lib/email.functions";
-import { saveOfferTemplate } from "@/lib/offers.functions";
-import { DOC_FIELDS, OFFER_FIELDS } from "@/lib/offers";
-import { listSignTemplates, saveHireOnSign } from "@/lib/documents.functions";
-import { Switch } from "@/components/ui/switch";
+import { BoldSignSetup } from "@/components/boldsign-setup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
-  head: () => ({ meta: [{ title: "Integrations | WerkandMe Hiring" }] }),
+  head: () => ({ meta: [
+    { title: "Integrations | WerkandMe Hiring" },
+    { name: "description", content: "Manage email, texting and BoldSign document connections for your dealer group." },
+    { property: "og:title", content: "Integrations | WerkandMe Hiring" },
+    { property: "og:description", content: "Manage your dealer group's email, texting and signing connections." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Integrations,
 });
 
@@ -258,7 +261,7 @@ function Integrations() {
           needs="choosing the partner and their API keys."
         />
 
-        <OfferLettersCard
+        <BoldSignSetup
           orgId={org.orgId}
           isAdmin={isAdmin}
           apiKey={!!env?.boldsign}
@@ -267,172 +270,7 @@ function Integrations() {
           onSaved={() => qc.invalidateQueries({ queryKey: ["integration-status", org.orgId] })}
         />
 
-        <DocumentsCard orgId={org.orgId} isAdmin={isAdmin} />
       </div>
     </div>
-  );
-}
-
-function OfferLettersCard({
-  orgId,
-  isAdmin,
-  apiKey,
-  webhook,
-  templateId,
-  onSaved,
-}: {
-  orgId: string;
-  isAdmin: boolean;
-  apiKey: boolean;
-  webhook: boolean;
-  templateId: string | null;
-  onSaved: () => void;
-}) {
-  const save = useServerFn(saveOfferTemplate);
-  const [value, setValue] = useState(templateId ?? "");
-  useEffect(() => setValue(templateId ?? ""), [templateId]);
-  const hookUrl = `${typeof window === "undefined" ? "" : window.location.origin}/api/public/boldsign/webhook`;
-  const state: State = apiKey && templateId ? "connected" : "not_connected";
-  return (
-    <Card
-      icon={FileSignature}
-      title="Offer letters (BoldSign)"
-      state={state}
-      what="Send your offer letter from the applicant's profile. They sign on their phone from a texted link, and the status (opened, signed, declined) shows on the profile."
-      needs={
-        apiKey
-          ? webhook
-            ? "pick your offer letter template below."
-            : "add the BOLDSIGN_WEBHOOK_SECRET secret so signing updates come back to hireme (steps below)."
-          : "connect BoldSign in Lovable's connectors."
-      }
-    >
-      <div className="mt-3 space-y-3 text-xs">
-        <div className="space-y-1">
-          <div className="font-medium">Offer letter template ID</div>
-          <div className="flex gap-2">
-            <Input
-              value={value}
-              disabled={!isAdmin}
-              placeholder="Paste from BoldSign: Templates > your template > ID"
-              onChange={(e) => setValue(e.target.value)}
-            />
-            {isAdmin && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={value.trim() === (templateId ?? "")}
-                onClick={async () => {
-                  try {
-                    await save({ data: { orgId, templateId: value.trim() } });
-                    toast.success("Offer template saved");
-                    onSaved();
-                  } catch (e) {
-                    toast.error((e as Error).message);
-                  }
-                }}
-              >
-                Save
-              </Button>
-            )}
-          </div>
-          <p className="text-muted-foreground">
-            In the template, make role 1 the candidate (signer). Give text fields these IDs and hireme fills them in:{" "}
-            {OFFER_FIELDS.map((f) => (
-              <code key={f.id} className="mr-1 rounded bg-secondary px-1">
-                {f.id}
-              </code>
-            ))}
-          </p>
-        </div>
-        <div className="space-y-1">
-          <div className="font-medium">Webhook (signing updates)</div>
-          <div className="flex gap-2">
-            <code className="min-w-0 flex-1 truncate rounded bg-secondary px-2 py-1.5">{hookUrl}</code>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigator.clipboard.writeText(hookUrl).then(() => toast.success("Webhook URL copied"))}
-            >
-              Copy
-            </Button>
-          </div>
-          <p className="text-muted-foreground">
-            In BoldSign: API &gt; Webhooks &gt; Add webhook. Paste this URL, select the document events (Sent, Viewed,
-            Completed, Declined, Revoked, Expired, Send/Delivery failed), save, then reveal the signing secret and add it
-            in Lovable as BOLDSIGN_WEBHOOK_SECRET. {webhook ? "Secret is set." : ""}
-          </p>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function DocumentsCard({ orgId, isAdmin }: { orgId: string; isAdmin: boolean }) {
-  const list = useServerFn(listSignTemplates);
-  const saveHire = useServerFn(saveHireOnSign);
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["sign-templates", orgId],
-    queryFn: () => list({ data: { orgId } }),
-  });
-  const { data: hire, refetch: refetchHire } = useQuery({
-    queryKey: ["hire-on-sign", orgId],
-    queryFn: async () =>
-      !!(await supabase.from("messaging_settings").select("hire_on_offer_signed").eq("org_id", orgId).maybeSingle()).data
-        ?.hire_on_offer_signed,
-  });
-  return (
-    <Card
-      icon={FileSignature}
-      title="Documents (BoldSign)"
-      state={data?.connected ? "connected" : "not_connected"}
-      what="Build and edit documents in BoldSign as templates. They appear here automatically, and you can send any of them from an applicant's profile."
-      needs={data?.connected ? "nothing. Add or change templates in BoldSign any time." : "connect BoldSign in Lovable's connectors."}
-    >
-      <div className="mt-3 space-y-3 text-xs">
-        <div className="flex items-center justify-between">
-          <div className="font-medium">Your templates</div>
-          <Button size="sm" variant="ghost" onClick={() => refetch()}>
-            Refresh
-          </Button>
-        </div>
-        {isLoading && <p className="text-muted-foreground">Loading…</p>}
-        {data?.error && <p className="text-destructive">{data.error}</p>}
-        {data?.connected && !data.error && data.templates.length === 0 && (
-          <p className="text-muted-foreground">No templates yet. Create one in BoldSign (Templates &gt; Create template).</p>
-        )}
-        <ul className="space-y-1">
-          {data?.templates.map((t) => (
-            <li key={t.id} className="rounded bg-secondary px-2 py-1.5">
-              <span className="font-medium">{t.name}</span>
-              {t.description && <span className="text-muted-foreground"> · {t.description}</span>}
-            </li>
-          ))}
-        </ul>
-        <p className="text-muted-foreground">
-          Make role 1 the applicant (signer). Name fill-in boxes like this and hireme fills them in:{" "}
-          {DOC_FIELDS.map((f) => (
-            <code key={f.id} className="mr-1 rounded bg-secondary px-1">
-              {f.id}
-            </code>
-          ))}
-        </p>
-        <label className="flex items-center justify-between gap-3">
-          <span>Move the applicant to Hired when they sign the offer letter</span>
-          <Switch
-            checked={!!hire}
-            disabled={!isAdmin}
-            onCheckedChange={async (on) => {
-              try {
-                await saveHire({ data: { orgId, on } });
-                refetchHire();
-              } catch (e) {
-                toast.error((e as Error).message);
-              }
-            }}
-          />
-        </label>
-      </div>
-    </Card>
   );
 }
