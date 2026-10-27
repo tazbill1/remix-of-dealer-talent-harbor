@@ -10,6 +10,7 @@ import { VoiceJobWriter } from "@/components/voice-job-writer";
 import type { AiJobDraft } from "@/lib/ai-job.functions";
 import { parseQuestions, questionSchema, type Question } from "@/lib/questions";
 import { JobQuestions } from "@/components/job-questions";
+import { JobShare } from "@/components/job-share";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -310,6 +311,7 @@ function Jobs() {
             </button>
             <div className="flex items-center gap-2">
               <Badge variant={j.status === "open" ? "default" : "secondary"}>{j.status === "requested" ? "waiting on HR" : j.status}</Badge>
+              <JobShare orgSlug={org.orgSlug} job={j} store={storeName(j.dealership_id)} pay={formatPay(j.pay_min, j.pay_max, j.pay_period)} />
               <Button size="sm" variant="outline" onClick={() => openJob(j)}>Open</Button>
               {hr && (j.status === "requested"
                 ? <Button size="sm" onClick={() => setStatus(j.id, "open")}>Approve</Button>
