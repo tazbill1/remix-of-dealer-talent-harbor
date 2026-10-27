@@ -20,3 +20,4 @@
 - Job posting is gated by `can_post_jobs` (group admins, recruiters, platform admin); other members may only insert/edit jobs with status `requested`. Why: client requires Recruiting/HR to own job reqs.
 - AI assistant logic lives in src/lib/assistant.functions.ts (resume parse, threaded SMS replies that patch applications.profile). Why: one server boundary for AI + profile updates, RLS as the signed-in user.
 - Store/region scoping: RLS uses can_access_store / can_access_application; a member with no org_member_scopes rows sees the whole group. Why: scoped managers only see their stores without breaking unscoped users.
+- Group texting configuration uses messaging_settings with RLS-backed browser editing; dedicated settings/contact components serve Team and Stores, while sms_opt_outs writes are service-role-only. Why: centralizes configuration without enabling unimplemented delivery or exposing opt-out write access.
