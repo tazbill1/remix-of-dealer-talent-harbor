@@ -26,6 +26,7 @@ import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as BookTokenRouteImport } from './routes/book.$token'
 import { Route as CareersIndexRouteImport } from './routes/careers.index'
 import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
@@ -132,6 +133,11 @@ const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BookTokenRoute = BookTokenRouteImport.update({
+  id: '/book/$token',
+  path: '/book/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CareersIndexRoute = CareersIndexRouteImport.update({
   id: '/',
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
     | '/invite/$token'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
     | '/invite/$token'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stores'
     | '/_authenticated/team'
     | '/_authenticated/templates'
+    | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
     | '/invite/$token'
@@ -488,6 +500,7 @@ export interface RootRouteChildren {
   CareersRoute: typeof CareersRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  BookTokenRoute: typeof BookTokenRoute
   InviteTokenRoute: typeof InviteTokenRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
@@ -627,6 +640,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/templates'
       preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/book/$token': {
+      id: '/book/$token'
+      path: '/book/$token'
+      fullPath: '/book/$token'
+      preLoaderRoute: typeof BookTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/careers/': {
       id: '/careers/'
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   CareersRoute: CareersRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  BookTokenRoute: BookTokenRoute,
   InviteTokenRoute: InviteTokenRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,

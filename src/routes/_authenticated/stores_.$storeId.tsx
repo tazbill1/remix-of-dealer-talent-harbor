@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Briefcase, Users, Sparkles, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
 import { GradientText } from "@/components/brand";
+import { InterviewHoursCard } from "@/components/interview-hours";
 
 export const Route = createFileRoute("/_authenticated/stores_/$storeId")({
   head: () => ({ meta: [{ title: "Store dashboard | WerkandMe Hiring" }] }),
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/stores_/$storeId")({
 function StoreDashboard() {
   const { storeId } = Route.useParams();
   const org = useOrg();
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["store-dash", org.orgId, storeId],
     queryFn: async () => {
@@ -68,6 +70,14 @@ function StoreDashboard() {
           </div>
         ))}
       </div>
+      <InterviewHoursCard
+        orgId={org.orgId}
+        storeId={store.id}
+        hours={store.interview_hours}
+        minutes={store.interview_minutes}
+        timeZone={store.timezone || "America/Chicago"}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["store-dash", org.orgId, storeId] })}
+      />
       <div className="rounded-2xl bg-background p-5 shadow-sm">
         <h2 className="mb-4 text-lg">Pipeline</h2>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">

@@ -88,7 +88,7 @@ export async function handleManagerShortReply(
       ...(decision === "interview"
         ? {
             purpose: PURPOSE.inviteCandidate,
-            body: text.inviteCandidate({ first, store: input.storeName }),
+            body: await inviteBody(app.id, first, input.storeName),
           }
         : {
             purpose: PURPOSE.declineCandidate,
@@ -150,4 +150,17 @@ export async function handleManagerShortReply(
     };
   }
   return null;
+}
+
+/** The interview invite: a link to pick a time, or the old "when works?" text if the link can't be made. */
+async function inviteBody(applicationId: string, first: string, store: string) {
+  try {
+    const { bookingLink } = await import("@/lib/booking.functions");
+    const { bookingInviteText } = await import("@/lib/booking");
+    const link = await bookingLink(applicationId);
+    if (link.startsWith("http")) return bookingInviteText({ first, store, link });
+  } catch {
+    /* fall through */
+  }
+  return text.inviteCandidate({ first, store });
 }

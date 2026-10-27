@@ -1,3 +1,4 @@
+import { sendBookingLink } from "@/lib/booking.functions";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -181,6 +182,8 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
   const qc = useQueryClient();
   const [when, setWhen] = useState("");
   const notify = useServerFn(notifyApplicants);
+  const textLink = useServerFn(sendBookingLink);
+  const [linkBusy, setLinkBusy] = useState(false);
   const { data: list = [] } = useQuery({
     queryKey: ["interviews", appId],
     queryFn: async () => (await supabase.from("interviews").select("*").eq("application_id", appId).order("starts_at")).data ?? [],
@@ -208,13 +211,23 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
       <ul className="mb-2 space-y-1 text-sm">
         {list.map((i) => (
           <li key={i.id} className="flex items-center justify-between rounded-lg bg-secondary px-2 py-1">
-            <span>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.source === "werkandme" ? "booked in WerkandMe" : `found on ${i.source} calendar`}</span></span>
+            <span className={i.status === "cancelled" ? "text-muted-foreground line-through" : ""}>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.status === "cancelled" ? "cancelled" : i.source === "werkandme" ? "booked in WerkandMe" : i.source === "self_scheduled" ? "picked by the candidate" : `found on ${i.source} calendar`}</span></span>
             <Button size="sm" variant="ghost" onClick={() => download(i)} aria-label="Add to calendar"><Download /></Button>
           </li>
         ))}
       </ul>
       <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
         <Button size="sm" onClick={add} disabled={!when}>Schedule</Button></div>
+      <Button size="sm" variant="outline" className="mt-2" disabled={linkBusy} onClick={async () => {
+        setLinkBusy(true);
+        try {
+          const r = await textLink({ data: { applicationId: appId } });
+          if (r.note) toast.message(r.note); else toast.success("Booking link texted");
+          try { await navigator.clipboard.writeText(r.link); } catch { /* clipboard is optional */ }
+        } catch (e) { toast.error((e as Error).message); }
+        setLinkBusy(false);
+      }}><Send />Text booking link</Button>
+      <p className="mt-1 text-xs text-muted-foreground">They pick from this store's interview hours. The link is also copied for you.</p>
     </div>
   );
 }
