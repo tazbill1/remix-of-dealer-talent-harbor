@@ -1192,37 +1192,34 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          dealership_id: string | null
+          dealership_id: string
           ics_url: string
           id: string
           label: string
           last_checked_at: string | null
           last_error: string | null
-          member_id: string | null
           org_id: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
-          dealership_id?: string | null
+          dealership_id: string
           ics_url: string
           id?: string
           label: string
           last_checked_at?: string | null
           last_error?: string | null
-          member_id?: string | null
           org_id: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
-          dealership_id?: string | null
+          dealership_id?: string
           ics_url?: string
           id?: string
           label?: string
           last_checked_at?: string | null
           last_error?: string | null
-          member_id?: string | null
           org_id?: string
         }
         Relationships: [
