@@ -48,7 +48,7 @@ function Team() {
   }
   async function addScope(memberId: string, value: string) {
     if (!value) return;
-    const [kind, id] = value.split(":");
+    const [kind, id = ""] = value.split(":");
     const { error } = await supabase.from("org_member_scopes").insert({
       org_id: org.orgId, member_id: memberId,
       region_id: kind === "r" ? id : null, dealership_id: kind === "s" ? id : null,
