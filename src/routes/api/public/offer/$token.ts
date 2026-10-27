@@ -21,22 +21,24 @@ export const Route = createFileRoute("/api/public/offer/$token")({
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: offer } = await db
           .from("offers")
-          .select("id, status, provider_document_id, application_id")
+          .select("id, kind, status, provider_document_id, application_id")
           .eq("id", offerId)
           .maybeSingle();
         if (!offer) return page("Link not found", "This offer link isn't valid.");
         const url = new URL(request.url);
         if (url.searchParams.has("done") || offer.status === "signed")
-          return page("Thank you!", "Your offer is signed. A copy is on its way to your email, and the dealership will be in touch about next steps.");
+          return offer.kind === "onboarding"
+            ? page("All set!", "Your paperwork is complete. A copy is on its way to your email. See you on your first day!")
+            : page("Thank you!", "Your offer is signed. A copy is on its way to your email, and the dealership will be in touch about next steps.");
         if (!isOpen(offer.status) || !offer.provider_document_id)
-          return page("This offer is closed", "This offer is no longer open. Please reach out to the dealership with any questions.");
+          return page(offer.kind === "onboarding" ? "This request is closed" : "This offer is closed", "This is no longer open. Please reach out to the dealership with any questions.");
         const { data: app } = await db.from("applications").select("email").eq("id", offer.application_id).single();
         try {
           const { embeddedSignLink } = await import("@/lib/esign/boldsign.server");
           const link = await embeddedSignLink(offer.provider_document_id, app?.email ?? "", `${url.origin}${url.pathname}?done=1`);
           return Response.redirect(link, 302);
         } catch {
-          return page("Almost there", "We couldn't open the signing page right now. Look for the email from BoldSign to sign your offer, or try this link again in a few minutes.");
+          return page("Almost there", "We couldn't open the signing page right now. Look for the email from BoldSign to sign, or try this link again in a few minutes.");
         }
       },
     },

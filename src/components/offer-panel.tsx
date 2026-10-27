@@ -56,6 +56,7 @@ export function OfferPanel({
           .from("offers")
           .select("id, status, job_title, pay, start_date, created_at, error")
           .eq("application_id", appId)
+          .eq("kind", "offer")
           .order("created_at", { ascending: false })
       ).data ?? [],
   });

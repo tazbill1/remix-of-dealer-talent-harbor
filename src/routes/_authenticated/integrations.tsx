@@ -15,8 +15,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { integrationStatus } from "@/lib/email.functions";
-import { saveOfferTemplate } from "@/lib/offers.functions";
-import { OFFER_FIELDS } from "@/lib/offers";
+import { saveOfferTemplate, saveOnboardingTemplates } from "@/lib/offers.functions";
+import { OFFER_FIELDS, ONBOARDING_SUGGESTIONS, type OnboardingTemplate } from "@/lib/offers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -264,6 +264,14 @@ function Integrations() {
           templateId={env?.offerTemplateId ?? null}
           onSaved={() => qc.invalidateQueries({ queryKey: ["integration-status", org.orgId] })}
         />
+
+        <OnboardingDocsCard
+          orgId={org.orgId}
+          isAdmin={isAdmin}
+          apiKey={!!env?.boldsign}
+          templates={env?.onboardingTemplates ?? []}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["integration-status", org.orgId] })}
+        />
       </div>
     </div>
   );
@@ -359,6 +367,108 @@ function OfferLettersCard({
             in Lovable as BOLDSIGN_WEBHOOK_SECRET. {webhook ? "Secret is set." : ""}
           </p>
         </div>
+      </div>
+    </Card>
+  );
+}
+
+function OnboardingDocsCard({
+  orgId,
+  isAdmin,
+  apiKey,
+  templates,
+  onSaved,
+}: {
+  orgId: string;
+  isAdmin: boolean;
+  apiKey: boolean;
+  templates: OnboardingTemplate[];
+  onSaved: () => void;
+}) {
+  const save = useServerFn(saveOnboardingTemplates);
+  const [rows, setRows] = useState<OnboardingTemplate[]>(templates);
+  useEffect(() => setRows(templates), [templates]);
+  const dirty = JSON.stringify(rows) !== JSON.stringify(templates);
+  const unusedNames = ONBOARDING_SUGGESTIONS.filter((n) => !rows.some((r) => r.name === n));
+  return (
+    <Card
+      icon={FileSignature}
+      title="New-hire paperwork (BoldSign)"
+      state={apiKey && templates.length ? "connected" : "not_connected"}
+      what="Send W-4, I-9, direct deposit, handbook sign-off and other forms from a hired applicant's profile. They sign everything in one sitting on their phone."
+      needs={
+        apiKey
+          ? "make each form a template in BoldSign (role 1 = new hire), then list them here."
+          : "connect BoldSign first (offer letters card), then list your form templates here."
+      }
+    >
+      <div className="mt-3 space-y-2 text-xs">
+        {rows.map((r, i) => (
+          <div key={i} className="flex gap-2">
+            <Input
+              aria-label="Form name"
+              className="w-40"
+              value={r.name}
+              disabled={!isAdmin}
+              onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
+            />
+            <Input
+              aria-label="BoldSign template ID"
+              placeholder="BoldSign template ID"
+              value={r.id}
+              disabled={!isAdmin}
+              onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, id: e.target.value.trim() } : x)))}
+            />
+            {isAdmin && (
+              <Button size="sm" variant="ghost" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {unusedNames.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="rounded-full bg-secondary px-2.5 py-1 hover:bg-secondary/70"
+                onClick={() => setRows([...rows, { name: n, id: "" }])}
+              >
+                + {n}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="rounded-full bg-secondary px-2.5 py-1 hover:bg-secondary/70"
+              onClick={() => setRows([...rows, { name: "", id: "" }])}
+            >
+              + Other form
+            </button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto"
+              disabled={!dirty}
+              onClick={async () => {
+                try {
+                  await save({ data: { orgId, templates: rows } });
+                  toast.success("Paperwork list saved");
+                  onSaved();
+                } catch (e) {
+                  const msg = (e as Error).message;
+                  toast.error(msg.includes("template ID") || msg.includes("too_small") ? "Each form needs a name and a valid BoldSign template ID." : msg);
+                }
+              }}
+            >
+              Save list
+            </Button>
+          </div>
+        )}
+        <p className="text-muted-foreground">
+          Templates can use the same field IDs as the offer letter (candidate_name, job_title, store_name, start_date,
+          manager_name) and hireme fills them in. Status updates use the same webhook as offer letters.
+        </p>
       </div>
     </Card>
   );
