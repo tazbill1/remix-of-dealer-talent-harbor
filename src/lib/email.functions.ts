@@ -144,7 +144,7 @@ export const integrationStatus = createServerFn({ method: "POST" })
       .eq("org_id", data.orgId)
       .maybeSingle();
     return {
-      boldsign: has("BOLDSIGN_API_KEY"),
+      boldsign: (has("UDC_BOLDSIGN_API_KEY") && has("LOVABLE_API_KEY")) || has("BOLDSIGN_API_KEY"),
       boldsignWebhook: has("BOLDSIGN_WEBHOOK_SECRET"),
       offerTemplateId: ms?.offer_template_id ?? null,
       twilio: has("TWILIO_ACCOUNT_SID") && has("TWILIO_AUTH_TOKEN"),
