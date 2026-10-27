@@ -2,7 +2,7 @@
  * Email sending (Lovable's managed delivery) and signed unsubscribe links. Server only.
  * Nothing here runs in practice mode: the outbox marks practice emails "simulated".
  */
-import { sendLovableEmail } from "@lovable.dev/email-js";
+import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 import { textToHtml } from "@/lib/email/core";
 
 /** Managed sending runs on Lovable's own API key, which Lovable gives the app. */
@@ -20,29 +20,62 @@ export async function sendLovable(input: {
   text: string;
   replyTo?: string | null;
   idempotencyKey?: string;
+  /** Shown in Lovable's email logs, e.g. "email" or "bulk_email". */
+  label?: string;
 }) {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("Email sending isn't connected yet");
   const senderDomain = input.fromAddress.split("@")[1] ?? "";
-  const res = await sendLovableEmail(
-    {
-      to: input.to,
-      from: {
-        name: input.fromName.replace(/["<>]/g, "").trim() || "Hiring team",
-        address: input.fromAddress,
+  let res;
+  try {
+    res = await sendLovableEmail(
+      {
+        to: input.to,
+        from: {
+          name: input.fromName.replace(/["<>]/g, "").trim() || "Hiring team",
+          address: input.fromAddress,
+        },
+        sender_domain: senderDomain,
+        subject: input.subject,
+        text: input.text,
+        html: textToHtml(input.text),
+        ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+        ...(input.idempotencyKey ? { idempotency_key: input.idempotencyKey } : {}),
+        // Lovable's app email is for one-to-one (transactional) messages only.
+        purpose: "transactional",
+        ...(input.label ? { label: input.label } : {}),
       },
-      sender_domain: senderDomain,
-      subject: input.subject,
-      text: input.text,
-      html: textToHtml(input.text),
-      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
-      ...(input.idempotencyKey ? { idempotency_key: input.idempotencyKey } : {}),
-    },
-    { apiKey },
-  );
+      { apiKey, sendUrl: process.env["LOVABLE_SEND_URL"] },
+    );
+  } catch (e) {
+    throw new EmailSendError(e);
+  }
   if (!res.success || !res.message_id) throw new Error("Email sending failed");
   return { providerMessageId: res.message_id };
 }
+
+/** A send failure translated into what the outbox should record. */
+export class EmailSendError extends Error {
+  readonly suppressed: boolean;
+  constructor(cause: unknown) {
+    const code = cause instanceof EmailAPIError ? cause.code : null;
+    const status = cause instanceof EmailAPIError ? cause.status : null;
+    super(
+      code === "recipient_suppressed"
+        ? "This address unsubscribed"
+        : code === "domain_not_verified"
+          ? "The sending domain isn't verified yet (check More → Emails in Lovable)"
+          : status === 429
+            ? "Hourly email limit reached; try again later"
+            : (cause as Error)?.message || "Email sending failed",
+    );
+    this.suppressed = code === "recipient_suppressed";
+  }
+}
+
+/** Lovable adds its own unsubscribe link, so ours is left out of what's sent. */
+export const withoutOurUnsubscribe = (body: string) =>
+  body.replace(/\n?Don't want these emails\? Unsubscribe: \S+\s*$/, "").trimEnd();
 
 // ---------------------------------------------------------------------------
 // Unsubscribe links: /u/<token>, where the token is signed so it can't be forged.

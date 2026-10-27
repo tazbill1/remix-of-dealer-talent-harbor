@@ -1,25 +1,25 @@
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
-import { EmailAPIError, sendLovableEmail as sendLovableEmailApi } from '@lovable.dev/email-js'
+import { EmailAPIError, sendLovableEmail as sendLovableEmailApi } from "@lovable.dev/email-js";
 
-const SITE_NAME = 'WerkandMe'
+const SITE_NAME = "WerkandMe";
 // Verified sender subdomain delegated to Lovable's nameservers. Never the root domain.
-const SENDER_DOMAIN = 'notify.workwithwerk.com'
-const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`
+const SENDER_DOMAIN = "notify.workwithwerk.com";
+const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
 
 export interface SendLovableEmailInput {
-  to: string
-  subject: string
-  text: string
-  replyTo?: string
+  to: string;
+  subject: string;
+  text: string;
+  replyTo?: string;
 }
 
 function escapeHtml(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /** Renders the plain template: the text split into paragraphs. */
@@ -28,8 +28,8 @@ function renderPlainTemplate(text: string): string {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 16px 0;">${escapeHtml(p).replace(/\n/g, '<br/>')}</p>`)
-    .join('\n')
+    .map((p) => `<p style="margin:0 0 16px 0;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
+    .join("\n");
 
   return `<!doctype html>
 <html lang="en" dir="ltr">
@@ -39,7 +39,7 @@ function renderPlainTemplate(text: string): string {
       ${paragraphs}
     </div>
   </body>
-</html>`
+</html>`;
 }
 
 /**
@@ -54,11 +54,11 @@ export async function sendLovableEmail({
   text,
   replyTo,
 }: SendLovableEmailInput): Promise<{ id: string }> {
-  const apiKey = process.env['LOVABLE_API_KEY']
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
+    throw new Error("LOVABLE_API_KEY is not configured");
   }
-  if (!to) throw new Error('Recipient is required')
+  if (!to) throw new Error("Recipient is required");
 
   const response = await sendLovableEmailApi(
     {
@@ -68,16 +68,16 @@ export async function sendLovableEmail({
       subject,
       html: renderPlainTemplate(text),
       text,
-      purpose: 'transactional',
+      purpose: "transactional",
       idempotency_key: crypto.randomUUID(),
       ...(replyTo ? { reply_to: replyTo } : {}),
     },
-    { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
-  )
+    { apiKey, sendUrl: process.env["LOVABLE_SEND_URL"] },
+  );
 
   if (!response.success || !response.message_id) {
-    throw new EmailAPIError(502, 'Email send was not accepted', null, 'send_not_accepted')
+    throw new EmailAPIError(502, "Email send was not accepted", null, "send_not_accepted");
   }
 
-  return { id: response.message_id }
+  return { id: response.message_id };
 }

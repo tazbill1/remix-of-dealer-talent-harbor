@@ -178,4 +178,72 @@ describe("email outbox", () => {
       error: "No sending address set — add one on the Integrations page",
     });
   });
+
+  it("sends without our unsubscribe line (Lovable adds its own) as a transactional email", async () => {
+    process.env["LOVABLE_API_KEY"] = "lovable_test";
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ success: true, message_id: "msg_2" }) });
+    vi.stubGlobal("fetch", fetchSpy);
+    const { client, tables } = world("live");
+    const row = await queueEmail(client, {
+      applicationId: "a1",
+      subject: "Hi",
+      body: "Hello",
+      purpose: "email",
+      baseUrl: base,
+    });
+    await deliverDue(client, { ids: [row.id] });
+    const sent = JSON.parse(fetchSpy.mock.calls[0]![1].body);
+    expect(sent.purpose).toBe("transactional");
+    expect(sent.text).toContain("GR Ford · 1 Main St");
+    expect(sent.text).not.toContain("Unsubscribe:");
+    // The profile still shows the full email as written.
+    expect(tables["messages"]![0]!["body"]).toContain("Unsubscribe:");
+  });
+
+  it("an address Lovable has suppressed is recorded as unsubscribed for the group", async () => {
+    process.env["LOVABLE_API_KEY"] = "lovable_test";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        text: async () => JSON.stringify({ type: "recipient_suppressed" }),
+        headers: { get: () => null },
+      }),
+    );
+    const { client, tables } = world("live");
+    const row = await queueEmail(client, {
+      applicationId: "a1",
+      subject: "Hi",
+      body: "Hello",
+      purpose: "email",
+      baseUrl: base,
+    });
+    expect((await deliverDue(client, { ids: [row.id] })).blocked).toBe(1);
+    expect(tables["messages"]![0]).toMatchObject({
+      status: "blocked",
+      error: "This address unsubscribed",
+    });
+    expect(tables["email_opt_outs"]).toHaveLength(1);
+  });
+
+  it("live blasts are held until a bulk email service is set up", async () => {
+    process.env["LOVABLE_API_KEY"] = "lovable_test";
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    const { client, tables } = world("live");
+    const row = await queueEmail(client, {
+      applicationId: "a1",
+      subject: "Openings",
+      body: "We're hiring",
+      purpose: "bulk_email",
+      baseUrl: base,
+    });
+    await deliverDue(client, { ids: [row.id] });
+    expect(tables["messages"]![0]!["status"]).toBe("blocked");
+    expect(String(tables["messages"]![0]!["error"])).toContain("bulk email service");
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });
