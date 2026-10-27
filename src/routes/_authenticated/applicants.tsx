@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
+import { useServerFn } from "@tanstack/react-start";
+import { notifyApplicants } from "@/lib/email.functions";
 import { UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
@@ -55,7 +57,10 @@ function Applicants() {
     const moving = chosen.filter((a) => a.status !== bulkStatus).map((a) => a.id);
     const { error } = await supabase.from("applications").update({ status: bulkStatus }).in("id", checked);
     if (error) return toast.error(error.message);
-    if (moving.length) await supabase.from("application_events").insert(statusEventRows(org.orgId, moving, bulkStatus));
+    if (moving.length) {
+      await supabase.from("application_events").insert(statusEventRows(org.orgId, moving, bulkStatus));
+      void notify({ data: { orgId: org.orgId, applicationIds: moving, event: { kind: "status", status: bulkStatus } } }).catch(() => {});
+    }
     toast.success(`Moved ${checked.length} applicant${checked.length > 1 ? "s" : ""} to ${STATUS_LABEL[bulkStatus]}.`);
     setChecked([]); qc.invalidateQueries({ queryKey: key });
   }
@@ -92,12 +97,14 @@ function Applicants() {
       .map((a) => ({ id: a.id, label: `${job(a.job_id)} · ${storeName(a.dealership_id)}`, status: a.status }))
     : [];
 
+  const notify = useServerFn(notifyApplicants);
   async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
     const before = data?.apps.find((a) => a.id === id)?.status;
     const { error } = await supabase.from("applications").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
     if (patch.status && patch.status !== before) {
       await supabase.from("application_events").insert(statusEventRows(org.orgId, [id], patch.status));
+      void notify({ data: { orgId: org.orgId, applicationIds: [id], event: { kind: "status", status: patch.status } } }).catch(() => {});
     }
     qc.invalidateQueries({ queryKey: key });
   }

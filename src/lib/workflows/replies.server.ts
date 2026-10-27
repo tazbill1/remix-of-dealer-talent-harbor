@@ -75,6 +75,12 @@ export async function handleManagerShortReply(
     const status = decision === "interview" ? "interview" : "rejected";
     await sb.from("applications").update({ status }).eq("id", app.id);
     await sb.from("application_events").insert(statusEventRows(app.org_id, [app.id], status));
+    {
+      const { emailApplicant } = await import("@/lib/email/applicant.server");
+      await emailApplicant(admin, app.id, status === "interview"
+        ? { kind: "interview", startsAt: null }
+        : { kind: "status", status });
+    }
     await event(
       decision === "interview"
         ? "Hiring manager replied 1: interview"

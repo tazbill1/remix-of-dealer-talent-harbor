@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Upload, Loader2, Send, CalendarPlus, Download, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyApplicants } from "@/lib/email.functions";
 import { parseResume, assistantMessage, type ParsedResume } from "@/lib/assistant.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,6 +180,7 @@ function ics(i: { id: string; starts_at: string; duration_min: number; location:
 export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: string; orgId: string; title: string; onChanged: () => void }) {
   const qc = useQueryClient();
   const [when, setWhen] = useState("");
+  const notify = useServerFn(notifyApplicants);
   const { data: list = [] } = useQuery({
     queryKey: ["interviews", appId],
     queryFn: async () => (await supabase.from("interviews").select("*").eq("application_id", appId).order("starts_at")).data ?? [],
@@ -190,6 +192,9 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
     if (error) return toast.error(error.message);
     await supabase.from("applications").update({ status: "interview" }).eq("id", appId);
     await supabase.from("application_events").insert({ org_id: orgId, application_id: appId, kind: "interview", message: `Interview scheduled for ${new Date(starts_at).toLocaleString()}` });
+    void notify({ data: { orgId, applicationIds: [appId], event: { kind: "interview", startsAt: starts_at } } })
+      .then((r) => r.sent && toast.success("Interview invite emailed."))
+      .catch(() => {});
     setWhen(""); qc.invalidateQueries({ queryKey: ["interviews", appId] }); onChanged();
   }
   function download(i: (typeof list)[number]) {
