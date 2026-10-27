@@ -270,8 +270,6 @@ export type Database = {
           escalation_name: string | null
           escalation_phone: string | null
           id: string
-          interview_hours: Json
-          interview_minutes: number
           manager_name: string | null
           manager_phone: string | null
           name: string
@@ -292,8 +290,6 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
-          interview_hours?: Json
-          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name: string
@@ -314,8 +310,6 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
-          interview_hours?: Json
-          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name?: string
@@ -1193,6 +1187,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_calendars: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dealership_id: string
+          ics_url: string
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_error: string | null
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dealership_id: string
+          ics_url: string
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dealership_id?: string
+          ics_url?: string
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          org_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

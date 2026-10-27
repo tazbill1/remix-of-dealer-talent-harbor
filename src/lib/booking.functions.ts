@@ -42,6 +42,13 @@ async function loadBooking(db: DB, applicationId: string, now = Date.now()) {
     .map((i) => ({ start: Date.parse(i.starts_at), end: Date.parse(i.starts_at) + (i.duration_min || 30) * 60e3 }));
   const timeZone = store.timezone || "America/Chicago";
   const minutes = store.interview_minutes || 30;
+  // Busy times on the managers' own calendars (linked on the store page).
+  try {
+    const { storeBusy } = await import("@/lib/busy-calendar.server");
+    busy.push(...(await storeBusy(db, store.id, timeZone, now, now + 9 * 86400e3)));
+  } catch {
+    /* a calendar problem never blocks booking */
+  }
   const slots = openSlots({ hours: parseHours(store.interview_hours), minutes, timeZone, busy, now, days: 7, max: 60 });
   const address = [store.address, [store.city, store.state].filter(Boolean).join(", ")].filter(Boolean).join(", ") || null;
   return { app, store, job, timeZone, minutes, slots, address, upcoming: mine[0] ?? null };
