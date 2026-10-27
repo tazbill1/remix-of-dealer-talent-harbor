@@ -176,3 +176,35 @@ export const unsubscribe = createServerFn({ method: "POST" })
       done: data.confirm,
     };
   });
+
+const notifySchema = z.object({
+  orgId: z.string().uuid(),
+  applicationIds: z.array(z.string().uuid()).min(1).max(500),
+  event: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("interview"), startsAt: z.string().datetime().nullable() }),
+    z.object({ kind: z.literal("status"), status: z.enum(["new", "screening", "interview", "offer", "hired", "rejected"]) }),
+  ]),
+});
+
+/** Automatic applicant email after a stage change or interview booked in the app. */
+export const notifyApplicants = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: z.input<typeof notifySchema>) => notifySchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("applications")
+      .select("id")
+      .in("id", data.applicationIds)
+      .eq("org_id", data.orgId);
+    if (error) throw new Error(error.message);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    // Moving to Interview without a time still sends the invite.
+    const event =
+      data.event.kind === "status" && data.event.status === "interview"
+        ? ({ kind: "interview", startsAt: null } as const)
+        : data.event;
+    let sent = 0;
+    for (const r of rows ?? []) if (await emailApplicant(supabaseAdmin, r.id, event)) sent++;
+    return { sent };
+  });
