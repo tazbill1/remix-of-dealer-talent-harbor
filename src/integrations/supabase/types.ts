@@ -763,6 +763,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_application: {
+        Args: { _app: string; _uid: string }
+        Returns: boolean
+      }
+      can_access_store: {
+        Args: { _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
       can_post_jobs: { Args: { _org: string; _uid: string }; Returns: boolean }
       create_organization: {
         Args: { _name: string; _slug: string }
