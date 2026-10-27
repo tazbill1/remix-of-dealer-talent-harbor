@@ -25,6 +25,7 @@ import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
 import { Route as ApiCronEscalateRouteImport } from './routes/api/cron/escalate'
 import { Route as ApiCronMessagesRouteImport } from './routes/api/cron/messages'
+import { Route as ApiCronWorkflowsRouteImport } from './routes/api/cron/workflows'
 import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
 import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
@@ -111,6 +112,11 @@ const ApiCronMessagesRoute = ApiCronMessagesRouteImport.update({
   path: '/api/cron/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronWorkflowsRoute = ApiCronWorkflowsRouteImport.update({
+  id: '/api/cron/workflows',
+  path: '/api/cron/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSmsInboundRoute = ApiSmsInboundRouteImport.update({
   id: '/api/sms/inbound',
   path: '/api/sms/inbound',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/cron/escalate': typeof ApiCronEscalateRoute
   '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/cron/workflows': typeof ApiCronWorkflowsRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/cron/escalate': typeof ApiCronEscalateRoute
   '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/cron/workflows': typeof ApiCronWorkflowsRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/cron/escalate': typeof ApiCronEscalateRoute
   '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/cron/workflows': typeof ApiCronWorkflowsRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/stores/$storeId'
     | '/api/cron/escalate'
     | '/api/cron/messages'
+    | '/api/cron/workflows'
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/stores/$storeId'
     | '/api/cron/escalate'
     | '/api/cron/messages'
+    | '/api/cron/workflows'
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stores_/$storeId'
     | '/api/cron/escalate'
     | '/api/cron/messages'
+    | '/api/cron/workflows'
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   StatusTokenRoute: typeof StatusTokenRoute
   ApiCronEscalateRoute: typeof ApiCronEscalateRoute
   ApiCronMessagesRoute: typeof ApiCronMessagesRoute
+  ApiCronWorkflowsRoute: typeof ApiCronWorkflowsRoute
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
   ApiSmsStatusRoute: typeof ApiSmsStatusRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
@@ -403,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/workflows': {
+      id: '/api/cron/workflows'
+      path: '/api/cron/workflows'
+      fullPath: '/api/cron/workflows'
+      preLoaderRoute: typeof ApiCronWorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/sms/inbound': {
       id: '/api/sms/inbound'
       path: '/api/sms/inbound'
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusTokenRoute: StatusTokenRoute,
   ApiCronEscalateRoute: ApiCronEscalateRoute,
   ApiCronMessagesRoute: ApiCronMessagesRoute,
+  ApiCronWorkflowsRoute: ApiCronWorkflowsRoute,
   ApiSmsInboundRoute: ApiSmsInboundRoute,
   ApiSmsStatusRoute: ApiSmsStatusRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,

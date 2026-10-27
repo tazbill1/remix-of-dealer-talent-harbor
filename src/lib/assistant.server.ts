@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { statusEventRows } from "@/lib/status-log";
 import { keywordOf, toE164 } from "@/lib/messaging/core";
+import { handleManagerShortReply } from "@/lib/workflows/replies.server";
 import {
   applyKeyword,
   deliverDue,
@@ -284,6 +285,20 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
     };
   }
 
+  // "1"/"2" after a candidate summary and "Y"/"N" after a check-in always mean the same
+  // thing, so they're handled here rather than left to the AI.
+  if (data.party === "manager") {
+    const handled = await handleManagerShortReply(sb, admin, {
+      app,
+      storeName: store?.name ?? "the dealership",
+      jobTitle: job?.title ?? "the role",
+      timeZone: tz,
+      body: data.body,
+      replyTo: senderPhone,
+    });
+    if (handled) return handled;
+  }
+
   const assistant = store?.assistant_name ?? "Your HR assistant";
   const now = new Date().toISOString();
   const system = `You are ${assistant}, the AI HR assistant for ${store?.name ?? "the dealership"}. Personality: bubbly, kind, sweet and super organized — the assistant HR manager everyone loves. You text by SMS, so keep replies under 320 characters, warm, with at most one emoji.
@@ -404,16 +419,14 @@ Return:
     out.timeline_note,
   ].filter(Boolean) as string[];
   if (notes.length)
-    await sb
-      .from("application_events")
-      .insert(
-        notes.map((message) => ({
-          org_id: app.org_id,
-          application_id: app.id,
-          kind: "assistant",
-          message,
-        })),
-      );
+    await sb.from("application_events").insert(
+      notes.map((message) => ({
+        org_id: app.org_id,
+        application_id: app.id,
+        kind: "assistant",
+        message,
+      })),
+    );
   if (patch.status && patch.status !== app.status) {
     await sb.from("application_events").insert(statusEventRows(app.org_id, [app.id], patch.status));
   }

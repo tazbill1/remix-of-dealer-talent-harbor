@@ -100,6 +100,9 @@ export const submitApplication = createServerFn({ method: "POST" })
     await supabaseAdmin.from("application_events").insert({
       org_id: job.org_id, application_id: app.id, kind: "applied", message: "Application received",
     });
+    // Welcome text (respects consent, STOP and texting hours; never blocks applying).
+    const { welcomeOnApply } = await import("@/lib/workflows/run.server");
+    await welcomeOnApply(supabaseAdmin, app.id);
     let uploadUrl: string | null = null;
     let uploadToken: string | null = null;
     let resumePath: string | null = null;
