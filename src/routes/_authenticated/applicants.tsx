@@ -20,6 +20,7 @@ import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
 import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
 import { OfferPanel } from "@/components/offer-panel";
+import { DocumentsPanel } from "@/components/documents-panel";
 import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
@@ -257,6 +258,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
       {app.status !== "rejected" && !app.departed_at && (
         <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
+        <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} />
       )}
       <div>
         <div className="mb-2 text-sm font-semibold">Stage</div>
