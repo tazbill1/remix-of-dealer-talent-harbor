@@ -10,7 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Logo, GradientText } from "@/components/brand";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: z.object({ mode: z.enum(["signin", "signup"]).optional() }),
+  validateSearch: z.object({
+    mode: z.enum(["signin", "signup"]).optional(),
+    // Where to go after signing in (e.g. back to an invite). Only paths inside the app.
+    redirect: z
+      .string()
+      .regex(/^\/(?!\/)/)
+      .optional()
+      .catch(undefined),
+    email: z.string().max(200).optional().catch(undefined),
+  }),
   head: () => ({
     meta: [
       { title: "Sign in | WerkandMe Hiring" },
@@ -23,15 +32,17 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { mode: initial } = Route.useSearch();
+  const { mode: initial, redirect: after, email: invitedEmail } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">(initial ?? "signin");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(invitedEmail ?? "");
+  const goNext = () => (after ? navigate({ to: after }) : navigate({ to: "/dashboard" }));
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { if (data.user) navigate({ to: "/dashboard" }); });
+    supabase.auth.getUser().then(({ data }) => { if (data.user) goNext(); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   async function submit(e: React.FormEvent) {
@@ -40,7 +51,7 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
-          email, password, options: { emailRedirectTo: window.location.origin + "/dashboard" },
+          email, password, options: { emailRedirectTo: window.location.origin + (after ?? "/dashboard") },
         });
         if (error) throw error;
         if (!data.session) {
@@ -52,7 +63,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/dashboard" });
+      goNext();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -61,10 +72,12 @@ function AuthPage() {
   }
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
+    const r = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + "/auth" + (after ? `?redirect=${encodeURIComponent(after)}` : ""),
+    });
     if (r.error) return toast.error("Google sign-in didn't work. Please try again.");
     if (r.redirected) return;
-    navigate({ to: "/dashboard" });
+    goNext();
   }
 
   return (

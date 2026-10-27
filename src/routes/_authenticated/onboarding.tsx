@@ -36,6 +36,7 @@ function Onboarding() {
   return (
     <div className="mx-auto max-w-lg rounded-2xl bg-background p-8 shadow-sm">
       <h1 className="text-3xl">Welcome! Let's set up <GradientText>your group.</GradientText></h1>
+      <p className="mt-2 text-sm text-muted-foreground">Joining an existing dealer group instead? Open the invite link your HR team sent you.</p>
       <p className="mt-2 text-muted-foreground">Your group's data is private to your team. Always.</p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div className="space-y-2">

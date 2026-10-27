@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, type Membership } from "@/lib/org";
 import { TextingSettings } from "@/components/texting-settings";
+import { TeamInvites } from "@/components/team-invites";
 
 export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe team roles, coverage and group texting settings." }, { property: "og:title", content: "Team | WerkandMe Hiring" }, { property: "og:description", content: "Manage team roles, coverage and group texting settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -57,6 +58,13 @@ function Team() {
     if (error) return toast.error(error.message);
     refresh();
   }
+  async function removeMember(id: string, who: string) {
+    if (!window.confirm(`Remove ${who} from this group? They'll lose access right away.`)) return;
+    const { error } = await supabase.from("org_members").delete().eq("id", id);
+    if (error) return toast.error(error.message.includes("at least one group admin") ? "A group must keep at least one group admin." : error.message);
+    toast.success(`${who} removed`);
+    refresh();
+  }
   async function removeScope(id: string) {
     const { error } = await supabase.from("org_member_scopes").delete().eq("id", id);
     if (error) return toast.error(error.message);
@@ -67,7 +75,7 @@ function Team() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl">Team</h1>
-        <p className="text-muted-foreground">Set each person's role and which regions or stores they cover. Someone with no coverage set sees the whole group.</p>
+        <p className="text-muted-foreground">Invite people, set their role, and choose the stores or regions they cover. Managers only see applicants for their stores.</p>
       </div>
       <div className="overflow-hidden rounded-2xl bg-background shadow-sm">
         {data?.members.map((m) => {
@@ -76,6 +84,7 @@ function Team() {
             <div key={m.id} className="space-y-3 border-b p-4 last:border-0">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="font-semibold">{m.email ?? "Team member"}</div>
+                <button onClick={() => removeMember(m.id, m.email ?? "this person")} className="ml-auto text-xs text-muted-foreground hover:text-destructive sm:order-last">Remove</button>
                 <select aria-label={`Role for ${m.email}`} className="h-9 rounded-md border bg-background px-2 text-sm"
                   value={m.role} onChange={(e) => setRole(m.id, e.target.value as Membership["role"])}>
                   {roles.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}
@@ -83,7 +92,7 @@ function Team() {
               </div>
               {scoped.has(m.role) ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  {mine.length === 0 && <span className="text-sm text-muted-foreground">Covers: whole group</span>}
+                  {mine.length === 0 && <span className="rounded-full bg-destructive/10 px-3 py-1 text-sm text-destructive" title="Managers should only see their own stores">Sees the whole group: add a store or region</span>}
                   {mine.map((s) => {
                     const label = s.region_id
                       ? `${data.regions.find((r) => r.id === s.region_id)?.name ?? "Region"} region`
@@ -109,7 +118,7 @@ function Team() {
           );
         })}
       </div>
-      <p className="text-sm text-muted-foreground">Inviting new people by email isn't set up yet — new teammates can sign up and be added here once invites are turned on.</p>
+      {data && <TeamInvites orgId={org.orgId} stores={data.stores} regions={data.regions} />}
       <TextingSettings orgId={org.orgId} />
     </div>
   );
