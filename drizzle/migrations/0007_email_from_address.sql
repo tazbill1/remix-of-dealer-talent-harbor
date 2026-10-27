@@ -1,0 +1,1 @@
+ALTER TABLE public.messaging_settings ADD COLUMN IF NOT EXISTS email_from_address text;
