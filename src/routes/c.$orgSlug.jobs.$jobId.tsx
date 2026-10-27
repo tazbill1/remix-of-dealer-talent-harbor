@@ -7,6 +7,7 @@ import { getPublicJob, submitApplication } from "@/lib/public.functions";
 import { formatPay } from "@/lib/jobs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { SOURCES } from "@/lib/sources";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,7 @@ function JobPage() {
   const navigate = useNavigate();
   const [f, setF] = useState({ fullName: "", email: "", phone: "" });
   const [smsConsent, setSmsConsent] = useState(false);
+  const [heard, setHeard] = useState("own_site");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const pay = formatPay(job.pay_min, job.pay_max, job.pay_period);
@@ -55,7 +57,7 @@ function JobPage() {
     if (file && file.size > 10 * 1024 * 1024) return toast.error("Resume must be under 10 MB.");
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source: source || heard, resumeFileName: file?.name, smsConsent } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }
@@ -86,6 +88,12 @@ function JobPage() {
           <div className="space-y-1.5"><Label htmlFor="n">Full name</Label><Input id="n" required value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+          {!source && (
+            <div className="space-y-1.5"><Label htmlFor="src">How did you hear about this job?</Label>
+              <select id="src" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={heard} onChange={(e) => setHeard(e.target.value)}>
+                {SOURCES.filter((x) => x.key !== "walk_in").map((x) => <option key={x.key} value={x.key}>{x.key === "own_site" ? "This website" : x.label}</option>)}
+              </select></div>
+          )}
           <div className="space-y-1.5"><Label htmlFor="r">Resume (optional)</Label><Input id="r" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
             <Checkbox id="sms" className="mt-0.5" checked={smsConsent} onCheckedChange={(c) => setSmsConsent(c === true)} />
