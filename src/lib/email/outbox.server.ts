@@ -1,12 +1,12 @@
 /**
  * Email outbox. Emails are saved in `messages` (channel "email") next to texts, so they
  * show on the candidate's timeline and go out through the same delivery job. Practice
- * mode logs them as "Practice · not sent"; live mode sends through Resend.
+ * mode logs them as "Practice · not sent"; live mode sends through Lovable's delivery.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { emailFooter, normalizeEmail } from "@/lib/email/core";
-import { emailConfigured, sendResend, unsubscribeToken } from "@/lib/email/provider.server";
+import { emailConfigured, sendLovable, unsubscribeToken } from "@/lib/email/provider.server";
 
 type DB = SupabaseClient<Database>;
 
@@ -14,18 +14,20 @@ export type EmailSettings = {
   email_mode: "practice" | "live";
   email_from_name: string | null;
   email_reply_to: string | null;
+  email_from_address: string | null;
 };
 
 export async function loadEmailSettings(sb: DB, orgId: string): Promise<EmailSettings> {
   const { data } = await sb
     .from("messaging_settings")
-    .select("email_mode, email_from_name, email_reply_to")
+    .select("email_mode, email_from_name, email_reply_to, email_from_address")
     .eq("org_id", orgId)
     .maybeSingle();
   return {
     email_mode: data?.email_mode === "live" ? "live" : "practice",
     email_from_name: data?.email_from_name ?? null,
     email_reply_to: data?.email_reply_to ?? null,
+    email_from_address: data?.email_from_address ?? null,
   };
 }
 
@@ -92,7 +94,7 @@ export async function queueEmail(
       body,
       purpose: input.purpose,
       to_email: to,
-      from_email: process.env["EMAIL_FROM"] ?? null,
+      from_email: null,
       campaign_id: input.campaignId ?? null,
       status: reason ? "blocked" : "queued",
       scheduled_for: reason ? null : new Date(now).toISOString(),
@@ -132,10 +134,13 @@ export async function deliverEmail(
       .eq("id", m.id);
     return "simulated";
   }
-  if (!emailConfigured() || !m.to_email) {
+  const fromAddress = settings.email_from_address?.trim() || null;
+  if (!emailConfigured() || !fromAddress || !m.to_email) {
     const error = !emailConfigured()
-      ? "Email provider isn't connected yet"
-      : "No valid email address";
+      ? "Email sending isn't connected yet"
+      : !fromAddress
+        ? "No sending address set — add one on the Integrations page"
+        : "No valid email address";
     await sb.from("messages").update({ status: "failed", error }).eq("id", m.id);
     return "failed";
   }
@@ -148,23 +153,21 @@ export async function deliverEmail(
     const { data: store } = app
       ? await sb.from("dealerships").select("name").eq("id", app.dealership_id).maybeSingle()
       : { data: null };
-    const unsubscribeUrl = /Unsubscribe: (\S+)\s*$/.exec(m.body)?.[1];
-    const { providerMessageId } = await sendResend({
+    const { providerMessageId } = await sendLovable({
+      fromAddress,
       fromName: settings.email_from_name || store?.name || "Hiring team",
       to: m.to_email,
       subject: m.subject || "(no subject)",
       text: m.body,
       replyTo: settings.email_reply_to,
-      // Mail apps' one-click "Unsubscribe" button posts here (no page visit needed).
-      ...(unsubscribeUrl
-        ? { unsubscribeUrl: unsubscribeUrl.replace("/u/", "/api/public/unsubscribe/") }
-        : {}),
+      idempotencyKey: `email-${m.id}`,
     });
     await sb
       .from("messages")
       .update({
         status: "sent",
-        provider: "resend",
+        provider: "lovable",
+        from_email: fromAddress,
         provider_message_id: providerMessageId,
         sent_at: sentAt,
       })
@@ -173,7 +176,7 @@ export async function deliverEmail(
   } catch (e) {
     await sb
       .from("messages")
-      .update({ status: "failed", provider: "resend", error: (e as Error).message })
+      .update({ status: "failed", provider: "lovable", error: (e as Error).message })
       .eq("id", m.id);
     return "failed";
   }

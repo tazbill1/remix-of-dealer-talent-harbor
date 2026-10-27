@@ -735,6 +735,7 @@ export type Database = {
       messaging_settings: {
         Row: {
           ai_provider: string
+          email_from_address: string | null
           email_from_name: string | null
           email_mode: string
           email_reply_to: string | null
@@ -749,6 +750,7 @@ export type Database = {
         }
         Insert: {
           ai_provider?: string
+          email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
           email_reply_to?: string | null
@@ -763,6 +765,7 @@ export type Database = {
         }
         Update: {
           ai_provider?: string
+          email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
           email_reply_to?: string | null

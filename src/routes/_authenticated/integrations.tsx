@@ -94,17 +94,19 @@ function Integrations() {
       (
         await supabase
           .from("messaging_settings")
-          .select("mode, ai_provider, email_mode, email_from_name, email_reply_to")
+          .select("mode, ai_provider, email_mode, email_from_name, email_reply_to, email_from_address")
           .eq("org_id", org.orgId)
           .maybeSingle()
       ).data,
   });
   const [fromName, setFromName] = useState("");
   const [replyTo, setReplyTo] = useState("");
+  const [fromAddress, setFromAddress] = useState("");
   useEffect(() => {
     setFromName(settings?.email_from_name ?? "");
     setReplyTo(settings?.email_reply_to ?? "");
-  }, [settings?.email_from_name, settings?.email_reply_to]);
+    setFromAddress(settings?.email_from_address ?? "");
+  }, [settings?.email_from_name, settings?.email_reply_to, settings?.email_from_address]);
 
   const smsLive = settings?.mode === "live";
   const emailLive = settings?.email_mode === "live";
@@ -116,6 +118,7 @@ function Integrations() {
     email_mode?: string;
     email_from_name?: string | null;
     email_reply_to?: string | null;
+    email_from_address?: string | null;
   }) {
     const { error } = await supabase
       .from("messaging_settings")
@@ -155,10 +158,10 @@ function Integrations() {
 
         <Card
           icon={Mail}
-          title="Email (Resend)"
+          title="Email"
           state={emailState}
           what="One-to-one emails and bulk emails to applicants, from the Applicants page, with corporate templates. Every email includes the store's name and address and an unsubscribe link."
-          needs="a Resend account with your sending domain verified (e.g. mail.werkandme.com), then the RESEND_API_KEY and EMAIL_FROM secrets in Lovable."
+          needs="your sender domain set up (More → Emails), then the address you want emails to come from, like penny@notify.workwithwerk.com."
         >
           {isAdmin && (
             <div className="mt-4 space-y-2 border-t pt-4">
@@ -169,8 +172,12 @@ function Integrations() {
                     <button
                       key={m}
                       type="button"
-                      disabled={m === "live" && !env?.email}
-                      title={m === "live" && !env?.email ? "Connect Resend first" : undefined}
+                      disabled={m === "live" && !(env?.email && env?.emailFrom)}
+                      title={
+                        m === "live" && !(env?.email && env?.emailFrom)
+                          ? "Set a sending address first"
+                          : undefined
+                      }
                       onClick={() => saveEmail({ email_mode: m })}
                       className={cn(
                         "rounded-full px-3 py-1 text-xs disabled:opacity-40",
@@ -190,6 +197,12 @@ function Integrations() {
                 onChange={(e) => setFromName(e.target.value)}
               />
               <Input
+                placeholder="Sending address (e.g. penny@notify.workwithwerk.com)"
+                type="email"
+                value={fromAddress}
+                onChange={(e) => setFromAddress(e.target.value)}
+              />
+              <Input
                 placeholder="Replies go to (e.g. recruiting@yourgroup.com)"
                 type="email"
                 value={replyTo}
@@ -202,13 +215,16 @@ function Integrations() {
                   saveEmail({
                     email_from_name: fromName.trim() || null,
                     email_reply_to: replyTo.trim() || null,
+                    email_from_address: fromAddress.trim().toLowerCase() || null,
                   })
                 }
               >
                 Save email settings
               </Button>
-              {env?.emailFrom && (
-                <p className="text-xs text-muted-foreground">Sending address: {env.emailFrom}</p>
+              {!env?.emailFrom && (
+                <p className="text-xs text-muted-foreground">
+                  Emails stay in practice mode until you set the sending address above.
+                </p>
               )}
             </div>
           )}

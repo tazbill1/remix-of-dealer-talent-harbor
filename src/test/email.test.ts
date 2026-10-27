@@ -18,8 +18,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
-  delete process.env["RESEND_API_KEY"];
-  delete process.env["EMAIL_FROM"];
+  delete process.env["LOVABLE_API_KEY"];
 });
 
 describe("email basics", () => {
@@ -59,14 +58,23 @@ describe("email basics", () => {
   });
 });
 
-function world(mode: "practice" | "live" = "practice", email = "Marcus@X.com") {
+function world(
+  mode: "practice" | "live" = "practice",
+  email = "Marcus@X.com",
+  fromAddress: string | null = "hiring@notify.example.com",
+) {
   return fakeSupabase({
     applications: [{ id: "a1", org_id: "o1", dealership_id: "s1", email }],
     dealerships: [{ id: "s1", name: "GR Ford", address: "1 Main St" }],
     messaging_settings: [
-      { org_id: "o1", email_mode: mode, email_from_name: null, email_reply_to: "hr@g.com" },
+      {
+        org_id: "o1",
+        email_mode: mode,
+        email_from_name: null,
+        email_reply_to: "hr@g.com",
+        email_from_address: fromAddress,
+      },
     ],
-    email_opt_outs: [],
     candidates: [{ id: "c1", org_id: "o1", email: "marcus@x.com", email_opted_out_at: null }],
     messages: [],
     sms_opt_outs: [],
@@ -123,10 +131,11 @@ describe("email outbox", () => {
     expect(r2).toMatchObject({ status: "blocked", error: "No valid email address" });
   });
 
-  it("live mode sends through Resend with reply-to and one-click unsubscribe", async () => {
-    process.env["RESEND_API_KEY"] = "re_test";
-    process.env["EMAIL_FROM"] = "hiring@mail.example.com";
-    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "em_1" }) });
+  it("live mode sends through Lovable from the group's sending address", async () => {
+    process.env["LOVABLE_API_KEY"] = "lovable_test";
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ success: true, message_id: "msg_1" }) });
     vi.stubGlobal("fetch", fetchSpy);
     const { client, tables } = world("live");
     const row = await queueEmail(client, {
@@ -139,22 +148,23 @@ describe("email outbox", () => {
     expect((await deliverDue(client, { ids: [row.id] })).sent).toBe(1);
     expect(tables["messages"]![0]).toMatchObject({
       status: "sent",
-      provider: "resend",
-      provider_message_id: "em_1",
+      provider: "lovable",
+      provider_message_id: "msg_1",
+      from_email: "hiring@notify.example.com",
     });
     const [url, init] = fetchSpy.mock.calls[0]!;
-    expect(url).toBe("https://api.resend.com/emails");
+    expect(String(url)).toMatch(/^https:\/\/api\.lovable\.dev\//);
     const sent = JSON.parse(init.body);
-    expect(sent).toMatchObject({
-      from: "GR Ford <hiring@mail.example.com>",
-      to: ["marcus@x.com"],
-      reply_to: "hr@g.com",
-    });
-    expect(sent.headers["List-Unsubscribe"]).toContain(`${base}/api/public/unsubscribe/`);
+    expect(sent.to).toBe("marcus@x.com");
+    expect(sent.subject).toBe("Hi");
+    expect(sent.reply_to).toBe("hr@g.com");
+    expect(sent.sender_domain).toBe("notify.example.com");
+    expect(String(sent.from)).toContain("hiring@notify.example.com");
   });
 
-  it("live mode without Resend connected fails with a clear reason", async () => {
-    const { client, tables } = world("live");
+  it("live mode without a sending address fails with a clear reason", async () => {
+    process.env["LOVABLE_API_KEY"] = "lovable_test";
+    const { client, tables } = world("live", "Marcus@X.com", null);
     const row = await queueEmail(client, {
       applicationId: "a1",
       subject: "Hi",
@@ -165,7 +175,7 @@ describe("email outbox", () => {
     await deliverDue(client, { ids: [row.id] });
     expect(tables["messages"]![0]).toMatchObject({
       status: "failed",
-      error: "Email provider isn't connected yet",
+      error: "No sending address set — add one on the Integrations page",
     });
   });
 });
