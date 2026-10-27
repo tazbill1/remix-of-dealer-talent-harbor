@@ -1,46 +1,47 @@
 /**
- * Email provider (Resend) and signed unsubscribe links. Server only.
+ * Email sending (Lovable's managed delivery) and signed unsubscribe links. Server only.
  * Nothing here runs in practice mode: the outbox marks practice emails "simulated".
  */
+import { sendLovableEmail } from "@lovable.dev/email-js";
 import { textToHtml } from "@/lib/email/core";
 
-export const emailConfigured = () => !!process.env["RESEND_API_KEY"] && !!process.env["EMAIL_FROM"];
+/** Managed sending runs on Lovable's own API key, which Lovable gives the app. */
+export const emailConfigured = () => !!process.env["LOVABLE_API_KEY"];
 
-export async function sendResend(input: {
+/**
+ * Send one email from the group's verified sending address. Lovable handles delivery,
+ * retries, bounces and suppression; the sender domain must be verified first.
+ */
+export async function sendLovable(input: {
+  fromAddress: string;
   fromName: string;
   to: string;
   subject: string;
   text: string;
   replyTo?: string | null;
-  unsubscribeUrl?: string;
+  idempotencyKey?: string;
 }) {
-  const key = process.env["RESEND_API_KEY"];
-  const from = process.env["EMAIL_FROM"];
-  if (!key || !from) throw new Error("Email provider isn't connected yet");
-  const safeName = input.fromName.replace(/["<>]/g, "").trim() || "Hiring team";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: `${safeName} <${from}>`,
-      to: [input.to],
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("Email sending isn't connected yet");
+  const senderDomain = input.fromAddress.split("@")[1] ?? "";
+  const res = await sendLovableEmail(
+    {
+      to: input.to,
+      from: {
+        name: input.fromName.replace(/["<>]/g, "").trim() || "Hiring team",
+        address: input.fromAddress,
+      },
+      sender_domain: senderDomain,
       subject: input.subject,
       text: input.text,
       html: textToHtml(input.text),
       ...(input.replyTo ? { reply_to: input.replyTo } : {}),
-      ...(input.unsubscribeUrl
-        ? {
-            headers: {
-              "List-Unsubscribe": `<${input.unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
-          }
-        : {}),
-    }),
-  });
-  const json = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
-  if (!res.ok || !json.id) throw new Error(json.message ?? `Email provider error (${res.status})`);
-  return { providerMessageId: json.id };
+      ...(input.idempotencyKey ? { idempotency_key: input.idempotencyKey } : {}),
+    },
+    { apiKey },
+  );
+  if (!res.success || !res.message_id) throw new Error("Email sending failed");
+  return { providerMessageId: res.message_id };
 }
 
 // ---------------------------------------------------------------------------
