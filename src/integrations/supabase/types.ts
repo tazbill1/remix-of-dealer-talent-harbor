@@ -179,19 +179,74 @@ export type Database = {
           },
         ]
       }
-      jobs: {
+      job_templates: {
         Row: {
           created_at: string
-          dealership_id: string
           department: string | null
           description: string
+          division: string
           employment_type: string
           id: string
           org_id: string
           pay_max: number | null
           pay_min: number | null
           pay_period: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          description?: string
+          division?: string
+          employment_type?: string
+          id?: string
+          org_id: string
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_period?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          description?: string
+          division?: string
+          employment_type?: string
+          id?: string
+          org_id?: string
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_period?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          department: string | null
+          description: string
+          division: string
+          employment_type: string
+          hiring_manager: string | null
+          id: string
+          org_id: string
+          pay_max: number | null
+          pay_min: number | null
+          pay_period: string
+          req_type: string
+          requested_by: string | null
           status: string
+          target_start_date: string | null
           title: string
         }
         Insert: {
@@ -199,13 +254,18 @@ export type Database = {
           dealership_id: string
           department?: string | null
           description?: string
+          division?: string
           employment_type?: string
+          hiring_manager?: string | null
           id?: string
           org_id: string
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          req_type?: string
+          requested_by?: string | null
           status?: string
+          target_start_date?: string | null
           title: string
         }
         Update: {
@@ -213,13 +273,18 @@ export type Database = {
           dealership_id?: string
           department?: string | null
           description?: string
+          division?: string
           employment_type?: string
+          hiring_manager?: string | null
           id?: string
           org_id?: string
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          req_type?: string
+          requested_by?: string | null
           status?: string
+          target_start_date?: string | null
           title?: string
         }
         Relationships: [
@@ -321,6 +386,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_post_jobs: { Args: { _org: string; _uid: string }; Returns: boolean }
       create_organization: {
         Args: { _name: string; _slug: string }
         Returns: string
