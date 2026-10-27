@@ -94,7 +94,7 @@ export async function queueEmail(
       body,
       purpose: input.purpose,
       to_email: to,
-      from_email: process.env["EMAIL_FROM"] ?? null,
+      from_email: null,
       campaign_id: input.campaignId ?? null,
       status: reason ? "blocked" : "queued",
       scheduled_for: reason ? null : new Date(now).toISOString(),
@@ -167,6 +167,7 @@ export async function deliverEmail(
       .update({
         status: "sent",
         provider: "lovable",
+        from_email: fromAddress,
         provider_message_id: providerMessageId,
         sent_at: sentAt,
       })
