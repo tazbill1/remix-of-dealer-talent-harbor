@@ -27,11 +27,17 @@ export async function fetchIcs(rawUrl: string) {
 }
 
 /**
- * Busy times from every calendar linked to a store. A calendar that can't be read is
+ * Busy times for a store: the calendars of the hiring managers and GMs who cover it
+ * (plus any linked to the store itself). A calendar that can't be read is
  * skipped (and its error saved for the store page), so booking never breaks.
  */
 export async function storeBusy(db: DB, storeId: string, storeTz: string, from: number, to: number): Promise<Busy[]> {
-  const { data: cals } = await db.from("store_calendars").select("id, ics_url").eq("dealership_id", storeId).limit(10);
+  const { data: store } = await db.from("dealerships").select("org_id").eq("id", storeId).maybeSingle();
+  if (!store) return [];
+  const { storeInterviewers } = await import("@/lib/member-calendars.functions");
+  const people = await storeInterviewers(db, store.org_id, storeId);
+  const owners = [`dealership_id.eq.${storeId}`, ...(people.length ? [`member_id.in.(${people.map((p) => p.id).join(",")})`] : [])];
+  const { data: cals } = await db.from("store_calendars").select("id, ics_url").or(owners.join(",")).limit(20);
   const out: Busy[] = [];
   await Promise.all(
     (cals ?? []).map(async (c) => {

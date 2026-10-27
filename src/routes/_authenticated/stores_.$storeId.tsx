@@ -6,7 +6,7 @@ import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
 import { GradientText } from "@/components/brand";
 import { InterviewHoursCard } from "@/components/interview-hours";
-import { StoreCalendarsCard } from "@/components/store-calendars";
+import { StoreInterviewersCard } from "@/components/store-interviewers";
 
 export const Route = createFileRoute("/_authenticated/stores_/$storeId")({
   head: () => ({ meta: [{ title: "Store dashboard | WerkandMe Hiring" }] }),
@@ -79,7 +79,7 @@ function StoreDashboard() {
         timeZone={store.timezone || "America/Chicago"}
         onSaved={() => qc.invalidateQueries({ queryKey: ["store-dash", org.orgId, storeId] })}
       />
-      <StoreCalendarsCard orgId={org.orgId} storeId={store.id} />
+      <StoreInterviewersCard orgId={org.orgId} storeId={store.id} />
       <div className="rounded-2xl bg-background p-5 shadow-sm">
         <h2 className="mb-4 text-lg">Pipeline</h2>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
