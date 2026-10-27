@@ -29,6 +29,13 @@
       "when": 1793123343067,
       "tag": "0003_store_job_access_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793123455136,
+      "tag": "0004_fix_jobs_read_policy",
+      "breakpoints": true
     }
   ]
 }
