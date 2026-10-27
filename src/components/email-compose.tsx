@@ -124,6 +124,15 @@ export function EmailCompose({
             </Link>
           </p>
         )}
+        {data?.live && recipients.length > 1 && (
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            Email blasts need a bulk email service (Resend or Amazon SES), which isn't set up yet.
+            For now, email applicants one at a time from their profile.
+          </p>
+        )}
         <div className="space-y-3">
           {(data?.templates.length ?? 0) > 0 && (
             <select
@@ -187,7 +196,10 @@ export function EmailCompose({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={busy || recipients.length === 0}>
+          <Button
+            onClick={submit}
+            disabled={busy || recipients.length === 0 || (!!data?.live && recipients.length > 1)}
+          >
             {busy ? <Loader2 className="animate-spin" /> : <Mail />}
             {recipients.length === 1 ? "Send email" : `Send to ${recipients.length}`}
           </Button>

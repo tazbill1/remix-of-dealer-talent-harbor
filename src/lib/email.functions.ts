@@ -73,6 +73,11 @@ export const sendEmails = createServerFn({ method: "POST" })
     const duplicates = apps.length - recipients.length;
 
     const bulk = recipients.length > 1;
+    const { loadEmailSettings: settingsFor } = await import("@/lib/email/outbox.server");
+    if (bulk && (await settingsFor(supabaseAdmin, data.orgId)).email_mode === "live")
+      throw new Error(
+        "Email blasts need a bulk email service (Resend or Amazon SES), which isn't set up yet. Email applicants one at a time from their profile for now.",
+      );
     let campaignId: string | null = null;
     if (bulk) {
       const { data: c, error } = await supabaseAdmin

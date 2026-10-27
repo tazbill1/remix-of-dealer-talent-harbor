@@ -6,7 +6,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { emailFooter, normalizeEmail } from "@/lib/email/core";
-import { emailConfigured, sendLovable, unsubscribeToken } from "@/lib/email/provider.server";
+import {
+  EmailSendError,
+  emailConfigured,
+  sendLovable,
+  unsubscribeToken,
+  withoutOurUnsubscribe,
+} from "@/lib/email/provider.server";
+import { applyEmailOptOut } from "@/lib/email/unsubscribe.server";
 
 type DB = SupabaseClient<Database>;
 
@@ -116,6 +123,7 @@ export async function deliverEmail(
     to_email: string | null;
     subject: string | null;
     body: string;
+    purpose?: string | null;
   },
   settings: EmailSettings,
 ): Promise<"sent" | "simulated" | "failed" | "blocked"> {
@@ -133,6 +141,17 @@ export async function deliverEmail(
       .update({ status: "simulated", provider: "practice", sent_at: sentAt })
       .eq("id", m.id);
     return "simulated";
+  }
+  // Lovable's app email is one-to-one only; blasts wait for a bulk sender (Resend/SES).
+  if (m.purpose === "bulk_email") {
+    await sb
+      .from("messages")
+      .update({
+        status: "blocked",
+        error: "Bulk email needs a bulk email service (Resend or Amazon SES), not set up yet",
+      })
+      .eq("id", m.id);
+    return "blocked";
   }
   const fromAddress = settings.email_from_address?.trim() || null;
   if (!emailConfigured() || !fromAddress || !m.to_email) {
@@ -158,9 +177,10 @@ export async function deliverEmail(
       fromName: settings.email_from_name || store?.name || "Hiring team",
       to: m.to_email,
       subject: m.subject || "(no subject)",
-      text: m.body,
+      text: withoutOurUnsubscribe(m.body),
       replyTo: settings.email_reply_to,
       idempotencyKey: `email-${m.id}`,
+      label: m.purpose ?? "email",
     });
     await sb
       .from("messages")
@@ -174,6 +194,15 @@ export async function deliverEmail(
       .eq("id", m.id);
     return "sent";
   } catch (e) {
+    // Unsubscribed through Lovable's own link: record it here too, for the whole group.
+    if (e instanceof EmailSendError && e.suppressed) {
+      await applyEmailOptOut(sb, m.org_id, m.to_email, "lovable_suppression");
+      await sb
+        .from("messages")
+        .update({ status: "blocked", provider: "lovable", error: e.message })
+        .eq("id", m.id);
+      return "blocked";
+    }
     await sb
       .from("messages")
       .update({ status: "failed", provider: "lovable", error: (e as Error).message })
