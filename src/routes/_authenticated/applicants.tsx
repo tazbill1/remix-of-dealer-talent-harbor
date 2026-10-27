@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
+import { statusEventRows } from "@/lib/status-log";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,8 +46,10 @@ function Applicants() {
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
   const chosen = (data?.apps ?? []).filter((a) => checked.includes(a.id));
   async function bulkMove() {
+    const moving = chosen.filter((a) => a.status !== bulkStatus).map((a) => a.id);
     const { error } = await supabase.from("applications").update({ status: bulkStatus }).in("id", checked);
     if (error) return toast.error(error.message);
+    if (moving.length) await supabase.from("application_events").insert(statusEventRows(org.orgId, moving, bulkStatus));
     toast.success(`Moved ${checked.length} applicant${checked.length > 1 ? "s" : ""} to ${STATUS_LABEL[bulkStatus]}.`);
     setChecked([]); qc.invalidateQueries({ queryKey: key });
   }
@@ -72,8 +75,12 @@ function Applicants() {
   const current = data?.apps.find((a) => a.id === selected);
 
   async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
+    const before = data?.apps.find((a) => a.id === id)?.status;
     const { error } = await supabase.from("applications").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
+    if (patch.status && patch.status !== before) {
+      await supabase.from("application_events").insert(statusEventRows(org.orgId, [id], patch.status));
+    }
     qc.invalidateQueries({ queryKey: key });
   }
 

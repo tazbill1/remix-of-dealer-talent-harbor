@@ -21,7 +21,9 @@
 ## Next
 - [ ] Live SMS delivery (blocked: Twilio connection)
 - [ ] One-click Outlook/Google calendar sync + outside-booking detection (blocked: Microsoft/Google sign-in client setup was declined)
-- [ ] Track 2: analytics (time to first contact, aging, time to fill, manager response, retention, exports)
+- [x] Track 2 analytics page: time to first contact, aging by stage, time to fill by role/rooftop, manager response, open roles (fixed ops vs variable, per store), applicant and contacted counts, breakdowns by location/role/hiring manager/source, CSV exports
+- [x] Stage changes logged to the timeline (powers first contact, aging, time to fill)
+- [ ] Track 2 retention (30/60/90 by location and enterprise): needs the data model update in docs/data-model-update.md
 - [ ] Enterprise communication templates + in-app bulk sending (needs sender domain)
 - [ ] 3-business-day untouched escalation
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
