@@ -8,6 +8,8 @@ import { useOrg } from "@/lib/org";
 import { DIVISIONS, REQ_TYPES, STARTER_TEMPLATES, canPostJobs, divisionLabel, formatPay } from "@/lib/jobs";
 import { VoiceJobWriter } from "@/components/voice-job-writer";
 import type { AiJobDraft } from "@/lib/ai-job.functions";
+import { parseQuestions, questionSchema, type Question } from "@/lib/questions";
+import { JobQuestions } from "@/components/job-questions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +25,8 @@ export const Route = createFileRoute("/_authenticated/jobs")({
 
 const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager: "",
   hiring_manager_phone: "", escalation_name: "", escalation_phone: "",
-  employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "" };
+  employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "",
+  questions: [] as Question[] };
 type Form = typeof empty;
 
 const fromAi = (j: AiJobDraft["job"]) => (prev: Form): Form => ({
@@ -86,6 +89,7 @@ function JobFields({ f, setF }: { f: Form; setF: (f: Form) => void }) {
           </select></div>
       </div>
       <div className="space-y-1.5"><Label>Description</Label><Textarea rows={8} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
+      <JobQuestions value={f.questions} onChange={(questions) => setF({ ...f, questions })} />
     </>
   );
 }
@@ -95,6 +99,8 @@ const payload = (f: Form) => ({
   target_start_date: f.target_start_date || null, hiring_manager: f.hiring_manager || null, employment_type: f.employment_type, pay_period: f.pay_period,
   hiring_manager_phone: f.hiring_manager_phone || null, escalation_name: f.escalation_name || null, escalation_phone: f.escalation_phone || null,
   description: f.description, pay_min: f.pay_min ? Number(f.pay_min) : null, pay_max: f.pay_max ? Number(f.pay_max) : null,
+  // Drop half-finished questions rather than failing the save.
+  questions: f.questions.filter((q) => questionSchema.safeParse(q).success),
 });
 
 function Jobs() {
@@ -163,6 +169,7 @@ function Jobs() {
       target_start_date: j.target_start_date ?? "", hiring_manager: j.hiring_manager ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
       hiring_manager_phone: j.hiring_manager_phone ?? "", escalation_name: j.escalation_name ?? "", escalation_phone: j.escalation_phone ?? "",
       description: j.description ?? "", pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
+      questions: parseQuestions(j.questions),
     });
     setEditing(false); setViewId(j.id);
   }
