@@ -110,7 +110,7 @@ function Jobs() {
   const savedTemplates = data?.templates ?? [];
   const templates: { id?: string; title: string; department: string | null; division: string; employment_type: string; pay_min: number | null; pay_max: number | null; pay_period: string; description: string }[] =
     savedTemplates.length ? savedTemplates : STARTER_TEMPLATES.map((t) => ({ ...t }));
-  function useTemplate(t: (typeof templates)[number]) {
+  function applyTemplate(t: (typeof templates)[number]) {
     setF({ ...f, title: t.title, department: t.department ?? "", division: t.division, employment_type: t.employment_type, pay_period: t.pay_period,
       pay_min: t.pay_min != null ? String(t.pay_min) : "", pay_max: t.pay_max != null ? String(t.pay_max) : "", description: t.description });
   }
@@ -191,7 +191,7 @@ function Jobs() {
               <div className="flex flex-wrap gap-2">
                 {templates.map((t) => (
                   <span key={t.id ?? t.title} className="flex items-center rounded-full border text-xs hover:border-sapphire">
-                    <button type="button" onClick={() => useTemplate(t)} className="px-3 py-1 hover:text-sapphire">{t.title}</button>
+                    <button type="button" onClick={() => applyTemplate(t)} className="px-3 py-1 hover:text-sapphire">{t.title}</button>
                     {hr && t.id && <button type="button" aria-label={`Remove ${t.title}`} onClick={() => deleteTemplate(t.id!)} className="pr-2 text-muted-foreground hover:text-destructive"><X className="size-3" /></button>}
                   </span>
                 ))}
