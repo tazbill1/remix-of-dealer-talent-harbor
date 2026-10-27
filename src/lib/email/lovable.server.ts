@@ -76,10 +76,7 @@ export async function sendLovableEmail({
   )
 
   if (!response.success || !response.message_id) {
-    throw new EmailAPIError('Email send was not accepted', {
-      code: 'send_not_accepted',
-      status: 502,
-    } as never)
+    throw new EmailAPIError(502, 'Email send was not accepted', null, 'send_not_accepted')
   }
 
   return { id: response.message_id }
