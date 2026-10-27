@@ -133,10 +133,15 @@ export const integrationStatus = createServerFn({ method: "POST" })
     ]);
     if (!member.data && !admin.data) throw new Error("Not a member of this group.");
     const has = (k: string) => !!process.env[k];
+    const { data: ms } = await context.supabase
+      .from("messaging_settings")
+      .select("email_from_address")
+      .eq("org_id", data.orgId)
+      .maybeSingle();
     return {
       twilio: has("TWILIO_ACCOUNT_SID") && has("TWILIO_AUTH_TOKEN"),
-      email: has("RESEND_API_KEY") && has("EMAIL_FROM"),
-      emailFrom: process.env["EMAIL_FROM"] ?? null,
+      email: has("LOVABLE_API_KEY"),
+      emailFrom: ms?.email_from_address ?? null,
       anthropic: has("ANTHROPIC_API_KEY"),
       publicUrl: has("PUBLIC_APP_URL"),
     };
