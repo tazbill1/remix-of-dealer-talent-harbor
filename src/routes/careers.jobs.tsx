@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { formatPay } from "@/lib/jobs";
 import { SITE_URL } from "@/lib/site";
 
-const title = "Open jobs at ABC Motors | Apply today";
-const description = "Every open job at ABC Motors dealerships. Search by role or city and apply in a minute.";
+const title = "Open jobs at ABC Dealer Group | Apply today";
+const description = "Every open job at ABC Dealer Group dealerships. Search by role or city and apply in a minute.";
 
 export const Route = createFileRoute("/careers/jobs")({
   validateSearch: z.object({ q: z.string().max(80).optional(), store: z.string().max(60).optional() }),

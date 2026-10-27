@@ -5,8 +5,8 @@ import { GradientText } from "@/components/brand";
 import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/journey-faq";
 import { SITE_URL } from "@/lib/site";
 
-const title = "Careers at ABC Motors | Dealership jobs in sales, service and more";
-const description = "Join ABC Motors. Browse open dealership jobs in sales, service, parts and the office, and apply in a minute.";
+const title = "Careers at ABC Dealer Group | Dealership jobs in sales, service and more";
+const description = "Join ABC Dealer Group. Browse open dealership jobs in sales, service, parts and the office, and apply in a minute.";
 
 export const Route = createFileRoute("/careers/")({
   head: () => ({
