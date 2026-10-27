@@ -15,6 +15,13 @@
       "when": 1793121863382,
       "tag": "0001_store_scoping_access_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793122377799,
+      "tag": "0002_admin_access_candidates_roles",
+      "breakpoints": true
     }
   ]
 }
