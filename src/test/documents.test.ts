@@ -24,3 +24,22 @@ describe("BoldSign documents", () => {
     expect(hireOnSign({ ...a, appStatus: "rejected" })).toBe(false);
   });
 });
+
+describe("documents text and links", () => {
+  it("writes the texted link message", async () => {
+    const { docsText } = await import("@/lib/offers");
+    expect(docsText({ first: "Jane", store: "ABC Ford", count: 1, link: "L" })).toBe(
+      "ABC Ford: Hi Jane, you have a document to review and sign. It takes a few minutes on your phone: L",
+    );
+    expect(docsText({ first: "Jane", store: "ABC Ford", count: 3, link: "L" })).toContain("3 documents");
+  });
+  it("keeps offer links and document-list links separate", async () => {
+    process.env["OFFER_LINK_SECRET"] = "s";
+    const { offerToken, docsToken, readOfferToken, readDocsToken } = await import("@/lib/offers-token.server");
+    const id = "0555ae45-5317-47d1-988c-9ff2ac68d4a7";
+    expect(await readDocsToken(await docsToken(id))).toBe(id);
+    expect(await readOfferToken(await offerToken(id))).toBe(id);
+    expect(await readOfferToken(await docsToken(id))).toBeNull();
+    expect(await readDocsToken(await offerToken(id))).toBeNull();
+  });
+});

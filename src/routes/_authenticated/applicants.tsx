@@ -259,7 +259,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       {app.status !== "rejected" && !app.departed_at && (
         <>
           <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
-          <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} />
+          <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} hasPhone={!!app.phone} />
         </>
       )}
       <div>

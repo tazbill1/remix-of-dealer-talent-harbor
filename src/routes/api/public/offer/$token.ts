@@ -21,22 +21,28 @@ export const Route = createFileRoute("/api/public/offer/$token")({
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: offer } = await db
           .from("offers")
-          .select("id, status, provider_document_id, application_id")
+          .select("id, status, provider_document_id, application_id, is_offer_letter, template_name")
           .eq("id", offerId)
           .maybeSingle();
         if (!offer) return page("Link not found", "This offer link isn't valid.");
         const url = new URL(request.url);
+        // Came from the documents page: go back there after signing.
+        const hub = url.searchParams.get("hub");
+        const hubUrl = hub && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(hub) ? `${url.origin}/api/public/docs/${hub}` : null;
+        if (hubUrl && (url.searchParams.has("done") || offer.status === "signed")) return Response.redirect(hubUrl, 302);
+        if (!offer.is_offer_letter && (url.searchParams.has("done") || offer.status === "signed"))
+          return page("Thank you!", `${offer.template_name ?? "Your document"} is signed. A copy is on its way to your email.`);
         if (url.searchParams.has("done") || offer.status === "signed")
           return page("Thank you!", "Your offer is signed. A copy is on its way to your email, and the dealership will be in touch about next steps.");
         if (!isOpen(offer.status) || !offer.provider_document_id)
-          return page("This offer is closed", "This offer is no longer open. Please reach out to the dealership with any questions.");
+          return page("This is closed", "This document is no longer open. Please reach out to the dealership with any questions.");
         const { data: app } = await db.from("applications").select("email").eq("id", offer.application_id).single();
         try {
           const { embeddedSignLink } = await import("@/lib/esign/boldsign.server");
-          const link = await embeddedSignLink(offer.provider_document_id, app?.email ?? "", `${url.origin}${url.pathname}?done=1`);
+          const link = await embeddedSignLink(offer.provider_document_id, app?.email ?? "", `${url.origin}${url.pathname}?done=1${hubUrl ? `&hub=${hub}` : ""}`);
           return Response.redirect(link, 302);
         } catch {
-          return page("Almost there", "We couldn't open the signing page right now. Look for the email from BoldSign to sign your offer, or try this link again in a few minutes.");
+          return page("Almost there", "We couldn't open the signing page right now. Look for the email from BoldSign to sign, or try this link again in a few minutes.");
         }
       },
     },

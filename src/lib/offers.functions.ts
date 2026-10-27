@@ -31,7 +31,7 @@ export const sendOffer = createServerFn({ method: "POST" })
       db.from("messaging_settings").select("offer_template_id").eq("org_id", data.orgId).maybeSingle(),
       db.from("dealerships").select("name, manager_name").eq("id", app.dealership_id).single(),
       db.from("jobs").select("hiring_manager").eq("id", app.job_id).maybeSingle(),
-      db.from("offers").select("id, status").eq("application_id", app.id).in("status", ["sent", "viewed"]),
+      db.from("offers").select("id, status").eq("application_id", app.id).eq("is_offer_letter", true).in("status", ["sent", "viewed"]),
     ]);
     if (!settings?.offer_template_id)
       throw new Error("Add your BoldSign offer letter template on the Integrations page first.");
@@ -45,6 +45,9 @@ export const sendOffer = createServerFn({ method: "POST" })
         org_id: data.orgId,
         application_id: app.id,
         status: "sent",
+        is_offer_letter: true,
+        template_id: settings.offer_template_id,
+        template_name: "Offer letter",
         job_title: data.jobTitle,
         pay: data.pay || null,
         start_date: data.startDate ?? null,

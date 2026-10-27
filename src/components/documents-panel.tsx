@@ -20,7 +20,7 @@ const TONE: Partial<Record<OfferStatus, string>> = {
 };
 
 /** Send any BoldSign template to the applicant and follow each document. */
-export function DocumentsPanel({ orgId, appId, jobTitle }: { orgId: string; appId: string; jobTitle: string }) {
+export function DocumentsPanel({ orgId, appId, jobTitle, hasPhone }: { orgId: string; appId: string; jobTitle: string; hasPhone: boolean }) {
   const qc = useQueryClient();
   const list = useServerFn(listSignTemplates);
   const send = useServerFn(sendDocuments);
@@ -33,6 +33,7 @@ export function DocumentsPanel({ orgId, appId, jobTitle }: { orgId: string; appI
   const [start, setStart] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [textLink, setTextLink] = useState(true);
 
   const { data: tpl, isLoading } = useQuery({
     queryKey: ["sign-templates", orgId],
@@ -58,11 +59,12 @@ export function DocumentsPanel({ orgId, appId, jobTitle }: { orgId: string; appI
   async function submit() {
     setBusy(true);
     try {
-      const r = await send({ data: { orgId, applicationId: appId, templates: chosen, jobTitle: title, pay, startDate: start, note } });
+      const r = await send({ data: { orgId, applicationId: appId, templates: chosen, jobTitle: title, pay, startDate: start, note, textLink: textLink && hasPhone } });
       const bad = r.results.filter((x) => !x.ok);
       const good = r.results.length - bad.length;
       if (good) toast.success(`${good} document${good === 1 ? "" : "s"} sent for signature`);
       bad.forEach((b) => toast.error(`${b.name}: ${b.error}`));
+      if (r.textNote) toast.message(r.textNote);
       setOpen(false);
       setReview(false);
       setPicked({});
@@ -149,6 +151,10 @@ export function DocumentsPanel({ orgId, appId, jobTitle }: { orgId: string; appI
           <Input value={pay} onChange={(e) => setPay(e.target.value)} placeholder="Pay (optional)" />
           <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} aria-label="Start date" />
           <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Message to the applicant (optional)" />
+          <label className="flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={textLink && hasPhone} disabled={!hasPhone} onChange={(e) => setTextLink(e.target.checked)} />
+            {hasPhone ? "Also text them one link to sign everything" : "No mobile number, so BoldSign will email them only"}
+          </label>
           <div className="flex gap-2">
             <Button size="sm" disabled={busy || title.trim().length < 2} onClick={submit}>
               <Send />

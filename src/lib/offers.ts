@@ -176,7 +176,12 @@ export const sendDocsInput = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   note: z.string().trim().max(500).optional().default(""),
+  textLink: z.boolean().default(true),
 });
+
+export function docsText(a: { first: string; store: string; count: number; link: string }) {
+  return `${a.store}: Hi ${a.first}, you have ${a.count === 1 ? "a document" : `${a.count} documents`} to review and sign. It takes a few minutes on your phone: ${a.link}`;
+}
 
 /** Whether a signed document should move the applicant to Hired. */
 export const hireOnSign = (a: { status: OfferStatus; isOfferLetter: boolean; setting: boolean; appStatus: string }) =>
