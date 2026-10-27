@@ -62,9 +62,6 @@ function Applicants() {
   function bulkEmail() {
     setEmailing(chosen.map((a) => a.id));
   }
-  const emailRecipients = (data?.apps ?? [])
-    .filter((a) => emailing?.includes(a.id))
-    .map((a) => ({ id: a.id, full_name: a.full_name, email: a.email, jobTitle: job(a.job_id), storeName: storeName(a.dealership_id) }));
   async function transfer(appId: string, jobId: string) {
     const target = data?.jobs.find((j) => j.id === jobId);
     const app = data?.apps.find((a) => a.id === appId);
@@ -84,6 +81,10 @@ function Applicants() {
     || (store === "shared" && a.open_to_other_stores)));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
+  // Must come after job() and storeName(): they're used while rendering.
+  const emailRecipients = (data?.apps ?? [])
+    .filter((a) => emailing?.includes(a.id))
+    .map((a) => ({ id: a.id, full_name: a.full_name, email: a.email, jobTitle: job(a.job_id), storeName: storeName(a.dealership_id) }));
   const current = data?.apps.find((a) => a.id === selected);
   // Every other application from the same person, across all stores in the group.
   const otherApps = current?.candidate_id
