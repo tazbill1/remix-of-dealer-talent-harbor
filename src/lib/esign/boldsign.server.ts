@@ -76,6 +76,41 @@ export async function sendFromTemplate(a: {
   return r.documentId;
 }
 
+/** Several templates as one envelope: one link, one signing session. */
+export async function sendPacket(a: {
+  templateIds: string[];
+  title: string;
+  message: string;
+  signerName: string;
+  signerEmail: string;
+  fields: { id: string; value: string }[];
+}) {
+  if (a.templateIds.length === 1) return sendFromTemplate({ ...a, templateId: a.templateIds[0]! });
+  const sets = await Promise.all(a.templateIds.map(templateFieldIds));
+  const known = sets.every(Boolean) ? new Set(sets.flatMap((x) => [...(x ?? [])])) : null;
+  const fields = known ? a.fields.filter((f) => known.has(f.id)) : a.fields;
+  const r = (await call(`/v1-beta/template/mergeAndSend`, {
+    method: "POST",
+    body: JSON.stringify({
+      templateIds: a.templateIds,
+      title: a.title,
+      message: a.message,
+      roles: [
+        {
+          roleIndex: 1,
+          signerName: a.signerName,
+          signerEmail: a.signerEmail,
+          signerType: "Signer",
+          ...(fields.length ? { existingFormFields: fields } : {}),
+        },
+      ],
+      reminderSettings: { enableAutoReminder: true, reminderDays: 2, reminderCount: 3 },
+    }),
+  })) as { documentId?: string } | null;
+  if (!r?.documentId) throw new Error("BoldSign didn't return a document ID.");
+  return r.documentId;
+}
+
 /** A fresh signing link (BoldSign's links expire, so this is fetched when tapped). */
 export async function embeddedSignLink(documentId: string, signerEmail: string, redirectUrl: string) {
   const q = new URLSearchParams({

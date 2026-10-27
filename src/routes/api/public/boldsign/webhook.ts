@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { shouldMove, statusFromEvent, OFFER_LABEL } from "@/lib/offers";
+import { docEventMessage, shouldMove, statusFromEvent } from "@/lib/offers";
 
 /** BoldSign tells hireme when an offer is viewed, signed, declined or expires. */
 export const Route = createFileRoute("/api/public/boldsign/webhook")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/boldsign/webhook")({
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: offer } = await db
           .from("offers")
-          .select("id, org_id, application_id, status, job_title")
+          .select("id, org_id, application_id, kind, status, job_title, documents")
           .eq("provider_document_id", documentId)
           .maybeSingle();
         if (!offer || !shouldMove(offer.status, to)) return new Response("ok");
@@ -41,8 +41,8 @@ export const Route = createFileRoute("/api/public/boldsign/webhook")({
           await db.from("application_events").insert({
             org_id: offer.org_id,
             application_id: offer.application_id,
-            kind: "offer",
-            message: `Offer ${OFFER_LABEL[to].toLowerCase()}: ${offer.job_title}`,
+            kind: offer.kind === "onboarding" ? "onboarding" : "offer",
+            message: docEventMessage(offer.kind, to, offer.kind === "onboarding" ? (offer.documents ?? []).join(", ") : offer.job_title),
           });
 
         if (to === "signed" || to === "declined") {
@@ -53,8 +53,11 @@ export const Route = createFileRoute("/api/public/boldsign/webhook")({
             const row = await queueText(db, {
               applicationId: offer.application_id,
               party: "manager",
-              purpose: to === "signed" ? "manager_offer_signed" : "manager_offer_declined",
-              body: `${BRAND}: ${app?.full_name ?? "Your candidate"} ${to === "signed" ? "signed" : "declined"} the offer for ${offer.job_title}.`,
+              purpose: `manager_${offer.kind === "onboarding" ? "onboarding" : "offer"}_${to}`,
+              body:
+                offer.kind === "onboarding"
+                  ? `${BRAND}: ${app?.full_name ?? "Your new hire"} ${to === "signed" ? "finished" : "declined"} their new-hire paperwork.`
+                  : `${BRAND}: ${app?.full_name ?? "Your candidate"} ${to === "signed" ? "signed" : "declined"} the offer for ${offer.job_title}.`,
             });
             if (row.status === "queued") await deliverDue(db, { ids: [row.id] });
           } catch {

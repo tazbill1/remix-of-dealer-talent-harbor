@@ -743,6 +743,7 @@ export type Database = {
       }
       messaging_settings: {
         Row: {
+          onboarding_templates: Json
           offer_template_id: string | null
           ai_provider: string
           email_from_address: string | null
@@ -759,6 +760,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          onboarding_templates?: Json
           offer_template_id?: string | null
           ai_provider?: string
           email_from_address?: string | null
@@ -775,6 +777,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          onboarding_templates?: Json
           offer_template_id?: string | null
           ai_provider?: string
           email_from_address?: string | null
@@ -802,6 +805,8 @@ export type Database = {
       }
       offers: {
         Row: {
+          documents: string[] | null
+          kind: string
           application_id: string
           completed_at: string | null
           created_at: string
@@ -819,6 +824,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          documents?: string[] | null
+          kind?: string
           application_id: string
           completed_at?: string | null
           created_at?: string
@@ -836,6 +843,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          documents?: string[] | null
+          kind?: string
           application_id?: string
           completed_at?: string | null
           created_at?: string

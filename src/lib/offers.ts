@@ -49,6 +49,55 @@ export const offerInput = z.object({
 });
 export type OfferInput = z.input<typeof offerInput>;
 
+/** Kinds of paperwork sent through BoldSign. */
+export const DOC_KINDS = ["offer", "onboarding"] as const;
+export type DocKind = (typeof DOC_KINDS)[number];
+
+export const onboardingTemplateSchema = z.object({
+  id: z.string().trim().regex(/^[A-Za-z0-9_-]{8,80}$/, "That doesn't look like a BoldSign template ID."),
+  name: z.string().trim().min(2).max(60),
+});
+export const onboardingTemplatesSchema = z.array(onboardingTemplateSchema).max(20);
+export type OnboardingTemplate = z.infer<typeof onboardingTemplateSchema>;
+
+export function parseOnboardingTemplates(raw: unknown): OnboardingTemplate[] {
+  const r = onboardingTemplatesSchema.safeParse(raw);
+  return r.success ? r.data : [];
+}
+
+/** Common new-hire paperwork, as suggestions for naming templates. */
+export const ONBOARDING_SUGGESTIONS = [
+  "W-4",
+  "I-9 (Section 1)",
+  "Direct deposit",
+  "Handbook acknowledgment",
+  "Emergency contact",
+  "State tax withholding",
+] as const;
+
+export const onboardingInput = z.object({
+  orgId: z.string().uuid(),
+  applicationId: z.string().uuid(),
+  templateIds: z.array(z.string().min(8).max(80)).min(1, "Pick at least one document.").max(20),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  note: z.string().trim().max(500).optional().default(""),
+  textLink: z.boolean().default(true),
+});
+export type OnboardingInput = z.input<typeof onboardingInput>;
+
+export function onboardingText(a: { first: string; store: string; link: string }) {
+  return `Welcome aboard ${a.first}! Please complete your new-hire paperwork for ${a.store} before your first day: ${a.link}`;
+}
+
+export function docEventMessage(kind: string, to: OfferStatus, what: string) {
+  const label = OFFER_LABEL[to].toLowerCase();
+  return kind === "onboarding" ? `Onboarding paperwork ${label}: ${what}` : `Offer ${label}: ${what}`;
+}
+
 export const templateIdSchema = z
   .string()
   .trim()

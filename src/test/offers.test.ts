@@ -66,3 +66,18 @@ describe("offer letters", () => {
     expect(await readOfferToken(t.slice(0, -1) + (t.endsWith("A") ? "B" : "A"))).toBeNull();
   });
 });
+
+describe("new-hire paperwork", () => {
+  it("validates the document list and the send form", async () => {
+    const { onboardingInput, parseOnboardingTemplates, onboardingText, docEventMessage } = await import("@/lib/offers");
+    expect(parseOnboardingTemplates([{ id: "abc12345-xyz", name: "W-4" }])).toHaveLength(1);
+    expect(parseOnboardingTemplates([{ id: "bad id!", name: "W-4" }])).toEqual([]);
+    expect(parseOnboardingTemplates(null)).toEqual([]);
+    expect(() =>
+      onboardingInput.parse({ orgId: crypto.randomUUID(), applicationId: crypto.randomUUID(), templateIds: [] }),
+    ).toThrow();
+    expect(onboardingText({ first: "Jane", store: "ABC Ford", link: "L" })).toContain("new-hire paperwork for ABC Ford");
+    expect(docEventMessage("onboarding", "signed", "W-4, I-9")).toBe("Onboarding paperwork signed: W-4, I-9");
+    expect(docEventMessage("offer", "declined", "Porter")).toBe("Offer declined: Porter");
+  });
+});
