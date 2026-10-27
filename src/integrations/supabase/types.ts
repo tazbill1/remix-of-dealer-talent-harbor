@@ -260,8 +260,6 @@ export type Database = {
       }
       dealerships: {
         Row: {
-          interview_hours: Json
-          interview_minutes: number
           address: string | null
           assistant_name: string
           brand: string | null
@@ -282,8 +280,6 @@ export type Database = {
           timezone: string
         }
         Insert: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
@@ -304,8 +300,6 @@ export type Database = {
           timezone?: string
         }
         Update: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
@@ -1187,6 +1181,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sms_opt_outs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_calendars: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dealership_id: string
+          ics_url: string
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_error: string | null
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dealership_id: string
+          ics_url: string
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dealership_id?: string
+          ics_url?: string
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_calendars_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_calendars_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
