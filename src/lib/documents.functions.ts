@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { documentFields, sendDocsInput } from "@/lib/offers";
+import { docsText, documentFields, sendDocsInput } from "@/lib/offers";
 
 type Ctx = { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
 
@@ -44,7 +45,7 @@ export const sendDocuments = createServerFn({ method: "POST" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data: app } = await db
       .from("applications")
-      .select("id, full_name, email, dealership_id, job_id")
+      .select("id, full_name, email, phone, dealership_id, job_id")
       .eq("id", data.applicationId)
       .eq("org_id", data.orgId)
       .single();
@@ -114,7 +115,27 @@ export const sendDocuments = createServerFn({ method: "POST" })
         message: `Sent for signature: ${sent.join(", ")}`,
         actor_id: context.userId,
       });
-    return { results };
+
+    let textNote: string | null = null;
+    if (sent.length && data.textLink && app.phone) {
+      try {
+        const { docsToken } = await import("@/lib/offers-token.server");
+        const { appBaseUrl } = await import("@/lib/email/provider.server");
+        const { queueText, deliverDue } = await import("@/lib/messaging/outbox.server");
+        const link = `${appBaseUrl(getRequest())}/api/public/docs/${await docsToken(app.id)}`;
+        const msg = await queueText(db, {
+          applicationId: app.id,
+          party: "candidate",
+          purpose: "candidate_documents",
+          body: docsText({ first: app.full_name.split(" ")[0] ?? "", store: storeName, count: sent.length, link }),
+        });
+        if (msg.status === "queued") await deliverDue(db, { ids: [msg.id] });
+        textNote = msg.status === "blocked" ? `Text not sent: ${msg.error ?? "blocked"}` : null;
+      } catch (e) {
+        textNote = `Text not sent: ${(e as Error).message}`;
+      }
+    }
+    return { results, textNote };
   });
 
 /** The signed PDF, as base64 so the browser can save it. */

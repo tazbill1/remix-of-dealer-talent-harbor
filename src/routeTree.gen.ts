@@ -41,6 +41,7 @@ import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/
 import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
 import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/cron/messages'
 import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
+import { Route as ApiPublicDocsTokenRouteImport } from './routes/api/public/docs/$token'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
 import { Route as ApiPublicOfferTokenRouteImport } from './routes/api/public/offer/$token'
 import { Route as ApiPublicUnsubscribeTokenRouteImport } from './routes/api/public/unsubscribe/$token'
@@ -209,6 +210,11 @@ const ApiPublicCronWorkflowsRoute = ApiPublicCronWorkflowsRouteImport.update({
   path: '/api/public/cron/workflows',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDocsTokenRoute = ApiPublicDocsTokenRouteImport.update({
+  id: '/api/public/docs/$token',
+  path: '/api/public/docs/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFeedOrgSlugRoute = ApiPublicFeedOrgSlugRouteImport.update({
   id: '/api/public/feed/$orgSlug',
   path: '/api/public/feed/$orgSlug',
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
+  '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
+  '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
+  '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
+    | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
+    | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
+    | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
@@ -487,6 +499,7 @@ export interface RootRouteChildren {
   ApiPublicCronEscalateRoute: typeof ApiPublicCronEscalateRoute
   ApiPublicCronMessagesRoute: typeof ApiPublicCronMessagesRoute
   ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
+  ApiPublicDocsTokenRoute: typeof ApiPublicDocsTokenRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
   ApiPublicOfferTokenRoute: typeof ApiPublicOfferTokenRoute
   ApiPublicUnsubscribeTokenRoute: typeof ApiPublicUnsubscribeTokenRoute
@@ -720,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronWorkflowsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/docs/$token': {
+      id: '/api/public/docs/$token'
+      path: '/api/public/docs/$token'
+      fullPath: '/api/public/docs/$token'
+      preLoaderRoute: typeof ApiPublicDocsTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/feed/$orgSlug': {
       id: '/api/public/feed/$orgSlug'
       path: '/api/public/feed/$orgSlug'
@@ -824,6 +844,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronEscalateRoute: ApiPublicCronEscalateRoute,
   ApiPublicCronMessagesRoute: ApiPublicCronMessagesRoute,
   ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,
+  ApiPublicDocsTokenRoute: ApiPublicDocsTokenRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
   ApiPublicOfferTokenRoute: ApiPublicOfferTokenRoute,
   ApiPublicUnsubscribeTokenRoute: ApiPublicUnsubscribeTokenRoute,
