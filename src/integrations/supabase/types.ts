@@ -268,6 +268,8 @@ export type Database = {
           escalation_name: string | null
           escalation_phone: string | null
           id: string
+          interview_hours: Json
+          interview_minutes: number
           manager_name: string | null
           manager_phone: string | null
           name: string
@@ -286,6 +288,8 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
+          interview_hours?: Json
+          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name: string
@@ -304,6 +308,8 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
+          interview_hours?: Json
+          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name?: string
