@@ -57,6 +57,13 @@
       "when": 1793129470620,
       "tag": "0007_email_fields_templates_campaigns",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793129494241,
+      "tag": "0008_restrict_email_table_grants",
+      "breakpoints": true
     }
   ]
 }
