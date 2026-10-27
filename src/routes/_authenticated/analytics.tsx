@@ -1,3 +1,4 @@
+import { sourceLabel } from "@/lib/sources";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -204,7 +205,7 @@ function AnalyticsPage() {
             j?.title ?? "",
             DIVISIONS.find((d) => d.value === j?.division)?.label ?? "General & Admin",
             j?.hiring_manager ?? "",
-            x.source,
+            sourceLabel(x.source),
             STATUS_LABEL[x.status],
           ];
         }),
