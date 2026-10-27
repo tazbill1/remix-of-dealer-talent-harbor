@@ -324,6 +324,92 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          queued_count: number
+          recipient_count: number
+          skipped_count: number
+          subject: string
+          template_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          queued_count?: number
+          recipient_count?: number
+          skipped_count?: number
+          subject: string
+          template_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          queued_count?: number
+          recipient_count?: number
+          skipped_count?: number
+          subject?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_opt_outs: {
+        Row: {
+          email: string
+          id: string
+          opted_out_at: string
+          org_id: string
+          source: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          opted_out_at?: string
+          org_id: string
+          source?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          opted_out_at?: string
+          org_id?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_opt_outs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interviews: {
         Row: {
           application_id: string
@@ -515,14 +601,60 @@ export type Database = {
           },
         ]
       }
+      message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           application_id: string
           body: string
+          campaign_id: string | null
           channel: string
           created_at: string
           direction: string
           error: string | null
+          from_email: string | null
           from_phone: string | null
           id: string
           org_id: string
@@ -533,15 +665,19 @@ export type Database = {
           scheduled_for: string | null
           sent_at: string | null
           status: string
+          subject: string | null
+          to_email: string | null
           to_phone: string | null
         }
         Insert: {
           application_id: string
           body: string
+          campaign_id?: string | null
           channel?: string
           created_at?: string
           direction: string
           error?: string | null
+          from_email?: string | null
           from_phone?: string | null
           id?: string
           org_id: string
@@ -552,15 +688,19 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string | null
           status?: string
+          subject?: string | null
+          to_email?: string | null
           to_phone?: string | null
         }
         Update: {
           application_id?: string
           body?: string
+          campaign_id?: string | null
           channel?: string
           created_at?: string
           direction?: string
           error?: string | null
+          from_email?: string | null
           from_phone?: string | null
           id?: string
           org_id?: string
@@ -571,6 +711,8 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string | null
           status?: string
+          subject?: string | null
+          to_email?: string | null
           to_phone?: string | null
         }
         Relationships: [
@@ -593,6 +735,9 @@ export type Database = {
       messaging_settings: {
         Row: {
           ai_provider: string
+          email_from_name: string | null
+          email_mode: string
+          email_reply_to: string | null
           escalate_after_hours: number
           mode: string
           nudge_after_hours: number
@@ -604,6 +749,9 @@ export type Database = {
         }
         Insert: {
           ai_provider?: string
+          email_from_name?: string | null
+          email_mode?: string
+          email_reply_to?: string | null
           escalate_after_hours?: number
           mode?: string
           nudge_after_hours?: number
@@ -615,6 +763,9 @@ export type Database = {
         }
         Update: {
           ai_provider?: string
+          email_from_name?: string | null
+          email_mode?: string
+          email_reply_to?: string | null
           escalate_after_hours?: number
           mode?: string
           nudge_after_hours?: number
