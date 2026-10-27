@@ -43,6 +43,13 @@
       "when": 1793123945093,
       "tag": "0005_texting_settings_contacts_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793124099478,
+      "tag": "0006_restrict_sms_opt_out_write_grants",
+      "breakpoints": true
     }
   ]
 }
