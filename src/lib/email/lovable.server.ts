@@ -4,7 +4,7 @@ import { EmailAPIError, sendLovableEmail as sendLovableEmailApi } from "@lovable
 const SITE_NAME = "WerkandMe";
 // Verified sender subdomain delegated to Lovable's nameservers. Never the root domain.
 const SENDER_DOMAIN = "notify.workwithwerk.com";
-const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
+const FROM_ADDRESS = `penny@${SENDER_DOMAIN}`;
 
 export interface SendLovableEmailInput {
   to: string;
