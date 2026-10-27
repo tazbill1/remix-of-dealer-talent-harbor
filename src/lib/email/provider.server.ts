@@ -50,8 +50,9 @@ export async function sendLovable(input: {
   } catch (e) {
     throw new EmailSendError(e);
   }
-  if (!res.success || !res.message_id) throw new Error("Email sending failed");
-  return { providerMessageId: res.message_id };
+  // The API accepted the send unless it says otherwise; message_id isn't always returned.
+  if (res && res.success === false) throw new Error("Email sending failed");
+  return { providerMessageId: res?.message_id ?? null };
 }
 
 /** A send failure translated into what the outbox should record. */
