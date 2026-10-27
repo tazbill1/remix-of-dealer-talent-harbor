@@ -22,6 +22,13 @@
       "when": 1792877997747,
       "tag": "0002_werkandme_admin_autogrant",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793106993460,
+      "tag": "0003_track1_requisitions_jobbank",
+      "breakpoints": true
     }
   ]
 }
