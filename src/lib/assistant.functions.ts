@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { statusEventRows } from "@/lib/status-log";
 
 const GATEWAY = "https://ai.gateway.lovable.dev";
 const MODEL = "openai/gpt-6-astra";
@@ -188,5 +189,8 @@ Return:
       out.timeline_note,
     ].filter(Boolean) as string[];
     if (notes.length) await sb.from("application_events").insert(notes.map((message) => ({ org_id: app.org_id, application_id: app.id, kind: "assistant", message })));
+    if (patch.status && patch.status !== app.status) {
+      await sb.from("application_events").insert(statusEventRows(app.org_id, [app.id], patch.status));
+    }
     return { reply: out.reply, changed, status: patch.status ?? null, interviewAt };
   });
