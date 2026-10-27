@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitContact } from "@/lib/public.functions";
 import { CAREERS_ORG_SLUG, SITE_URL } from "@/lib/site";
 
-const title = "Contact the ABC Motors hiring team";
-const description = "Questions about a job at ABC Motors? Send the hiring team a message and we'll get back to you fast.";
+const title = "Contact the ABC Dealer Group hiring team";
+const description = "Questions about a job at ABC Dealer Group? Send the hiring team a message and we'll get back to you fast.";
 
 export const Route = createFileRoute("/careers/contact")({
   head: () => ({
