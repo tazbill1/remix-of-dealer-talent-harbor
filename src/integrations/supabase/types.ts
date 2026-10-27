@@ -91,6 +91,8 @@ export type Database = {
       }
       applications: {
         Row: {
+          answers: Json
+          knockout_failed: boolean
           ai_summary: string | null
           answers: Json
           candidate_id: string | null
@@ -118,6 +120,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          answers?: Json
+          knockout_failed?: boolean
           ai_summary?: string | null
           answers?: Json
           candidate_id?: string | null
@@ -145,6 +149,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          answers?: Json
+          knockout_failed?: boolean
           ai_summary?: string | null
           answers?: Json
           candidate_id?: string | null
@@ -525,6 +531,7 @@ export type Database = {
       }
       jobs: {
         Row: {
+          questions: Json
           created_at: string
           dealership_id: string
           department: string | null
@@ -548,6 +555,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          questions?: Json
           created_at?: string
           dealership_id: string
           department?: string | null
@@ -571,6 +579,7 @@ export type Database = {
           title: string
         }
         Update: {
+          questions?: Json
           created_at?: string
           dealership_id?: string
           department?: string | null
