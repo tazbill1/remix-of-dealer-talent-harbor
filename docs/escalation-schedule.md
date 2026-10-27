@@ -7,13 +7,13 @@ A candidate in **New** or **Screening** that nobody has touched for 3 business d
 is turned on and a note goes on their timeline. "Touched" means any timeline event or
 text after they applied. Each candidate escalates once.
 
-- The job lives at `POST /api/cron/escalate` and checks the Lovable cron secret.
+- The job lives at `POST /api/public/cron/escalate` and checks the Lovable cron secret.
 - The dashboard lists stalled candidates before the job runs, with a "Release to open
   pool" button for Recruiting/HR.
 
 ## Prompt to paste into Lovable
 
-> Please schedule a recurring job that calls `POST /api/cron/escalate` on this app every
+> Please schedule a recurring job that calls `POST /api/public/cron/escalate` on this app every
 > hour from 7am to 7pm US Central time, Monday through Friday, using the app's cron
 > secret in the `Authorization: Bearer` header (the route already checks it with
 > `authenticateCronRequest`). Don't change the route's code.

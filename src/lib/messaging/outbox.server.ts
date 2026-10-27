@@ -7,6 +7,7 @@ import {
 } from "@/lib/messaging-settings";
 import { decideDelivery, keywordReply, toE164, type Keyword } from "@/lib/messaging/core";
 import { sendTwilio, twilioConfigured } from "@/lib/messaging/twilio.server";
+import { deliverEmail, loadEmailSettings, type EmailSettings } from "@/lib/email/outbox.server";
 
 type DB = SupabaseClient<Database>;
 export type Party = "candidate" | "manager";
@@ -162,7 +163,7 @@ export async function deliverDue(
   const now = opts.now ?? Date.now();
   let q = sb
     .from("messages")
-    .select("id, org_id, to_phone, from_phone, body, purpose")
+    .select("id, org_id, application_id, channel, to_phone, from_phone, to_email, subject, body, purpose")
     .eq("status", "queued")
     .lte("scheduled_for", new Date(now).toISOString())
     .order("scheduled_for")
@@ -170,6 +171,7 @@ export async function deliverDue(
   if (opts.ids) q = q.in("id", opts.ids);
   const { data: due } = await q;
   const settingsByOrg = new Map<string, MessagingSettings>();
+  const emailSettingsByOrg = new Map<string, EmailSettings>();
   const result = { sent: 0, simulated: 0, failed: 0, blocked: 0 };
 
   for (const m of due ?? []) {
@@ -181,6 +183,13 @@ export async function deliverDue(
       .eq("status", "queued")
       .select("id");
     if (!claimed?.length) continue;
+
+    if (m.channel === "email") {
+      if (!emailSettingsByOrg.has(m.org_id))
+        emailSettingsByOrg.set(m.org_id, await loadEmailSettings(sb, m.org_id));
+      result[await deliverEmail(sb, m, emailSettingsByOrg.get(m.org_id)!)]++;
+      continue;
+    }
 
     if (m.purpose !== "keyword" && m.to_phone) {
       const { data: out } = await sb

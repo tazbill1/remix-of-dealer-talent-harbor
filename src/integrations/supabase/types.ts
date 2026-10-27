@@ -324,6 +324,85 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          queued_count: number
+          recipient_count: number
+          skipped_count: number
+          subject: string
+          template_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          queued_count?: number
+          recipient_count?: number
+          skipped_count?: number
+          subject: string
+          template_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          queued_count?: number
+          recipient_count?: number
+          skipped_count?: number
+          subject?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_opt_outs: {
+        Row: {
+          email: string
+          id: string
+          opted_out_at: string
+          org_id: string
+          source: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          opted_out_at?: string
+          org_id: string
+          source?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          opted_out_at?: string
+          org_id?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_opt_outs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interviews: {
         Row: {
           application_id: string
@@ -517,6 +596,10 @@ export type Database = {
       }
       messages: {
         Row: {
+          subject: string | null
+          to_email: string | null
+          from_email: string | null
+          campaign_id: string | null
           application_id: string
           body: string
           channel: string
@@ -536,6 +619,10 @@ export type Database = {
           to_phone: string | null
         }
         Insert: {
+          subject?: string | null
+          to_email?: string | null
+          from_email?: string | null
+          campaign_id?: string | null
           application_id: string
           body: string
           channel?: string
@@ -555,6 +642,10 @@ export type Database = {
           to_phone?: string | null
         }
         Update: {
+          subject?: string | null
+          to_email?: string | null
+          from_email?: string | null
+          campaign_id?: string | null
           application_id?: string
           body?: string
           channel?: string
@@ -590,8 +681,55 @@ export type Database = {
           },
         ]
       }
+      message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messaging_settings: {
         Row: {
+          email_mode: string
+          email_from_name: string | null
+          email_reply_to: string | null
           ai_provider: string
           escalate_after_hours: number
           mode: string
@@ -603,6 +741,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          email_mode?: string
+          email_from_name?: string | null
+          email_reply_to?: string | null
           ai_provider?: string
           escalate_after_hours?: number
           mode?: string
@@ -614,6 +755,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          email_mode?: string
+          email_from_name?: string | null
+          email_reply_to?: string | null
           ai_provider?: string
           escalate_after_hours?: number
           mode?: string

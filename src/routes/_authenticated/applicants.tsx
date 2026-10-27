@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
+import { EmailCompose } from "@/components/email-compose";
 import { UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
@@ -46,6 +47,7 @@ function Applicants() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
+  const [emailing, setEmailing] = useState<string[] | null>(null);
   const [bulkStatus, setBulkStatus] = useState<AppStatus>("screening");
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
   const chosen = (data?.apps ?? []).filter((a) => checked.includes(a.id));
@@ -58,9 +60,11 @@ function Applicants() {
     setChecked([]); qc.invalidateQueries({ queryKey: key });
   }
   function bulkEmail() {
-    const emails = [...new Set(chosen.map((a) => a.email))].join(",");
-    window.location.href = `mailto:?bcc=${encodeURIComponent(emails)}`;
+    setEmailing(chosen.map((a) => a.id));
   }
+  const emailRecipients = (data?.apps ?? [])
+    .filter((a) => emailing?.includes(a.id))
+    .map((a) => ({ id: a.id, full_name: a.full_name, email: a.email, jobTitle: job(a.job_id), storeName: storeName(a.dealership_id) }));
   async function transfer(appId: string, jobId: string) {
     const target = data?.jobs.find((j) => j.id === jobId);
     const app = data?.apps.find((a) => a.id === appId);
@@ -163,6 +167,8 @@ function Applicants() {
         })}
       </div>
 
+      <EmailCompose open={!!emailing} onOpenChange={(o) => !o && setEmailing(null)} orgId={org.orgId}
+        recipients={emailRecipients} onSent={() => setChecked([])} />
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
@@ -173,7 +179,8 @@ function Applicants() {
               sameRegion: regionOf(j.dealership_id) === regionOf(current.dealership_id) }))}
             onTransfer={(jobId) => transfer(current.id, jobId)} orgId={org.orgId}
             assistantName={data?.stores.find((s) => s.id === current.dealership_id)?.assistant_name ?? "Assistant"}
-            onRefresh={() => qc.invalidateQueries({ queryKey: key })} />}
+            onRefresh={() => qc.invalidateQueries({ queryKey: key })}
+            onEmail={() => setEmailing([current.id])} />}
         </SheetContent>
       </Sheet>
     </div>
@@ -184,7 +191,7 @@ type App = { profile: unknown; ai_summary: string | null; id: string; full_name:
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
@@ -224,7 +231,7 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
         </div>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" asChild><a href={`mailto:${app.email}`}><Mail />Email</a></Button>
+        <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
         {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
         {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
       </div>

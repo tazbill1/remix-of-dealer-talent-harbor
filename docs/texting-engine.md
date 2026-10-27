@@ -54,7 +54,7 @@ Anthropic on the Team page. Without the key it keeps using Lovable AI. Optional
 ## Prompt to paste into Lovable (schedule the jobs)
 
 > Please schedule two recurring jobs on this app, each every 5 minutes, every day:
-> `POST /api/cron/workflows` and `POST /api/cron/messages`. Use the app's cron secret in
+> `POST /api/public/cron/workflows` and `POST /api/public/cron/messages`. Use the app's cron secret in
 > the `Authorization: Bearer` header (both routes already check it with
 > `authenticateCronRequest`). Don't change the routes' code.
 

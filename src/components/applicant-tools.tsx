@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { deliveryLabel } from "@/lib/messaging/labels";
+import { EmailHistory } from "@/components/email-compose";
 
 const toB64 = (f: File) => new Promise<string>((res, rej) => {
   const r = new FileReader();
@@ -110,7 +111,7 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
     queryKey: ["messages", appId],
     queryFn: async () => (await supabase.from("messages").select("*").eq("application_id", appId).order("created_at")).data ?? [],
   });
-  const thread = msgs.filter((m) => m.party === party);
+  const thread = msgs.filter((m) => m.party === party && m.channel !== "email");
   async function submit() {
     if (!text.trim()) return;
     setBusy(true);
@@ -129,6 +130,7 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
   }
   void orgId;
   return (
+    <>
     <div className="rounded-xl border">
       <div className="flex border-b text-sm">
         {(["candidate", "manager"] as const).map((p) => (
@@ -156,6 +158,8 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
         <Button size="icon" disabled={busy || !text.trim()} aria-label="Send"><Send /></Button>
       </form>
     </div>
+    <EmailHistory messages={msgs} />
+    </>
   );
 }
 

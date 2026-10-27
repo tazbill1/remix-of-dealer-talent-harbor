@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { chunk, fetchAll } from "@/lib/fetch-all";
 import {
   escalationEventRow,
@@ -8,9 +9,8 @@ import {
   type Touch,
 } from "@/lib/escalation";
 
-/** Same logic as /api/cron/escalate: pool candidates untouched for 3 business days. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function runEscalation(supabaseAdmin: SupabaseClient<any>) {
+/** Release candidates nobody has touched for 3 business days to the group's open pool. */
+export async function runEscalation(supabaseAdmin: SupabaseClient<Database>) {
   const now = Date.now();
   const apps = await fetchAll<EscApp & { org_id: string }>((f, t) =>
     supabaseAdmin
@@ -32,10 +32,12 @@ export async function runEscalation(supabaseAdmin: SupabaseClient<any>) {
           .range(f, t),
       ),
       fetchAll<Touch>((f, t) =>
+        // Bulk emails aren't a personal touch, so they don't stop the 3-day clock.
         supabaseAdmin
           .from("messages")
           .select("application_id, created_at")
           .in("application_id", ids)
+          .is("campaign_id", null)
           .range(f, t),
       ),
     ]);
