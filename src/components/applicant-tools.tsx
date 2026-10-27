@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Upload, Loader2, Send, CalendarPlus, Download, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SOURCES } from "@/lib/sources";
 import { notifyApplicants } from "@/lib/email.functions";
 import { parseResume, assistantMessage, type ParsedResume } from "@/lib/assistant.functions";
 import { Button } from "@/components/ui/button";
@@ -31,9 +32,10 @@ export function AddApplicantDialog({ open, onOpenChange, orgId, jobs, onCreated 
   const [over, setOver] = useState(false);
   const [p, setP] = useState<ParsedResume | null>(null);
   const [jobId, setJobId] = useState("");
+  const [source, setSource] = useState("referral");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function reset() { setFile(null); setP(null); setJobId(""); setBusy(false); }
+  function reset() { setFile(null); setP(null); setJobId(""); setSource("referral"); setBusy(false); }
   async function handle(f: File) {
     if (f.size > 10_000_000) return toast.error("That file is over 10 MB.");
     setFile(f); setBusy(true);
@@ -53,7 +55,7 @@ export function AddApplicantDialog({ open, onOpenChange, orgId, jobs, onCreated 
     const profile = { years_experience: p.years_experience, certifications: p.certifications, current_title: p.current_title,
       past_employers: p.past_employers, skills: p.skills, city: p.city };
     const { data: app, error } = await supabase.from("applications").insert({ org_id: orgId, job_id: job.id, dealership_id: job.dealership_id,
-      full_name: p.full_name.trim(), email: p.email.trim(), phone: p.phone.trim() || null, source: "manual", profile, ai_summary: p.summary }).select("id").single();
+      full_name: p.full_name.trim(), email: p.email.trim(), phone: p.phone.trim() || null, source, profile, ai_summary: p.summary }).select("id").single();
     if (error || !app) { setBusy(false); return toast.error(error?.message ?? "Couldn't save."); }
     const path = `${orgId}/${app.id}/${file.name.replace(/[^\w.-]/g, "_")}`;
     const up = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type });
@@ -93,6 +95,10 @@ export function AddApplicantDialog({ open, onOpenChange, orgId, jobs, onCreated 
               <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={jobId} onChange={(e) => setJobId(e.target.value)}>
                 <option value="">Pick a job...</option>
                 {jobs.map((j) => <option key={j.id} value={j.id}>{j.label}</option>)}
+              </select></label>
+            <label className="block text-sm"><span className="font-medium">Where did they come from?</span>
+              <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={source} onChange={(e) => setSource(e.target.value)}>
+                {SOURCES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select></label>
             <div className="flex justify-end gap-2"><Button variant="outline" onClick={reset}>Start over</Button>
               <Button onClick={save} disabled={busy}>{busy && <Loader2 className="animate-spin" />}Save applicant</Button></div>

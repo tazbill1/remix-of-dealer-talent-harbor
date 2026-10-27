@@ -1,3 +1,4 @@
+import { sourceLabel } from "@/lib/sources";
 import { STATUSES, type AppStatus } from "@/lib/jobs";
 import { STATUS_EVENT_KIND, statusFromEventMessage } from "@/lib/status-log";
 
@@ -280,7 +281,7 @@ export function computeAnalytics(input: {
     region: (a) => regionName(a.dealership_id),
     role: (a) => jobById.get(a.job_id)?.title ?? "Unknown role",
     manager: (a) => jobById.get(a.job_id)?.hiring_manager?.trim() || "Not assigned",
-    source: (a) => a.source || "Unknown",
+    source: (a) => sourceLabel(a.source),
   };
   const openKey: Partial<Record<GroupBy, (j: AJob) => string>> = {
     location: (j) => storeName(j.dealership_id),

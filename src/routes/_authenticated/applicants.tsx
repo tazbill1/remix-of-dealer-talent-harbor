@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, canPostJobs, type AppStatus } from "@/lib/jobs";
 import { statusEventRows } from "@/lib/status-log";
+import { SOURCES, sourceKey, sourceLabel } from "@/lib/sources";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,7 @@ function Applicants() {
     },
   });
   const [store, setStore] = useState("all");
+  const [src, setSrc] = useState("all");
   const [region, setRegion] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -82,8 +84,10 @@ function Applicants() {
   const regionName = (storeId: string) => data?.regions.find((r) => r.id === regionOf(storeId))?.name ?? null;
   const inRegion = (storeId: string) => region === "all" || (region === "none" ? !regionOf(storeId) : regionOf(storeId) === region);
   const storeOptions = (data?.stores ?? []).filter((s) => inRegion(s.id));
-  const apps = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
+  const inView = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
     || (store === "shared" && a.open_to_other_stores)));
+  const apps = inView.filter((a) => src === "all" || sourceKey(a.source) === src);
+  const sourceCounts = SOURCES.map((s) => ({ ...s, n: inView.filter((a) => sourceKey(a.source) === s.key).length }));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
   // Must come after job() and storeName(): they're used while rendering.
@@ -128,6 +132,13 @@ function Applicants() {
           {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select></div>
       </div>
+      <div className="flex flex-wrap items-center gap-2 text-sm" aria-label="Applicants by source">
+        <span className="text-muted-foreground">Source:</span>
+        <button onClick={() => setSrc("all")} className={cn("rounded-full border px-3 py-1", src === "all" ? "border-sapphire bg-sapphire text-primary-foreground" : "hover:border-sapphire")}>All {inView.length}</button>
+        {sourceCounts.map((s) => (
+          <button key={s.key} onClick={() => setSrc(s.key)} className={cn("rounded-full border px-3 py-1", src === s.key ? "border-sapphire bg-sapphire text-primary-foreground" : "hover:border-sapphire")}>{s.label} {s.n}</button>
+        ))}
+      </div>
       <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
         jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, dealership_id: j.dealership_id, label: `${storeName(j.dealership_id)} · ${j.title}` }))} />
       {checked.length > 0 && (
@@ -164,7 +175,7 @@ function Applicants() {
                       <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
                     <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
+                      <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
                       <span>{new Date(a.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -244,6 +255,10 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
         {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
       </div>
       <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+      <label className="flex items-center gap-2 text-sm"><span className="font-semibold">Source</span>
+        <select aria-label="Source" className="h-8 rounded-md border bg-background px-2 text-sm" value={sourceKey(app.source)} onChange={(e) => onUpdate({ source: e.target.value })}>
+          {SOURCES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select></label>
       {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
       <ProfileFacts profile={app.profile as Record<string, unknown>} />
       <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />

@@ -93,7 +93,7 @@ export const submitApplication = createServerFn({ method: "POST" })
     const { data: app, error } = await supabaseAdmin.from("applications").insert({
       org_id: job.org_id, job_id: job.id, dealership_id: job.dealership_id,
       full_name: data.fullName, email, phone,
-      source: (data.source || "careers").toLowerCase(),
+      source: (await import("@/lib/sources")).sourceKey(data.source),
       candidate_id: candidateId,
     }).select("id, status_token").single();
     if (error) throw new Error("We couldn't save your application. Please try again.");
