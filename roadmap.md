@@ -32,12 +32,12 @@
 - [x] "Also applied for" on the profile (one candidate, many applications)
 - [x] 30/60/90 check-ins recorded on each hire's profile
 - [ ] Store/region access rules + Team page: see docs/access-rules-update.md
-- [x] Enterprise templates (email + text), in-app email to one or many applicants with merge fields, unsubscribe links, Integrations page; practice mode until Resend is connected (docs/email-update.md)
+- [x] Enterprise templates (email + text), in-app email to one or many applicants with merge fields, unsubscribe links, Integrations page; practice mode until the sender domain is set up (docs/email-update.md)
 - [x] 3-business-day untouched escalation (code; schedule it in Lovable: docs/escalation-schedule.md)
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
 - [ ] Questionnaires attached to jobs (knockout questions)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
-- [ ] Live email (blocked: Resend account + sending domain) and live texts (blocked: Twilio)
+- [ ] Live email (blocked: sender domain setup in More → Emails, then set the sending address on Integrations) and live texts (blocked: Twilio)
 - [ ] Per-store AI HR assistant: applicant chat, check-ins, manager nudges, HR summaries
 - [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
 - [ ] Automated status moves from events
