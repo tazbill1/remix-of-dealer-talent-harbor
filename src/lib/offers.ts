@@ -139,3 +139,45 @@ export function parseSignatureHeader(header: string | null) {
   const sigs = [parts["s0"], parts["s1"]].filter((s): s is string => !!s);
   return Number.isFinite(t) && sigs.length ? { t, sigs } : null;
 }
+
+/**
+ * Fill-in boxes hireme fills on any BoldSign template. Either naming style works
+ * (ApplicantName or candidate_name); boxes the template doesn't have are skipped.
+ */
+export const DOC_FIELDS = [
+  { id: "ApplicantName", alt: "candidate_name", label: "Applicant name" },
+  { id: "JobTitle", alt: "job_title", label: "Job title" },
+  { id: "Store", alt: "store_name", label: "Store" },
+  { id: "Pay", alt: "pay", label: "Pay" },
+  { id: "StartDate", alt: "start_date", label: "Start date" },
+  { id: "Manager", alt: "manager_name", label: "Manager" },
+] as const;
+
+export function documentFields(v: Parameters<typeof prefillFields>[0]) {
+  const byAlt = new Map(prefillFields(v).map((f) => [f.id, f.value]));
+  return DOC_FIELDS.flatMap((f) => {
+    const value = byAlt.get(f.alt);
+    return value ? [{ id: f.id, value }, { id: f.alt, value }] : [];
+  });
+}
+
+export const sendDocsInput = z.object({
+  orgId: z.string().uuid(),
+  applicationId: z.string().uuid(),
+  templates: z
+    .array(z.object({ id: templateIdSchema, name: z.string().trim().min(1).max(200) }))
+    .min(1, "Pick at least one document.")
+    .max(10),
+  jobTitle: z.string().trim().min(2).max(120),
+  pay: z.string().trim().max(120).optional().default(""),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  note: z.string().trim().max(500).optional().default(""),
+});
+
+/** Whether a signed document should move the applicant to Hired. */
+export const hireOnSign = (a: { status: OfferStatus; isOfferLetter: boolean; setting: boolean; appStatus: string }) =>
+  a.status === "signed" && a.isOfferLetter && a.setting && a.appStatus !== "hired" && a.appStatus !== "rejected";
