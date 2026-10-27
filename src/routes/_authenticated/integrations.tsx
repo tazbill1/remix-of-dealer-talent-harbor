@@ -1,0 +1,251 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  Bot,
+  CalendarDays,
+  FileSignature,
+  Mail,
+  MessageSquare,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrg } from "@/lib/org";
+import { integrationStatus } from "@/lib/email.functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated/integrations")({
+  head: () => ({ meta: [{ title: "Integrations | WerkandMe Hiring" }] }),
+  component: Integrations,
+});
+
+type State = "connected" | "practice" | "not_connected" | "partner";
+const STATE_LABEL: Record<State, string> = {
+  connected: "Connected",
+  practice: "Practice mode",
+  not_connected: "Not connected",
+  partner: "Partner to be chosen",
+};
+const STATE_STYLE: Record<State, string> = {
+  connected: "bg-lime/20 text-foreground",
+  practice: "bg-accent text-foreground",
+  not_connected: "bg-secondary text-muted-foreground",
+  partner: "bg-secondary text-muted-foreground",
+};
+
+function Card({
+  icon: Icon,
+  title,
+  state,
+  what,
+  needs,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  state: State;
+  what: string;
+  needs: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col rounded-2xl bg-background p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <Icon className="size-5 text-sapphire" />
+          {title}
+        </div>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",
+            STATE_STYLE[state],
+          )}
+        >
+          {STATE_LABEL[state]}
+        </span>
+      </div>
+      <p className="mt-2 text-sm">{what}</p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        <b>To connect:</b> {needs}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function Integrations() {
+  const org = useOrg();
+  const qc = useQueryClient();
+  const isAdmin = org.role === "group_admin" || org.isPlatformAdmin;
+  const getStatus = useServerFn(integrationStatus);
+  const { data: env } = useQuery({
+    queryKey: ["integration-status", org.orgId],
+    queryFn: () => getStatus({ data: { orgId: org.orgId } }),
+  });
+  const settingsKey = ["messaging-settings-integrations", org.orgId];
+  const { data: settings } = useQuery({
+    queryKey: settingsKey,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("messaging_settings")
+          .select("mode, ai_provider, email_mode, email_from_name, email_reply_to")
+          .eq("org_id", org.orgId)
+          .maybeSingle()
+      ).data,
+  });
+  const [fromName, setFromName] = useState("");
+  const [replyTo, setReplyTo] = useState("");
+  useEffect(() => {
+    setFromName(settings?.email_from_name ?? "");
+    setReplyTo(settings?.email_reply_to ?? "");
+  }, [settings?.email_from_name, settings?.email_reply_to]);
+
+  const smsLive = settings?.mode === "live";
+  const emailLive = settings?.email_mode === "live";
+  const smsState: State = smsLive && env?.twilio ? "connected" : "practice";
+  const emailState: State = emailLive && env?.email ? "connected" : "practice";
+  const aiClaude = settings?.ai_provider === "anthropic" && env?.anthropic;
+
+  async function saveEmail(patch: {
+    email_mode?: string;
+    email_from_name?: string | null;
+    email_reply_to?: string | null;
+  }) {
+    const { error } = await supabase
+      .from("messaging_settings")
+      .upsert(
+        { org_id: org.orgId, ...patch, updated_at: new Date().toISOString() },
+        { onConflict: "org_id" },
+      );
+    if (error) return toast.error(error.message);
+    toast.success("Email settings saved");
+    qc.invalidateQueries({ queryKey: settingsKey });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl">Integrations</h1>
+        <p className="text-muted-foreground">
+          Everything hireme connects to, and what each one needs. Until a service is connected, its
+          features run in practice mode: you can use them end to end, and nothing is sent.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card
+          icon={MessageSquare}
+          title="Texting (Twilio)"
+          state={smsState}
+          what="Two-way texts with candidates and hiring managers: welcome, screening, manager summaries, nudges, reminders and 30/60/90 check-ins."
+          needs="the aKillion Twilio account, carrier registration (10DLC), and a texting number per store. Texting settings are on the Team page."
+        >
+          {smsLive && !env?.twilio && (
+            <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              This group is set to Live but Twilio isn't connected, so texts will fail. Switch back
+              to Practice on the Team page.
+            </p>
+          )}
+        </Card>
+
+        <Card
+          icon={Mail}
+          title="Email (Resend)"
+          state={emailState}
+          what="One-to-one emails and bulk emails to applicants, from the Applicants page, with corporate templates. Every email includes the store's name and address and an unsubscribe link."
+          needs="a Resend account with your sending domain verified (e.g. mail.werkandme.com), then the RESEND_API_KEY and EMAIL_FROM secrets in Lovable."
+        >
+          {isAdmin && (
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span>Sending mode</span>
+                <div className="flex gap-1">
+                  {(["practice", "live"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={m === "live" && !env?.email}
+                      title={m === "live" && !env?.email ? "Connect Resend first" : undefined}
+                      onClick={() => saveEmail({ email_mode: m })}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs disabled:opacity-40",
+                        (settings?.email_mode ?? "practice") === m
+                          ? "bg-sapphire text-primary-foreground"
+                          : "bg-secondary",
+                      )}
+                    >
+                      {m === "practice" ? "Practice" : "Live"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Input
+                placeholder="From name (default: the store's name)"
+                value={fromName}
+                onChange={(e) => setFromName(e.target.value)}
+              />
+              <Input
+                placeholder="Replies go to (e.g. recruiting@yourgroup.com)"
+                type="email"
+                value={replyTo}
+                onChange={(e) => setReplyTo(e.target.value)}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  saveEmail({
+                    email_from_name: fromName.trim() || null,
+                    email_reply_to: replyTo.trim() || null,
+                  })
+                }
+              >
+                Save email settings
+              </Button>
+              {env?.emailFrom && (
+                <p className="text-xs text-muted-foreground">Sending address: {env.emailFrom}</p>
+              )}
+            </div>
+          )}
+        </Card>
+
+        <Card
+          icon={Bot}
+          title="AI assistant"
+          state="connected"
+          what={`Screens candidates by text, updates profiles and books interviews. Running on ${aiClaude ? "Claude (Anthropic)" : "Lovable AI"}.`}
+          needs="nothing today. To switch to Claude, add an ANTHROPIC_API_KEY secret and choose Anthropic in texting settings on the Team page."
+        />
+
+        <Card
+          icon={CalendarDays}
+          title="Calendar (Outlook / Google)"
+          state="not_connected"
+          what="Puts interviews on the hiring manager's calendar and spots outside bookings. Today interviews can be downloaded to any calendar from the profile."
+          needs="a Microsoft (and/or Google) sign-in app registered for hireme."
+        />
+
+        <Card
+          icon={ShieldCheck}
+          title="Background checks"
+          state="partner"
+          what="Order checks from the profile and see results there, from a compliance partner rather than built in-house."
+          needs="choosing the partner and their API keys."
+        />
+
+        <Card
+          icon={FileSignature}
+          title="Offer letters & e-signature"
+          state="partner"
+          what="Send offer letters and onboarding paperwork to sign, with status on the profile."
+          needs="choosing the e-signature partner and their API keys."
+        />
+      </div>
+    </div>
+  );
+}

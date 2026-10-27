@@ -81,6 +81,7 @@ export function fakeSupabase(seed: Record<string, Row[]>) {
       lte: (c: string, v: any) => (filters.push((r) => r[c] != null && r[c] <= v), q),
       gte: (c: string, v: any) => (filters.push((r) => r[c] != null && r[c] >= v), q),
       range: (a: number, b: number) => ((limit = b - a + 1), q),
+      is: (c: string, v: any) => (filters.push((r) => (r[c] ?? null) === v), q),
       not: (c: string, _op: string, v: any) => (filters.push((r) => r[c] !== v && r[c] != null), q),
       order: (col: string, o?: { ascending?: boolean }) => (
         (order = { col, asc: o?.ascending !== false }),

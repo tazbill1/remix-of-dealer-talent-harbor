@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 
-/** Scheduler entry point; same job as /api/cron/workflows. */
+/** Scheduled job (every 5 min): texting workflows. Checks the cron secret. */
 export const Route = createFileRoute("/api/public/cron/workflows")({
   server: {
     handlers: {

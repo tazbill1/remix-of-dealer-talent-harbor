@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 
-/** Scheduler entry point; same job as /api/cron/escalate. */
+/** Scheduled job (hourly): 3-business-day escalation to the open pool. Checks the cron secret. */
 export const Route = createFileRoute("/api/public/cron/escalate")({
   server: {
     handlers: {
