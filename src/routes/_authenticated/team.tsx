@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, type Membership } from "@/lib/org";
+import { TextingSettings } from "@/components/texting-settings";
 
 export const Route = createFileRoute("/_authenticated/team")({
-  head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }] }),
+  head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe team roles, coverage and group texting settings." }, { property: "og:title", content: "Team | WerkandMe Hiring" }, { property: "og:description", content: "Manage team roles, coverage and group texting settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Team,
 });
 
@@ -109,6 +110,7 @@ function Team() {
         })}
       </div>
       <p className="text-sm text-muted-foreground">Inviting new people by email isn't set up yet — new teammates can sign up and be added here once invites are turned on.</p>
+      <TextingSettings orgId={org.orgId} />
     </div>
   );
 }

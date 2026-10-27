@@ -17,11 +17,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
-  head: () => ({ meta: [{ title: "Jobs | WerkandMe Hiring" }] }),
+  head: () => ({ meta: [{ title: "Jobs | WerkandMe Hiring" }, { name: "description", content: "Manage dealership job postings and hiring contact overrides in WerkandMe." }, { property: "og:title", content: "Jobs | WerkandMe Hiring" }, { property: "og:description", content: "Manage dealership job postings and hiring contact overrides." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Jobs,
 });
 
 const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager: "",
+  hiring_manager_phone: "", escalation_name: "", escalation_phone: "",
   employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "" };
 type Form = typeof empty;
 
@@ -67,6 +68,15 @@ function JobFields({ f, setF }: { f: Form; setF: (f: Form) => void }) {
         <div className="space-y-1.5"><Label>Hiring manager</Label><Input value={f.hiring_manager} onChange={(e) => setF({ ...f, hiring_manager: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Target start date</Label><Input type="date" value={f.target_start_date} onChange={(e) => setF({ ...f, target_start_date: e.target.value })} /></div>
       </div>
+      <fieldset className="space-y-3 border-t pt-3">
+        <legend className="text-sm font-semibold">Contact overrides (optional)</legend>
+        <p className="text-xs text-muted-foreground">These contacts override the store’s defaults. Leave blank to use the store’s contacts.</p>
+        <label className="block space-y-1.5 text-sm">Hiring manager phone<Input aria-label="Hiring manager phone" type="tel" value={f.hiring_manager_phone} onChange={(e) => setF({ ...f, hiring_manager_phone: e.target.value })} /></label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5 text-sm">Escalation contact name<Input aria-label="Escalation contact name" value={f.escalation_name} onChange={(e) => setF({ ...f, escalation_name: e.target.value })} /></label>
+          <label className="space-y-1.5 text-sm">Escalation contact phone<Input aria-label="Escalation contact phone" type="tel" value={f.escalation_phone} onChange={(e) => setF({ ...f, escalation_phone: e.target.value })} /></label>
+        </div>
+      </fieldset>
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5"><Label>Pay from</Label><Input type="number" value={f.pay_min} onChange={(e) => setF({ ...f, pay_min: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Pay to</Label><Input type="number" value={f.pay_max} onChange={(e) => setF({ ...f, pay_max: e.target.value })} /></div>
@@ -83,6 +93,7 @@ function JobFields({ f, setF }: { f: Form; setF: (f: Form) => void }) {
 const payload = (f: Form) => ({
   title: f.title, department: f.department || null, division: f.division, req_type: f.req_type,
   target_start_date: f.target_start_date || null, hiring_manager: f.hiring_manager || null, employment_type: f.employment_type, pay_period: f.pay_period,
+  hiring_manager_phone: f.hiring_manager_phone || null, escalation_name: f.escalation_name || null, escalation_phone: f.escalation_phone || null,
   description: f.description, pay_min: f.pay_min ? Number(f.pay_min) : null, pay_max: f.pay_max ? Number(f.pay_max) : null,
 });
 
@@ -150,6 +161,7 @@ function Jobs() {
     setEf({
       title: j.title, department: j.department ?? "", division: j.division, req_type: j.req_type,
       target_start_date: j.target_start_date ?? "", hiring_manager: j.hiring_manager ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
+      hiring_manager_phone: j.hiring_manager_phone ?? "", escalation_name: j.escalation_name ?? "", escalation_phone: j.escalation_phone ?? "",
       description: j.description ?? "", pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
     });
     setEditing(false); setViewId(j.id);

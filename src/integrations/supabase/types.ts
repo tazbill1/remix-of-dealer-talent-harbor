@@ -259,13 +259,17 @@ export type Database = {
           brand: string | null
           city: string | null
           created_at: string
+          escalation_name: string | null
+          escalation_phone: string | null
           id: string
           manager_name: string | null
           manager_phone: string | null
           name: string
           org_id: string
           region_id: string | null
+          sms_number: string | null
           state: string | null
+          timezone: string
         }
         Insert: {
           address?: string | null
@@ -273,13 +277,17 @@ export type Database = {
           brand?: string | null
           city?: string | null
           created_at?: string
+          escalation_name?: string | null
+          escalation_phone?: string | null
           id?: string
           manager_name?: string | null
           manager_phone?: string | null
           name: string
           org_id: string
           region_id?: string | null
+          sms_number?: string | null
           state?: string | null
+          timezone?: string
         }
         Update: {
           address?: string | null
@@ -287,13 +295,17 @@ export type Database = {
           brand?: string | null
           city?: string | null
           created_at?: string
+          escalation_name?: string | null
+          escalation_phone?: string | null
           id?: string
           manager_name?: string | null
           manager_phone?: string | null
           name?: string
           org_id?: string
           region_id?: string | null
+          sms_number?: string | null
           state?: string | null
+          timezone?: string
         }
         Relationships: [
           {
@@ -427,7 +439,10 @@ export type Database = {
           description: string
           division: string
           employment_type: string
+          escalation_name: string | null
+          escalation_phone: string | null
           hiring_manager: string | null
+          hiring_manager_phone: string | null
           id: string
           org_id: string
           pay_max: number | null
@@ -446,7 +461,10 @@ export type Database = {
           description?: string
           division?: string
           employment_type?: string
+          escalation_name?: string | null
+          escalation_phone?: string | null
           hiring_manager?: string | null
+          hiring_manager_phone?: string | null
           id?: string
           org_id: string
           pay_max?: number | null
@@ -465,7 +483,10 @@ export type Database = {
           description?: string
           division?: string
           employment_type?: string
+          escalation_name?: string | null
+          escalation_phone?: string | null
           hiring_manager?: string | null
+          hiring_manager_phone?: string | null
           id?: string
           org_id?: string
           pay_max?: number | null
@@ -501,9 +522,18 @@ export type Database = {
           channel: string
           created_at: string
           direction: string
+          error: string | null
+          from_phone: string | null
           id: string
           org_id: string
           party: string
+          provider: string | null
+          provider_message_id: string | null
+          purpose: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          to_phone: string | null
         }
         Insert: {
           application_id: string
@@ -511,9 +541,18 @@ export type Database = {
           channel?: string
           created_at?: string
           direction: string
+          error?: string | null
+          from_phone?: string | null
           id?: string
           org_id: string
           party: string
+          provider?: string | null
+          provider_message_id?: string | null
+          purpose?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          to_phone?: string | null
         }
         Update: {
           application_id?: string
@@ -521,9 +560,18 @@ export type Database = {
           channel?: string
           created_at?: string
           direction?: string
+          error?: string | null
+          from_phone?: string | null
           id?: string
           org_id?: string
           party?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          purpose?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          to_phone?: string | null
         }
         Relationships: [
           {
@@ -537,6 +585,50 @@ export type Database = {
             foreignKeyName: "messages_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_settings: {
+        Row: {
+          ai_provider: string
+          escalate_after_hours: number
+          mode: string
+          nudge_after_hours: number
+          org_id: string
+          send_days: number[]
+          send_end: string
+          send_start: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_provider?: string
+          escalate_after_hours?: number
+          mode?: string
+          nudge_after_hours?: number
+          org_id: string
+          send_days?: number[]
+          send_end?: string
+          send_start?: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_provider?: string
+          escalate_after_hours?: number
+          mode?: string
+          nudge_after_hours?: number
+          org_id?: string
+          send_days?: number[]
+          send_end?: string
+          send_start?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -751,6 +843,38 @@ export type Database = {
           },
           {
             foreignKeyName: "retention_checkins_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_opt_outs: {
+        Row: {
+          id: string
+          opted_out_at: string
+          org_id: string
+          phone: string
+          source: string | null
+        }
+        Insert: {
+          id?: string
+          opted_out_at?: string
+          org_id: string
+          phone: string
+          source?: string | null
+        }
+        Update: {
+          id?: string
+          opted_out_at?: string
+          org_id?: string
+          phone?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_opt_outs_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
