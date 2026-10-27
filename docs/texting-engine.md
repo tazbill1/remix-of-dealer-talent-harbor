@@ -5,8 +5,8 @@ account later) only carries messages.
 
 ## How a text flows
 
-1. Something decides to text (the AI assistant's reply, and next: welcome, manager
-   summary, nudges, reminders, check-ins). It calls `queueText`.
+1. Something decides to text (the AI assistant's reply or one of the workflows below).
+   It calls `queueText`.
 2. `queueText` checks, in order: a valid mobile number; the number hasn't replied STOP
    (opt-outs are per dealer group); a candidate agreed to texts on the apply form; the
    texting window (default 8am–6pm, Monday–Saturday, in the store's time zone). Texts
@@ -19,6 +19,27 @@ account later) only carries messages.
 
 Every text, in and out, shows on the candidate's profile with its status.
 
+## Workflows (src/lib/workflows)
+
+| When | Who | What |
+| --- | --- | --- |
+| Someone applies on the careers page | Candidate | Welcome text and the first screening question (only if they ticked the texting box) |
+| Candidate reaches Screening | Hiring manager | Short summary and fit rating: "Reply 1 to interview, 2 to pass" |
+| No reply after 4 texting hours (setting) | Hiring manager | One reminder |
+| No reply after 24 texting hours (setting) | Escalation contact | "Dana hasn't answered about Marcus…" with the same 1/2 options |
+| Manager replies 1 | Candidate + manager | Candidate moves to Interview and is asked for times; manager gets a confirmation |
+| Manager replies 2 | Candidate + manager | Candidate moves to Not selected and gets a polite note; manager gets a confirmation |
+| Day before an interview | Candidate | Reminder with the store address |
+| 2 hours before | Candidate + manager | Reminder |
+| 30, 60 and 90 days after the start date | Hiring manager | "Is Marcus still on your team? Reply Y or N." A N records the departure for retention reports |
+
+"Texting hours" means only time inside the texting window counts, so a summary sent at
+5pm doesn't trigger a nudge at 9pm. The nudge and escalation stop as soon as the manager
+replies or the candidate is moved in the app. 1/2 and Y/N are handled by fixed rules; any
+other reply goes to the AI. Check-ins more than a week overdue are skipped, so turning
+this on doesn't text managers about old hires. Each step runs once; the job is safe to
+run as often as you like.
+
 ## Who gets manager texts
 
 The job's hiring manager phone if set, otherwise the store's hiring contact. Escalations
@@ -30,12 +51,12 @@ Add an `ANTHROPIC_API_KEY` secret in Lovable, then set the group's AI provider t
 Anthropic on the Team page. Without the key it keeps using Lovable AI. Optional
 `ANTHROPIC_MODEL` secret overrides the model.
 
-## Prompt to paste into Lovable (schedule the delivery job)
+## Prompt to paste into Lovable (schedule the jobs)
 
-> Please schedule a recurring job that calls `POST /api/cron/messages` on this app every
-> 5 minutes, every day, using the app's cron secret in the `Authorization: Bearer`
-> header (the route already checks it with `authenticateCronRequest`). Don't change the
-> route's code.
+> Please schedule two recurring jobs on this app, each every 5 minutes, every day:
+> `POST /api/cron/workflows` and `POST /api/cron/messages`. Use the app's cron secret in
+> the `Authorization: Bearer` header (both routes already check it with
+> `authenticateCronRequest`). Don't change the routes' code.
 
 ## Going live (later, once the aKillion Twilio account is ready)
 
