@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg, type Membership } from "@/lib/org";
 import { TextingSettings } from "@/components/texting-settings";
 import { TeamInvites } from "@/components/team-invites";
+import { useServerFn } from "@tanstack/react-start";
+import { teamCalendars } from "@/lib/member-calendars.functions";
+import { CalendarLinkForm } from "@/components/calendar-link";
 
 export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe team roles, coverage and group texting settings." }, { property: "og:title", content: "Team | WerkandMe Hiring" }, { property: "og:description", content: "Manage team roles, coverage and group texting settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -39,6 +42,12 @@ function Team() {
     },
   });
   const refresh = () => qc.invalidateQueries({ queryKey: ["team", org.orgId] });
+  const getCalendars = useServerFn(teamCalendars);
+  const { data: calendars } = useQuery({
+    queryKey: ["team-calendars", org.orgId],
+    enabled: isAdmin,
+    queryFn: () => getCalendars({ data: { orgId: org.orgId } }),
+  });
 
   if (!isAdmin) return <p>Only group admins can manage the team.</p>;
 
@@ -114,6 +123,13 @@ function Team() {
               ) : (
                 <div className="text-sm text-muted-foreground">Sees every store in the group</div>
               )}
+              <CalendarLinkForm
+                compact
+                orgId={org.orgId}
+                memberId={m.id}
+                status={calendars?.[m.id] ?? { linked: false }}
+                onChanged={() => qc.invalidateQueries({ queryKey: ["team-calendars", org.orgId] })}
+              />
             </div>
           );
         })}
