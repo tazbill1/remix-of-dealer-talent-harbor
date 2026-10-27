@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand";
 
 // Linked from the texting opt-in. Carriers check that these are on the form.
-const SMS_TERMS_URL = "https://www.werkandme.com/terms-of-service/";
-const SMS_PRIVACY_URL = "https://www.werkandme.com/site-privacy-policy/";
+const SMS_TERMS_URL = "/terms";
+const SMS_PRIVACY_URL = "/privacy";
 
 export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
   validateSearch: z.object({ source: z.string().max(40).optional() }),
