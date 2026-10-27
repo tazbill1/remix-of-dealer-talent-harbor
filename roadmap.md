@@ -30,7 +30,7 @@
 - [x] 30/60/90 check-ins recorded on each hire's profile
 - [ ] Store/region access rules + Team page: see docs/access-rules-update.md
 - [ ] Enterprise communication templates + in-app bulk sending (needs sender domain)
-- [ ] 3-business-day untouched escalation
+- [x] 3-business-day untouched escalation (code; schedule it in Lovable: docs/escalation-schedule.md)
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
 - [ ] Questionnaires attached to jobs (knockout questions)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
