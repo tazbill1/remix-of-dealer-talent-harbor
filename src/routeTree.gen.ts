@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CareersRouteImport } from './routes/careers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -25,6 +26,9 @@ import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as CareersIndexRouteImport } from './routes/careers.index'
+import { Route as CareersContactRouteImport } from './routes/careers.contact'
+import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
@@ -52,6 +56,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -119,6 +128,21 @@ const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const CareersIndexRoute = CareersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CareersRoute,
+} as any)
+const CareersContactRoute = CareersContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => CareersRoute,
+} as any)
+const CareersJobsRoute = CareersJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => CareersRoute,
 } as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
@@ -197,6 +221,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -210,9 +235,12 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/careers/contact': typeof CareersContactRoute
+  '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
+  '/careers/': typeof CareersIndexRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
@@ -241,9 +269,12 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/careers/contact': typeof CareersContactRoute
+  '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
+  '/careers': typeof CareersIndexRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
@@ -261,6 +292,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -274,9 +306,12 @@ export interface FileRoutesById {
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/careers/contact': typeof CareersContactRoute
+  '/careers/jobs': typeof CareersJobsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
+  '/careers/': typeof CareersIndexRoute
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
@@ -294,6 +329,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/careers'
     | '/privacy'
     | '/terms'
     | '/analytics'
@@ -307,9 +343,12 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/careers/contact'
+    | '/careers/jobs'
     | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
+    | '/careers/'
     | '/stores/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
@@ -338,9 +377,12 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/careers/contact'
+    | '/careers/jobs'
     | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
+    | '/careers'
     | '/stores/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
@@ -357,6 +399,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/careers'
     | '/privacy'
     | '/terms'
     | '/_authenticated/analytics'
@@ -370,9 +413,12 @@ export interface FileRouteTypes {
     | '/_authenticated/stores'
     | '/_authenticated/team'
     | '/_authenticated/templates'
+    | '/careers/contact'
+    | '/careers/jobs'
     | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
+    | '/careers/'
     | '/_authenticated/stores_/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
@@ -390,6 +436,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CareersRoute: typeof CareersRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -428,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -520,6 +574,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/templates'
       preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/careers/': {
+      id: '/careers/'
+      path: '/'
+      fullPath: '/careers/'
+      preLoaderRoute: typeof CareersIndexRouteImport
+      parentRoute: typeof CareersRoute
+    }
+    '/careers/contact': {
+      id: '/careers/contact'
+      path: '/contact'
+      fullPath: '/careers/contact'
+      preLoaderRoute: typeof CareersContactRouteImport
+      parentRoute: typeof CareersRoute
+    }
+    '/careers/jobs': {
+      id: '/careers/jobs'
+      path: '/jobs'
+      fullPath: '/careers/jobs'
+      preLoaderRoute: typeof CareersJobsRouteImport
+      parentRoute: typeof CareersRoute
     }
     '/invite/$token': {
       id: '/invite/$token'
@@ -655,10 +730,26 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CareersRouteChildren {
+  CareersContactRoute: typeof CareersContactRoute
+  CareersJobsRoute: typeof CareersJobsRoute
+  CareersIndexRoute: typeof CareersIndexRoute
+}
+
+const CareersRouteChildren: CareersRouteChildren = {
+  CareersContactRoute: CareersContactRoute,
+  CareersJobsRoute: CareersJobsRoute,
+  CareersIndexRoute: CareersIndexRoute,
+}
+
+const CareersRouteWithChildren =
+  CareersRoute._addFileChildren(CareersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CareersRoute: CareersRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   InviteTokenRoute: InviteTokenRoute,
