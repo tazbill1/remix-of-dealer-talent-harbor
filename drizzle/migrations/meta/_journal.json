@@ -29,6 +29,13 @@
       "when": 1793106993460,
       "tag": "0003_track1_requisitions_jobbank",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793113115666,
+      "tag": "0004_assistant_sms_resume_calendar",
+      "breakpoints": true
     }
   ]
 }

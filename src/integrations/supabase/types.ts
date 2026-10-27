@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user_connections: {
+        Row: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          reconnect_required: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          reconnect_required?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          reconnect_required?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       application_events: {
         Row: {
           application_id: string
@@ -58,6 +88,7 @@ export type Database = {
       }
       applications: {
         Row: {
+          ai_summary: string | null
           created_at: string
           dealership_id: string
           email: string
@@ -68,6 +99,7 @@ export type Database = {
           open_to_other_stores: boolean
           org_id: string
           phone: string | null
+          profile: Json
           rating: number | null
           resume_path: string | null
           source: string
@@ -76,6 +108,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_summary?: string | null
           created_at?: string
           dealership_id: string
           email: string
@@ -86,6 +119,7 @@ export type Database = {
           open_to_other_stores?: boolean
           org_id: string
           phone?: string | null
+          profile?: Json
           rating?: number | null
           resume_path?: string | null
           source?: string
@@ -94,6 +128,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_summary?: string | null
           created_at?: string
           dealership_id?: string
           email?: string
@@ -104,6 +139,7 @@ export type Database = {
           open_to_other_stores?: boolean
           org_id?: string
           phone?: string | null
+          profile?: Json
           rating?: number | null
           resume_path?: string | null
           source?: string
@@ -143,6 +179,8 @@ export type Database = {
           city: string | null
           created_at: string
           id: string
+          manager_name: string | null
+          manager_phone: string | null
           name: string
           org_id: string
           state: string | null
@@ -154,6 +192,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          manager_name?: string | null
+          manager_phone?: string | null
           name: string
           org_id: string
           state?: string | null
@@ -165,6 +205,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          manager_name?: string | null
+          manager_phone?: string | null
           name?: string
           org_id?: string
           state?: string | null
@@ -172,6 +214,63 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dealerships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          application_id: string
+          created_at: string
+          created_by: string | null
+          duration_min: number
+          external_event_id: string | null
+          id: string
+          location: string | null
+          org_id: string
+          source: string
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number
+          external_event_id?: string | null
+          id?: string
+          location?: string | null
+          org_id: string
+          source?: string
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number
+          external_event_id?: string | null
+          id?: string
+          location?: string | null
+          org_id?: string
+          source?: string
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -297,6 +396,54 @@ export type Database = {
           },
           {
             foreignKeyName: "jobs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          application_id: string
+          body: string
+          channel: string
+          created_at: string
+          direction: string
+          id: string
+          org_id: string
+          party: string
+        }
+        Insert: {
+          application_id: string
+          body: string
+          channel?: string
+          created_at?: string
+          direction: string
+          id?: string
+          org_id: string
+          party: string
+        }
+        Update: {
+          application_id?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          org_id?: string
+          party?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"

@@ -13,11 +13,17 @@
 - [x] Enterprise job bank
 - [x] Store-to-store transfer, bulk stage update, bulk email
 
+## Done (Assistant + intake)
+- [x] Drag-and-drop resume upload with AI auto-fill (PDF, Word, image)
+- [x] Per-store assistant texting threads (candidate + hiring manager) that auto-update profile, rating, stage, and book interviews
+- [x] Interviews page + add-to-calendar download
+
 ## Next
+- [ ] Live SMS delivery (blocked: Twilio connection)
+- [ ] One-click Outlook/Google calendar sync + outside-booking detection (blocked: Microsoft/Google sign-in client setup was declined)
 - [ ] Track 2: analytics (time to first contact, aging, time to fill, manager response, retention, exports)
 - [ ] Enterprise communication templates + in-app bulk sending (needs sender domain)
 - [ ] 3-business-day untouched escalation
-- [ ] Outlook calendar integration
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
 - [ ] Questionnaires attached to jobs (knockout questions)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording

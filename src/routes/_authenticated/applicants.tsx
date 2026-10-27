@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
+import { UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }] }),
@@ -29,7 +31,7 @@ function Applicants() {
       const [apps, jobs, stores] = await Promise.all([
         supabase.from("applications").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, title, dealership_id, status").eq("org_id", org.orgId),
-        supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
+        supabase.from("dealerships").select("id, name, assistant_name").eq("org_id", org.orgId).order("name"),
       ]);
       return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [] };
     },
@@ -37,6 +39,7 @@ function Applicants() {
   const [store, setStore] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<AppStatus>("screening");
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
@@ -78,12 +81,15 @@ function Applicants() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-3xl">Applicants</h1><p className="text-muted-foreground">Drag a card to move it along, or tick several to update them at once.</p></div>
+        <div className="flex gap-2"><Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
         <select className="h-9 rounded-md border bg-background px-2 text-sm" value={store} onChange={(e) => setStore(e.target.value)}>
           <option value="all">All stores</option>
           <option value="shared">Open to other stores</option>
           {data?.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        </select></div>
       </div>
+      <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
+        jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, dealership_id: j.dealership_id, label: `${storeName(j.dealership_id)} · ${j.title}` }))} />
       {checked.length > 0 && (
         <div className="sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-2xl bg-navy p-3 text-navy-foreground shadow-lg">
           <span className="text-sm font-semibold">{checked.length} selected</span>
@@ -133,17 +139,19 @@ function Applicants() {
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}` }))}
-            onTransfer={(jobId) => transfer(current.id, jobId)} />}
+            onTransfer={(jobId) => transfer(current.id, jobId)} orgId={org.orgId}
+            assistantName={data?.stores.find((s) => s.id === current.dealership_id)?.assistant_name ?? "Assistant"}
+            onRefresh={() => qc.invalidateQueries({ queryKey: key })} />}
         </SheetContent>
       </Sheet>
     </div>
   );
 }
 
-type App = { id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
+type App = { profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer }: { app: App; jobTitle: string; storeName: string;
+function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
   const [target, setTarget] = useState("");
@@ -167,6 +175,10 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
         {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
       </div>
       <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+      {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
+      <ProfileFacts profile={app.profile as Record<string, unknown>} />
+      <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />
+      <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
       <div>
         <div className="mb-2 text-sm font-semibold">Stage</div>
         <div className="flex flex-wrap gap-2">
@@ -215,5 +227,21 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
         </ol>
       </div>
     </div>
+  );
+}
+
+const FACT_LABELS: Record<string, string> = { current_title: "Current title", years_experience: "Experience (yrs)", certifications: "Certifications",
+  availability: "Availability", desired_pay: "Desired pay", earliest_start: "Earliest start", has_drivers_license: "Driver's license",
+  past_employers: "Past employers", skills: "Skills", city: "City", facts: "Other notes" };
+function ProfileFacts({ profile }: { profile: Record<string, unknown> }) {
+  const rows = Object.entries(profile ?? {}).filter(([k, v]) => FACT_LABELS[k] && v !== null && v !== "" && !(Array.isArray(v) && !v.length));
+  if (!rows.length) return null;
+  return (
+    <dl className="grid grid-cols-2 gap-2 rounded-xl border p-3 text-sm">
+      {rows.map(([k, v]) => (
+        <div key={k}><dt className="text-xs text-muted-foreground">{FACT_LABELS[k]}</dt>
+          <dd>{Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}</dd></div>
+      ))}
+    </dl>
   );
 }
