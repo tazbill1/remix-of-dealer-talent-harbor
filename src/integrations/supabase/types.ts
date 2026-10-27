@@ -751,6 +751,7 @@ export type Database = {
           escalate_after_hours: number
           mode: string
           nudge_after_hours: number
+          offer_template_id: string | null
           org_id: string
           send_days: number[]
           send_end: string
@@ -766,6 +767,7 @@ export type Database = {
           escalate_after_hours?: number
           mode?: string
           nudge_after_hours?: number
+          offer_template_id?: string | null
           org_id: string
           send_days?: number[]
           send_end?: string
@@ -781,6 +783,7 @@ export type Database = {
           escalate_after_hours?: number
           mode?: string
           nudge_after_hours?: number
+          offer_template_id?: string | null
           org_id?: string
           send_days?: number[]
           send_end?: string
@@ -792,6 +795,75 @@ export type Database = {
             foreignKeyName: "messaging_settings_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          application_id: string
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          job_title: string
+          note: string | null
+          org_id: string
+          pay: string | null
+          provider: string
+          provider_document_id: string | null
+          sent_by: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_title: string
+          note?: string | null
+          org_id: string
+          pay?: string | null
+          provider?: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_title?: string
+          note?: string | null
+          org_id?: string
+          pay?: string | null
+          provider?: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
