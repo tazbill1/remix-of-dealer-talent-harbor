@@ -58,7 +58,7 @@ function CareersHome() {
               <Link key={s.id} to="/careers/jobs" search={{ store: s.id }} className="rounded-2xl bg-background p-4 shadow-sm transition hover:shadow-md">
                 <div className="font-semibold">{s.name}</div>
                 {s.city && <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-3.5" />{s.city}{s.state ? `, ${s.state}` : ""}</div>}
-                <div className="mt-2 text-sm text-sapphire">{jobs.filter((j) => j.dealership_id === s.id).length} open jobs</div>
+                <div className="mt-2 text-sm text-sapphire">{((n) => `${n} open job${n === 1 ? "" : "s"}`)(jobs.filter((j) => j.dealership_id === s.id).length)}</div>
               </Link>
             ))}
           </div>
