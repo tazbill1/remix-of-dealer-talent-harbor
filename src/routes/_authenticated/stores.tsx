@@ -89,7 +89,7 @@ function Stores() {
               </DialogContent>
             </Dialog>
           )}
-          <Dialog open={open} onOpenChange={setOpen}>
+          {isHr && <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus />Add store</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add a store</DialogTitle></DialogHeader>
@@ -104,7 +104,7 @@ function Stores() {
                 <Button type="submit" className="w-full">Save store</Button>
               </form>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
       </div>
 
@@ -129,7 +129,7 @@ function Stores() {
                 <h3 className="text-lg">{s.name}</h3>
                 <p className="text-sm text-muted-foreground">{[s.brand, [s.city, s.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
               </div>
-              <Button variant="ghost" size="icon" className="relative z-10" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>
+              {isHr && <Button variant="ghost" size="icon" className="relative z-10" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>}
             </div>
             <div className="mt-4 flex items-center justify-between gap-2 text-sm">
               <span>Assistant: <span className="font-semibold text-sapphire">{s.assistant_name}</span></span>
