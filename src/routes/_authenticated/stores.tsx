@@ -6,13 +6,14 @@ import { Plus, Trash2, MapPinned } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
+import { StoreTextingContact } from "@/components/store-texting-contact";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/stores")({
-  head: () => ({ meta: [{ title: "Stores | WerkandMe Hiring" }] }),
+  head: () => ({ meta: [{ title: "Stores | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe dealerships, regions and texting contacts." }, { property: "og:title", content: "Stores | WerkandMe Hiring" }, { property: "og:description", content: "Manage dealerships, regions and texting contacts." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Stores,
 });
 
@@ -146,6 +147,7 @@ function Stores() {
                   <option value="">No region</option>
                   {regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
+                <StoreTextingContact store={s} />
               </div>
             )}
           </div>
