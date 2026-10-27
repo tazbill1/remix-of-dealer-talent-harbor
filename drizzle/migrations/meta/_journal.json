@@ -71,6 +71,13 @@
       "when": 1793137623529,
       "tag": "0009_knockout_failed",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793137933589,
+      "tag": "0010_job_questions_and_public_read_grants",
+      "breakpoints": true
     }
   ]
 }
