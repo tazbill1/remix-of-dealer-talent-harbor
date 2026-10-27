@@ -95,6 +95,12 @@ export async function handleManagerShortReply(
             body: text.declineCandidate({ first, job: input.jobTitle, store: input.storeName }),
           }),
     });
+    {
+      const { emailApplicant } = await import("@/lib/email/applicant.server");
+      await emailApplicant(admin, app.id, status === "interview"
+        ? { kind: "interview", startsAt: null }
+        : { kind: "status", status });
+    }
     const reply =
       decision === "interview" ? text.ackInterview({ name: first }) : text.ackPass({ name: first });
     const row = await ack(reply);

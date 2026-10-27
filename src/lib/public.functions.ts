@@ -103,6 +103,8 @@ export const submitApplication = createServerFn({ method: "POST" })
     // Welcome text (respects consent, STOP and texting hours; never blocks applying).
     const { welcomeOnApply } = await import("@/lib/workflows/run.server");
     await welcomeOnApply(supabaseAdmin, app.id);
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    await emailApplicant(supabaseAdmin, app.id, { kind: "confirmation" });
     let uploadUrl: string | null = null;
     let uploadToken: string | null = null;
     let resumePath: string | null = null;

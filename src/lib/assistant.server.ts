@@ -435,6 +435,14 @@ Return:
   if (patch.status && patch.status !== app.status) {
     await sb.from("application_events").insert(statusEventRows(app.org_id, [app.id], patch.status));
   }
+  {
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    if (interviewAt) await emailApplicant(admin, app.id, { kind: "interview", startsAt: interviewAt });
+    else if (patch.status && patch.status !== app.status)
+      await emailApplicant(admin, app.id, patch.status === "interview"
+        ? { kind: "interview", startsAt: null }
+        : { kind: "status", status: patch.status as import("@/lib/jobs").AppStatus });
+  }
   return {
     reply: out.reply,
     keyword: null,
