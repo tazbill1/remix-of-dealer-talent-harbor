@@ -5,6 +5,7 @@ import { getCareers } from "@/lib/public.functions";
 import { formatPay } from "@/lib/jobs";
 import { Input } from "@/components/ui/input";
 import { Logo, GradientText } from "@/components/brand";
+import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/journey-faq";
 
 export const Route = createFileRoute("/c/$orgSlug/")({
   loader: async ({ params }) => {
@@ -66,7 +67,11 @@ function Careers() {
           {!list.length && <p className="rounded-2xl bg-background p-6 text-center text-muted-foreground">No matching jobs right now. Check back soon!</p>}
         </div>
       </div>
-      <footer className="flex items-center justify-center gap-2 pb-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>
+      <div className="bg-background">
+        <Journey title="Your path from applicant" accent="to team member." steps={candidateJourney} />
+        <FaqList faqs={candidateFaqs} />
+      </div>
+      <footer className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>
     </div>
   );
 }

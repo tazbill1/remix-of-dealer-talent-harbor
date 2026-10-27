@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Building2, Bot, Rss, Video, ShieldCheck, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo, GradientText } from "@/components/brand";
+import { Journey, FaqList, groupJourney, groupFaqs } from "@/components/journey-faq";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,6 +62,9 @@ function Index() {
           ))}
         </div>
       </section>
+
+      <Journey title="The employee journey," accent="start to 90 days." steps={groupJourney} />
+      <FaqList faqs={groupFaqs} />
 
       <footer className="mx-auto max-w-6xl px-5 py-10 text-sm text-muted-foreground">
         We change werk for the better. © {new Date().getFullYear()} WerkandMe
