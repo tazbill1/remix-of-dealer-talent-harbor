@@ -1,21 +1,36 @@
 /**
- * BoldSign (e-signature). Turned on by adding the BOLDSIGN_API_KEY secret, plus
- * BOLDSIGN_WEBHOOK_SECRET so signing updates reach hireme.
+ * BoldSign (e-signature). Uses the linked BoldSign connection (through Lovable's
+ * connector gateway); a raw BOLDSIGN_API_KEY secret still works as a fallback.
+ * BOLDSIGN_WEBHOOK_SECRET lets signing updates reach hireme.
  */
 import { parseSignatureHeader } from "@/lib/offers";
 
-const API = () => (process.env["BOLDSIGN_API_URL"] ?? "https://api.boldsign.com").replace(/\/$/, "");
-export const boldsignConfigured = () => !!process.env["BOLDSIGN_API_KEY"];
+const GATEWAY = "https://connector-gateway.lovable.dev/udc_boldsign";
+export const boldsignConfigured = () =>
+  !!(process.env["UDC_BOLDSIGN_API_KEY"] && process.env["LOVABLE_API_KEY"]) || !!process.env["BOLDSIGN_API_KEY"];
 
-async function call(path: string, init: RequestInit = {}) {
+function target(): { base: string; headers: Record<string, string> } {
+  const conn = process.env["UDC_BOLDSIGN_API_KEY"];
+  const lovable = process.env["LOVABLE_API_KEY"];
+  if (conn && lovable) return { base: GATEWAY, headers: { Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": conn } };
   const key = process.env["BOLDSIGN_API_KEY"];
-  if (!key) throw new Error("BoldSign isn't connected yet. Add the BOLDSIGN_API_KEY secret in Lovable.");
-  const res = await fetch(`${API()}${path}`, {
+  if (key)
+    return {
+      base: (process.env["BOLDSIGN_API_URL"] ?? "https://api.boldsign.com").replace(/\/$/, ""),
+      headers: { "X-API-KEY": key },
+    };
+  throw new Error("BoldSign isn't connected yet.");
+}
+
+async function raw(path: string, init: RequestInit = {}) {
+  const t = target();
+  const res = await fetch(`${t.base}${path}`, {
     ...init,
-    headers: { "X-API-KEY": key, accept: "application/json", "content-type": "application/json", ...init.headers },
+    headers: { ...t.headers, accept: "application/json", "content-type": "application/json", ...init.headers },
   });
-  const text = await res.text();
   if (!res.ok) {
+    const text = await res.text();
+    console.error(`BoldSign request failed [${res.status}]: ${text.slice(0, 500)}`);
     let msg = text.slice(0, 300);
     try {
       const j = JSON.parse(text) as { error?: string; message?: string; errors?: Record<string, string[]> };
@@ -23,10 +38,48 @@ async function call(path: string, init: RequestInit = {}) {
     } catch {
       /* not JSON */
     }
-    if (res.status === 401) msg = "BoldSign rejected the API key. Check BOLDSIGN_API_KEY.";
-    throw new Error(`BoldSign: ${msg || res.statusText}`);
+    if (res.status === 401) msg = "BoldSign rejected the connection. Reconnect BoldSign.";
+    throw new Error(`BoldSign [${res.status}]: ${msg || res.statusText}`);
   }
+  return res;
+}
+
+async function call(path: string, init: RequestInit = {}) {
+  const text = await (await raw(path, init)).text();
   return text ? (JSON.parse(text) as unknown) : null;
+}
+
+export type BoldTemplate = { id: string; name: string; description: string | null; updatedAt: string | null };
+
+/** All templates in the BoldSign account (newest activity first). */
+export async function listTemplates(): Promise<BoldTemplate[]> {
+  const out: BoldTemplate[] = [];
+  for (let page = 1; page <= 5; page++) {
+    const r = (await call(`/v1/template/list?PageSize=100&Page=${page}`)) as {
+      result?: { documentId?: string; templateId?: string; messageTitle?: string; templateName?: string; templateDescription?: string; activityDate?: string | number }[];
+      pageDetails?: { totalPages?: number };
+    } | null;
+    for (const t of r?.result ?? []) {
+      const id = t.documentId ?? t.templateId;
+      if (!id) continue;
+      out.push({
+        id,
+        name: t.templateName ?? t.messageTitle ?? "Untitled template",
+        description: t.templateDescription ?? null,
+        updatedAt: t.activityDate ? new Date(typeof t.activityDate === "number" ? t.activityDate * 1000 : t.activityDate).toISOString() : null,
+      });
+    }
+    if (page >= (r?.pageDetails?.totalPages ?? 1)) break;
+  }
+  return out;
+}
+
+/** The signed PDF. */
+export async function downloadDocument(documentId: string) {
+  const res = await raw(`/v1/document/download?documentId=${encodeURIComponent(documentId)}`, {
+    headers: { accept: "application/pdf" },
+  });
+  return new Uint8Array(await res.arrayBuffer());
 }
 
 /** The field IDs on a template, so hireme only fills fields that exist. Null if unknown. */
