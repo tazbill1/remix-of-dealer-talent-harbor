@@ -170,3 +170,106 @@ describe("helpers", () => {
     expect(toCsv(["Name"], [['Smith, "Bo"']])).toBe('"Name"\n"Smith, ""Bo"""');
   });
 });
+
+describe("retention and regions", () => {
+  const DAY = 24 * H;
+  const day = (daysAgo: number) => new Date(NOW - daysAgo * DAY).toISOString().slice(0, 10);
+  const rStores = [
+    { id: "s1", name: "Grand Rapids Ford", region_id: "west" },
+    { id: "s2", name: "Detroit Toyota", region_id: "east" },
+    { id: "s3", name: "Lansing Kia", region_id: null },
+  ];
+  const regions = [
+    { id: "west", name: "West Michigan" },
+    { id: "east", name: "Metro Detroit" },
+  ];
+  const rJobs: AJob[] = rStores.map((s, i) => ({
+    id: `j${i}`,
+    title: "Service Technician",
+    dealership_id: s.id,
+    status: "open",
+    division: "fixed_ops",
+    department: "Service",
+    hiring_manager: null,
+    created_at: iso(24 * 200),
+  }));
+  const hire = (
+    id: string,
+    job: AJob,
+    startDaysAgo: number,
+    departedDaysAgo: number | null,
+  ): AApp => ({
+    id,
+    job_id: job.id,
+    dealership_id: job.dealership_id,
+    status: "hired",
+    source: "Referral",
+    created_at: iso(24 * (startDaysAgo + 10)),
+    updated_at: iso(24 * startDaysAgo),
+    hired_at: iso(24 * (startDaysAgo + 3)),
+    start_date: day(startDaysAgo),
+    departed_at: departedDaysAgo === null ? null : day(departedDaysAgo),
+  });
+  const [west, east, none] = rJobs as [AJob, AJob, AJob];
+  const apps = [
+    hire("h1", west, 120, null), // stayed past 90
+    hire("h2", west, 100, 80), // left on day 20: fails 30/60/90
+    hire("h3", east, 70, 5), // left on day 65: passes 30 and 60; started 70 days ago, so not due for 90
+    hire("h4", east, 10, null), // too new for any mark
+    hire("h5", none, 45, null), // passes 30; not due for 60
+  ];
+  const run = (filters = { storeId: "all", division: "all", regionId: "all" }) =>
+    computeAnalytics({
+      apps,
+      jobs: rJobs,
+      stores: rStores,
+      regions,
+      events: [],
+      messages: [],
+      range: { from: null, to: NOW },
+      filters,
+      now: NOW,
+    });
+
+  it("computes enterprise 30/60/90 retention from start and departure dates", () => {
+    const e = run().retention.enterprise;
+    expect(e.hires).toBe(5);
+    // 30-day: h1, h2, h3, h5 due; h2 left before day 30 -> 3/4
+    expect(e[30]).toEqual({ eligible: 4, retained: 3, rate: 0.75 });
+    // 60-day: h1, h2, h3 due; h3 left on day 65 so still counts -> 2/3
+    expect(e[60]).toMatchObject({ eligible: 3, retained: 2 });
+    // 90-day: h1, h2 due -> 1/2
+    expect(e[90]).toEqual({ eligible: 2, retained: 1, rate: 0.5 });
+  });
+
+  it("breaks retention down by region and location", () => {
+    const r = run().retention;
+    expect(r.byRegion.map((x) => x.label).sort()).toEqual([
+      "Metro Detroit",
+      "No region",
+      "West Michigan",
+    ]);
+    const westRow = r.byRegion.find((x) => x.label === "West Michigan")!;
+    expect(westRow[30]).toEqual({ eligible: 2, retained: 1, rate: 0.5 });
+    expect(r.byLocation.find((x) => x.label === "Lansing Kia")?.[30].rate).toBe(1);
+  });
+
+  it("filters everything by region", () => {
+    const w = run({ storeId: "all", division: "all", regionId: "west" });
+    expect(w.retention.enterprise.hires).toBe(2);
+    expect(w.openByStore.map((s) => s.label)).toEqual(["Grand Rapids Ford"]);
+    const n = run({ storeId: "all", division: "all", regionId: "none" });
+    expect(n.retention.enterprise.hires).toBe(1);
+    expect(
+      run()
+        .breakdown("region")
+        .find((x) => x.label === "Metro Detroit")?.openRoles,
+    ).toBe(1);
+  });
+
+  it("uses hired_at for time to fill when present", () => {
+    const fill = run().timeToFillByStore.find((x) => x.label === "Grand Rapids Ford")!;
+    // job created 200 days ago; first hire (h1) hired_at 123 days ago -> 77 days
+    expect(fill.avgDays).toBeCloseTo(77);
+  });
+});

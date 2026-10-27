@@ -82,7 +82,13 @@ describe("Analytics page", () => {
       root.render(
         <QueryClientProvider client={new QueryClient()}>
           <OrgContext.Provider
-            value={{ orgId: "o1", orgName: "Test Group", orgSlug: "test", role: "recruiter", isPlatformAdmin: false }}
+            value={{
+              orgId: "o1",
+              orgName: "Test Group",
+              orgSlug: "test",
+              role: "recruiter",
+              isPlatformAdmin: false,
+            }}
           >
             <Page />
           </OrgContext.Provider>
