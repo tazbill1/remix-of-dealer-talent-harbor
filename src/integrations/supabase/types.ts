@@ -103,6 +103,7 @@ export type Database = {
           hired_at: string | null
           id: string
           job_id: string
+          knockout_failed: boolean
           notes: string | null
           open_to_other_stores: boolean
           org_id: string
@@ -129,6 +130,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           job_id: string
+          knockout_failed?: boolean
           notes?: string | null
           open_to_other_stores?: boolean
           org_id: string
@@ -155,6 +157,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           job_id?: string
+          knockout_failed?: boolean
           notes?: string | null
           open_to_other_stores?: boolean
           org_id?: string

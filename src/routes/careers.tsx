@@ -10,7 +10,7 @@ export const Route = createFileRoute("/careers")({
     return d;
   },
   component: CareersLayout,
-  errorComponent: ({ error }) => <div role="alert" className="p-10 text-center">{error.message}</div>,
+  errorComponent: ({ error }) => <div role="alert" className="p-10 text-center">{error instanceof Error ? error.message : "Something went wrong."}</div>,
   notFoundComponent: () => <div className="p-10 text-center">This careers site isn't available yet.</div>,
 });
 
