@@ -16,7 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { integrationStatus } from "@/lib/email.functions";
 import { saveOfferTemplate } from "@/lib/offers.functions";
-import { OFFER_FIELDS } from "@/lib/offers";
+import { DOC_FIELDS, OFFER_FIELDS } from "@/lib/offers";
+import { listSignTemplates, saveHireOnSign } from "@/lib/documents.functions";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -264,6 +266,8 @@ function Integrations() {
           templateId={env?.offerTemplateId ?? null}
           onSaved={() => qc.invalidateQueries({ queryKey: ["integration-status", org.orgId] })}
         />
+
+        <DocumentsCard orgId={org.orgId} isAdmin={isAdmin} />
       </div>
     </div>
   );
@@ -300,7 +304,7 @@ function OfferLettersCard({
           ? webhook
             ? "pick your offer letter template below."
             : "add the BOLDSIGN_WEBHOOK_SECRET secret so signing updates come back to hireme (steps below)."
-          : "add your BoldSign API key as the BOLDSIGN_API_KEY secret in Lovable (BoldSign: Settings > API > API Key)."
+          : "connect BoldSign in Lovable's connectors."
       }
     >
       <div className="mt-3 space-y-3 text-xs">
@@ -359,6 +363,75 @@ function OfferLettersCard({
             in Lovable as BOLDSIGN_WEBHOOK_SECRET. {webhook ? "Secret is set." : ""}
           </p>
         </div>
+      </div>
+    </Card>
+  );
+}
+
+function DocumentsCard({ orgId, isAdmin }: { orgId: string; isAdmin: boolean }) {
+  const list = useServerFn(listSignTemplates);
+  const saveHire = useServerFn(saveHireOnSign);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["sign-templates", orgId],
+    queryFn: () => list({ data: { orgId } }),
+  });
+  const { data: hire, refetch: refetchHire } = useQuery({
+    queryKey: ["hire-on-sign", orgId],
+    queryFn: async () =>
+      !!(await supabase.from("messaging_settings").select("hire_on_offer_signed").eq("org_id", orgId).maybeSingle()).data
+        ?.hire_on_offer_signed,
+  });
+  return (
+    <Card
+      icon={FileSignature}
+      title="Documents (BoldSign)"
+      state={data?.connected ? "connected" : "not_connected"}
+      what="Build and edit documents in BoldSign as templates. They appear here automatically, and you can send any of them from an applicant's profile."
+      needs={data?.connected ? "nothing. Add or change templates in BoldSign any time." : "connect BoldSign in Lovable's connectors."}
+    >
+      <div className="mt-3 space-y-3 text-xs">
+        <div className="flex items-center justify-between">
+          <div className="font-medium">Your templates</div>
+          <Button size="sm" variant="ghost" onClick={() => refetch()}>
+            Refresh
+          </Button>
+        </div>
+        {isLoading && <p className="text-muted-foreground">Loading…</p>}
+        {data?.error && <p className="text-destructive">{data.error}</p>}
+        {data?.connected && !data.error && data.templates.length === 0 && (
+          <p className="text-muted-foreground">No templates yet. Create one in BoldSign (Templates &gt; Create template).</p>
+        )}
+        <ul className="space-y-1">
+          {data?.templates.map((t) => (
+            <li key={t.id} className="rounded bg-secondary px-2 py-1.5">
+              <span className="font-medium">{t.name}</span>
+              {t.description && <span className="text-muted-foreground"> · {t.description}</span>}
+            </li>
+          ))}
+        </ul>
+        <p className="text-muted-foreground">
+          Make role 1 the applicant (signer). Name fill-in boxes like this and hireme fills them in:{" "}
+          {DOC_FIELDS.map((f) => (
+            <code key={f.id} className="mr-1 rounded bg-secondary px-1">
+              {f.id}
+            </code>
+          ))}
+        </p>
+        <label className="flex items-center justify-between gap-3">
+          <span>Move the applicant to Hired when they sign the offer letter</span>
+          <Switch
+            checked={!!hire}
+            disabled={!isAdmin}
+            onCheckedChange={async (on) => {
+              try {
+                await saveHire({ data: { orgId, on } });
+                refetchHire();
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }}
+          />
+        </label>
       </div>
     </Card>
   );
