@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand";
 
+// Linked from the texting opt-in. Carriers check that these are on the form.
+const SMS_TERMS_URL = "/terms";
+const SMS_PRIVACY_URL = "/privacy";
+
 export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
   validateSearch: z.object({ source: z.string().max(40).optional() }),
   loader: async ({ params }) => {
@@ -85,7 +89,11 @@ function JobPage() {
           <div className="space-y-1.5"><Label htmlFor="r">Resume (optional)</Label><Input id="r" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
             <Checkbox id="sms" className="mt-0.5" checked={smsConsent} onCheckedChange={(c) => setSmsConsent(c === true)} />
-            <span>Yes, text me updates about my application and interview times at the number above. Message and data rates may apply. Reply STOP anytime to opt out.</span>
+            <span>
+              Yes, text me at the number above about this application from hireme by WerkandMe for {store?.name ?? org?.name ?? "the hiring team"}: screening questions, updates and interview reminders. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out. Agreeing isn't required to apply.{" "}
+              <a href={SMS_TERMS_URL} target="_blank" rel="noreferrer" className="underline">Terms</a> ·{" "}
+              <a href={SMS_PRIVACY_URL} target="_blank" rel="noreferrer" className="underline">Privacy</a>
+            </span>
           </label>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Sending..." : "Submit application"}</Button>
           <p className="text-xs text-muted-foreground">By applying you agree to get updates about this job by email.</p>

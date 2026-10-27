@@ -169,7 +169,7 @@ export function dueReminders(input: {
 
 export const text = {
   welcome: (a: { first: string; store: string; assistant: string; job: string }) =>
-    `Hi ${a.first}! This is ${a.assistant} with ${a.store} hiring. Thanks for applying for ${a.job}! A few quick questions so we can get you in front of the team. First: how many years of experience do you have? Reply STOP to opt out.`,
+    `Hi ${a.first}! This is ${a.assistant}, the hiring assistant for ${a.store} (hireme by WerkandMe). Thanks for applying for ${a.job}! A few quick questions so we can get you in front of the team. First: how many years of experience do you have? Reply STOP to opt out.`,
   summary: (a: {
     assistant: string;
     name: string;

@@ -116,7 +116,7 @@ export function keywordReply(k: Keyword, storeName: string) {
     return `${storeName}: You're unsubscribed and won't get more texts from us. Reply START to resubscribe.`;
   if (k === "start")
     return `${storeName}: You're resubscribed to hiring updates. Msg & data rates may apply. Reply STOP to opt out, HELP for help.`;
-  return `${storeName} hiring texts: updates about your application. Msg & data rates may apply. Reply STOP to opt out.`;
+  return `${storeName} hiring texts via hireme by WerkandMe: application updates and interview reminders. Msg frequency varies. Msg & data rates may apply. Reply STOP to opt out. Help: support@werkandme.com`;
 }
 
 // ---------------------------------------------------------------------------
