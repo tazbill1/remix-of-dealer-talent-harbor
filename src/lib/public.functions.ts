@@ -52,6 +52,7 @@ const applySchema = z.object({
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   source: z.string().trim().max(40).optional(),
   resumeFileName: z.string().max(200).optional(),
+  smsConsent: z.boolean().optional(),
 });
 
 export const submitApplication = createServerFn({ method: "POST" })
@@ -60,10 +61,33 @@ export const submitApplication = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: job } = await supabaseAdmin.from("jobs").select("id, org_id, dealership_id, status").eq("id", data.jobId).maybeSingle();
     if (!job || job.status !== "open") throw new Error("This job is no longer accepting applications.");
+    const email = data.email.toLowerCase();
+    const phone = data.phone || null;
+    // Find an existing candidate in this group by email or phone, or create one.
+    let candidateId: string | null = null;
+    const { data: found } = await supabaseAdmin.from("candidates").select("id, sms_opt_in")
+      .eq("org_id", job.org_id).or(`email.eq.${email}${phone ? `,phone.eq.${phone}` : ""}`).limit(1);
+    if (found?.length) {
+      candidateId = found[0].id;
+      if (data.smsConsent && !found[0].sms_opt_in) {
+        await supabaseAdmin.from("candidates").update({
+          sms_opt_in: true, sms_opt_in_at: new Date().toISOString(), sms_opted_out_at: null, consent_source: "apply_form",
+        }).eq("id", candidateId);
+      }
+    } else {
+      const { data: created } = await supabaseAdmin.from("candidates").insert({
+        org_id: job.org_id, full_name: data.fullName, email, phone,
+        sms_opt_in: !!data.smsConsent,
+        sms_opt_in_at: data.smsConsent ? new Date().toISOString() : null,
+        consent_source: data.smsConsent ? "apply_form" : null,
+      }).select("id").single();
+      candidateId = created?.id ?? null;
+    }
     const { data: app, error } = await supabaseAdmin.from("applications").insert({
       org_id: job.org_id, job_id: job.id, dealership_id: job.dealership_id,
-      full_name: data.fullName, email: data.email.toLowerCase(), phone: data.phone || null,
+      full_name: data.fullName, email, phone,
       source: (data.source || "careers").toLowerCase(),
+      candidate_id: candidateId,
     }).select("id, status_token").single();
     if (error) throw new Error("We couldn't save your application. Please try again.");
     await supabaseAdmin.from("application_events").insert({
