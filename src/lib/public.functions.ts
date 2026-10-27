@@ -36,13 +36,21 @@ export const getPublicJob = createServerFn({ method: "GET" })
   .inputValidator((d: { jobId: string }) => z.object({ jobId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
     const sb = publicClient();
-    const { data: job } = await sb.from("jobs").select("*").eq("id", data.jobId).eq("status", "open").maybeSingle();
+    // Only public columns: hiring-manager phones and question rules stay private.
+    const { data: job } = await sb
+      .from("jobs")
+      .select("id, org_id, dealership_id, title, department, description, division, employment_type, pay_min, pay_max, pay_period, status, created_at")
+      .eq("id", data.jobId).eq("status", "open").maybeSingle();
     if (!job) return null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { parseQuestions, toPublic } = await import("@/lib/questions");
+    const { data: q } = await supabaseAdmin.from("jobs").select("questions").eq("id", job.id).maybeSingle();
+    const questions = toPublic(parseQuestions(q?.questions));
     const [{ data: store }, { data: org }] = await Promise.all([
       sb.from("dealerships").select("id, name, brand, city, state, address, assistant_name").eq("id", job.dealership_id).maybeSingle(),
       sb.from("organizations").select("id, name, slug").eq("id", job.org_id).maybeSingle(),
     ]);
-    return { job, store, org };
+    return { job, store, org, questions };
   });
 
 const applySchema = z.object({
@@ -53,14 +61,20 @@ const applySchema = z.object({
   source: z.string().trim().max(40).optional(),
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),
+  answers: z.record(z.string().max(40), z.union([z.string().max(500), z.number(), z.boolean()])).optional(),
 });
 
 export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((d: z.input<typeof applySchema>) => applySchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: job } = await supabaseAdmin.from("jobs").select("id, org_id, dealership_id, status").eq("id", data.jobId).maybeSingle();
+    const { data: job } = await supabaseAdmin.from("jobs").select("id, org_id, dealership_id, status, questions").eq("id", data.jobId).maybeSingle();
     if (!job || job.status !== "open") throw new Error("This job is no longer accepting applications.");
+    // Screening questions: check the answers, and flag (never reject) unmet requirements.
+    const { cleanAnswers, parseQuestions, unmet } = await import("@/lib/questions");
+    const questions = parseQuestions(job.questions);
+    const answers = cleanAnswers(questions, data.answers);
+    const knockoutFailed = unmet(questions, answers).length > 0;
     const email = data.email.toLowerCase();
     const phone = data.phone || null;
     // Find an existing candidate in this group by email, then by phone, or create one.
@@ -95,6 +109,8 @@ export const submitApplication = createServerFn({ method: "POST" })
       full_name: data.fullName, email, phone,
       source: (data.source || "careers").toLowerCase(),
       candidate_id: candidateId,
+      answers,
+      knockout_failed: knockoutFailed,
     }).select("id, status_token").single();
     if (error) throw new Error("We couldn't save your application. Please try again.");
     await supabaseAdmin.from("application_events").insert({

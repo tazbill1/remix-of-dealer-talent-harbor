@@ -4,6 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { statusEventRows } from "@/lib/status-log";
 import { keywordOf, toE164 } from "@/lib/messaging/core";
 import { handleManagerShortReply } from "@/lib/workflows/replies.server";
+import { answersForAi, parseQuestions } from "@/lib/questions";
 import {
   applyKeyword,
   deliverDue,
@@ -206,7 +207,7 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
     await Promise.all([
       sb
         .from("jobs")
-        .select("title, description, hiring_manager, hiring_manager_phone")
+        .select("title, description, hiring_manager, hiring_manager_phone, questions")
         .eq("id", app.job_id)
         .single(),
       sb
@@ -305,6 +306,10 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
   }
 
   const assistant = store?.assistant_name ?? "Your HR assistant";
+  const questions = parseQuestions(job?.questions);
+  const screening = questions.length
+    ? answersForAi(questions, (app.answers ?? {}) as Record<string, string>)
+    : "";
   const now = new Date().toISOString();
   const system = `You are ${assistant}, the AI HR assistant for ${store?.name ?? "the dealership"}. Personality: bubbly, kind, sweet and super organized — the assistant HR manager everyone loves. You text by SMS, so keep replies under 320 characters, warm, with at most one emoji.
 You are talking ONLY about this one applicant: ${app.full_name} (application ${app.id}) for ${job?.title ?? "an open role"}. Never mention or confuse any other applicant.
@@ -315,7 +320,7 @@ ${
     : 'Keep the manager accountable: summarize where the candidate stands, ask for decisions (interview? move forward? pass?), and offer specific interview times. Follow their instructions about stage changes and scheduling. A reply of "1" means interview, "2" means pass.'
 }
 Current time (UTC): ${now}. Store time zone: ${tz}.
-Current stage: ${app.status}. Profile so far: ${JSON.stringify(app.profile)}. Notes: ${app.notes ?? ""}.
+Current stage: ${app.status}. Profile so far: ${JSON.stringify(app.profile)}. Notes: ${app.notes ?? ""}.${screening ? `\nThe applicant already answered these on the application (don't ask them again; if a requirement wasn't met, don't argue it, just pass it on to the hiring team):\n${screening}` : ""}
 Scheduled interviews: ${JSON.stringify(interviews ?? [])}.
 Job description: ${(job?.description ?? "").slice(0, 2000)}
 

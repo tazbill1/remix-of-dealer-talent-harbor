@@ -33,7 +33,8 @@ export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
 });
 
 function JobPage() {
-  const { job, store, org } = Route.useLoaderData();
+  const { job, store, org, questions } = Route.useLoaderData();
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const { source } = Route.useSearch();
   const navigate = useNavigate();
   const [f, setF] = useState({ fullName: "", email: "", phone: "" });
@@ -53,9 +54,11 @@ function JobPage() {
   async function apply(e: React.FormEvent) {
     e.preventDefault();
     if (file && file.size > 10 * 1024 * 1024) return toast.error("Resume must be under 10 MB.");
+    const missing = questions.find((q) => q.required && q.kind === "yes_no" && !answers[q.id]);
+    if (missing) return toast.error(`Please answer: ${missing.text}`);
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent, answers } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }
@@ -87,6 +90,31 @@ function JobPage() {
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="r">Resume (optional)</Label><Input id="r" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
+          {questions.map((q) => (
+            <div key={q.id} className="space-y-1.5">
+              <Label htmlFor={`q-${q.id}`}>{q.text}{q.required ? "" : " (optional)"}</Label>
+              {q.kind === "yes_no" ? (
+                <div className="flex gap-2" role="radiogroup" aria-label={q.text}>
+                  {(["yes", "no"] as const).map((v) => (
+                    <button key={v} type="button" role="radio" aria-checked={answers[q.id] === v}
+                      onClick={() => setAnswers({ ...answers, [q.id]: v })}
+                      className={`flex-1 rounded-md border px-3 py-2 text-sm ${answers[q.id] === v ? "border-sapphire bg-sapphire text-primary-foreground" : "bg-background"}`}>
+                      {v === "yes" ? "Yes" : "No"}
+                    </button>
+                  ))}
+                </div>
+              ) : q.kind === "choice" ? (
+                <select id={`q-${q.id}`} required={q.required} className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                  value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}>
+                  <option value="">Choose…</option>
+                  {(q.options ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <Input id={`q-${q.id}`} required={q.required} type={q.kind === "number" ? "number" : "text"} min={q.kind === "number" ? 0 : undefined}
+                  value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} />
+              )}
+            </div>
+          ))}
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
             <Checkbox id="sms" className="mt-0.5" checked={smsConsent} onCheckedChange={(c) => setSmsConsent(c === true)} />
             <span>

@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
+import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
+import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
 import { UserPlus } from "lucide-react";
@@ -36,7 +38,7 @@ function Applicants() {
     queryFn: async () => {
       const [apps, jobs, stores, regions] = await Promise.all([
         supabase.from("applications").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
-        supabase.from("jobs").select("id, title, dealership_id, status").eq("org_id", org.orgId),
+        supabase.from("jobs").select("id, title, dealership_id, status, questions").eq("org_id", org.orgId),
         supabase.from("dealerships").select("id, name, assistant_name, region_id").eq("org_id", org.orgId).order("name"),
         supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
       ]);
@@ -163,6 +165,9 @@ function Applicants() {
                     <div className="flex items-start justify-between gap-2"><div className="font-semibold">{a.full_name}</div>
                       <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
                     <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
+                    {a.knockout_failed && (
+                      <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
+                    )}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
                       <span>{new Date(a.created_at).toLocaleDateString()}</span>
@@ -179,7 +184,7 @@ function Applicants() {
         recipients={emailRecipients} onSent={() => setChecked([])} />
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
+          {current && <Profile app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             isHr={canPostJobs(org.role, org.isPlatformAdmin)}
             otherApps={otherApps} onOpenApp={setSelected}
             regionName={regionName(current.dealership_id)}
@@ -195,11 +200,11 @@ function Applicants() {
   );
 }
 
-type App = { profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
+type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
@@ -245,6 +250,7 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
       </div>
       <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
       {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
+      <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
       <ProfileFacts profile={app.profile as Record<string, unknown>} />
       <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />

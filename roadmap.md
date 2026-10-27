@@ -35,7 +35,7 @@
 - [x] Enterprise templates (email + text), in-app email to one or many applicants with merge fields, unsubscribe links, Integrations page; practice mode until the sender domain is set up (docs/email-update.md)
 - [x] 3-business-day untouched escalation (code; schedule it in Lovable: docs/escalation-schedule.md)
 - [x] Team invites by email/link with role + store/region coverage; remove members; managers must be given coverage (docs/team-invites-update.md)
-- [ ] Questionnaires attached to jobs (knockout questions)
+- [x] Screening (knockout) questions on jobs: answers on the apply form, unmet requirements flagged on cards/profiles, assistant doesn't re-ask (docs/knockout-questions-update.md)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
 - [x] Live email (notify.workwithwerk.com verified; sending address penny@notify.workwithwerk.com, mode live)
 - [ ] Live texts (blocked: Twilio)
