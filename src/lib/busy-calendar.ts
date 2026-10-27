@@ -20,10 +20,10 @@ export function checkCalendarUrl(raw: string): { url: string } | { error: string
   const host = u.hostname.toLowerCase();
   if (!HOSTS.includes(host) && !host.endsWith(".icloud.com"))
     return { error: "Use the private calendar link from Google Calendar, Outlook, or iCloud." };
-  if (host === "calendar.google.com" && !u.pathname.includes("/private-"))
+  if (host === "calendar.google.com" && !/\/(private-[^/]+|public)\/basic\.ics$/.test(u.pathname))
     return {
       error:
-        "That's Google's public address. Use the \"Secret address in iCal format\" (it contains /private-) so busy times can be read.",
+        "Use Google's iCal address: the \"Public address in iCal format\" or the \"Secret address in iCal format\" (both end in basic.ics).",
     };
   return { url: u.toString() };
 }

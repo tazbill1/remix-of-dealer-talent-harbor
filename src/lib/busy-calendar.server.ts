@@ -12,7 +12,11 @@ export async function fetchIcs(rawUrl: string) {
   try {
     const res = await fetch(checked.url, { signal: ctl.signal, redirect: "follow", headers: { accept: "text/calendar" } });
     if (res.status === 404 || res.status === 403)
-      throw new Error("The calendar link doesn't work anymore. It may have been reset; paste the new one.");
+      throw new Error(
+        checked.url.includes("calendar.google.com") && checked.url.includes("/public/")
+          ? "Google says this calendar isn't shared publicly. In Google Calendar settings, under Access permissions, tick \"Make available to public\" and choose \"See only free/busy (hide details)\"."
+          : "The calendar link doesn't work anymore. It may have been reset; paste the new one.",
+      );
     if (!res.ok) throw new Error(`The calendar couldn't be read (${res.status}).`);
     const text = await res.text();
     if (text.length > 8_000_000) throw new Error("That calendar is too large to read.");
