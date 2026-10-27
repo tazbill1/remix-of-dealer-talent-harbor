@@ -36,6 +36,13 @@
       "when": 1793123455136,
       "tag": "0004_fix_jobs_read_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793123945093,
+      "tag": "0005_texting_settings_contacts_delivery",
+      "breakpoints": true
     }
   ]
 }
