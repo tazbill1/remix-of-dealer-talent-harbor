@@ -67,9 +67,10 @@ export const submitApplication = createServerFn({ method: "POST" })
     let candidateId: string | null = null;
     const { data: found } = await supabaseAdmin.from("candidates").select("id, sms_opt_in")
       .eq("org_id", job.org_id).or(`email.eq.${email}${phone ? `,phone.eq.${phone}` : ""}`).limit(1);
-    if (found?.length) {
-      candidateId = found[0].id;
-      if (data.smsConsent && !found[0].sms_opt_in) {
+    const existing = found?.[0];
+    if (existing) {
+      candidateId = existing.id;
+      if (data.smsConsent && !existing.sms_opt_in) {
         await supabaseAdmin.from("candidates").update({
           sms_opt_in: true, sms_opt_in_at: new Date().toISOString(), sms_opted_out_at: null, consent_source: "apply_form",
         }).eq("id", candidateId);
