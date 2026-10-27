@@ -25,6 +25,7 @@ import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
@@ -119,6 +120,11 @@ const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
   path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatusTokenRoute = StatusTokenRouteImport.update({
   id: '/status/$token',
   path: '/status/$token',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
     | '/stores/$storeId'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/team'
     | '/templates'
+    | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
     | '/stores/$storeId'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stores'
     | '/_authenticated/team'
     | '/_authenticated/templates'
+    | '/invite/$token'
     | '/status/$token'
     | '/u/$token'
     | '/_authenticated/stores_/$storeId'
@@ -380,6 +392,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
@@ -507,6 +520,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/templates'
       preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/status/$token': {
       id: '/status/$token'
@@ -641,6 +661,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  InviteTokenRoute: InviteTokenRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,
   ApiSmsInboundRoute: ApiSmsInboundRoute,
