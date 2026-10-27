@@ -38,6 +38,8 @@ export async function runEscalation(supabaseAdmin: SupabaseClient<Database>) {
           .select("application_id, created_at")
           .in("application_id", ids)
           .is("campaign_id", null)
+          // Texts that never went out (no consent, skipped at go-live) aren't a touch either.
+          .neq("status", "blocked")
           .range(f, t),
       ),
     ]);

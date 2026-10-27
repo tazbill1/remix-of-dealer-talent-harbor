@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { meQuery, OrgContext, type OrgCtx } from "@/lib/org";
+import { useMessagingMode } from "@/lib/texting-mode";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -93,6 +94,22 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
   );
 }
 
+/** Practice vs live, always visible, so nobody wonders whether a text really went out. */
+function ModeBadge({ orgId }: { orgId: string }) {
+  const { textLive, emailLive } = useMessagingMode(orgId);
+  const pill = (label: string, live: boolean) => (
+    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", live ? "bg-lime text-navy" : "bg-sidebar-accent text-sidebar-accent-foreground")}>
+      {label}: {live ? "Live" : "Practice"}
+    </span>
+  );
+  return (
+    <Link to="/integrations" className="mb-4 flex flex-wrap gap-1.5 px-2" title="Texting and email mode">
+      {pill("Texts", textLive)}
+      {pill("Email", emailLive)}
+    </Link>
+  );
+}
+
 function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void }) {
   const loc = useLocation();
   return (
@@ -104,6 +121,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
           {me.memberships.map((m) => <option key={m.org_id} value={m.org_id}>{m.organizations?.name}</option>)}
         </select>
       ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
+      {org && <ModeBadge orgId={org.orgId} />}
       <nav className="space-y-1">
         {org && nav.map((n) => (
           <Link key={n.to} to={n.to}

@@ -186,11 +186,17 @@ describe("message text", () => {
       assistant: "Penny",
       name: "Marcus Lee",
       job: "Service Technician",
+      store: "Grand Rapids Ford",
       summary: "x ".repeat(200),
       rating: 4,
     });
     expect(s.length).toBeLessThan(320);
     expect(s).toContain("Reply 1 to interview, 2 to pass");
+    // Every manager text names the program registered with the carriers.
+    expect(s.startsWith("hireme by WerkandMe: ")).toBe(true);
+    expect(text.checkin({ name: "Marcus", mark: 30, store: "GR Ford" })).toMatch(
+      /^hireme by WerkandMe: .*Reply Y or N\. Reply STOP to opt out\.$/,
+    );
     expect(
       text.welcome({ first: "Marcus", store: "GR Ford", assistant: "Penny", job: "Tech" }),
     ).toContain("Reply STOP to opt out");
