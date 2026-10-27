@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { keywordOf, toE164 } from "@/lib/messaging/core";
-import { publicUrl, sendTwilio, verifyTwilioRequest } from "@/lib/messaging/twilio.server";
+import { publicUrl, verifyTwilioRequest } from "@/lib/messaging/twilio.server";
 import { resolveSender, storeForNumber, twiml } from "@/lib/messaging/inbound.server";
 
 /**
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/sms/inbound")({
         if (!from || !to || !body.trim()) return twiml();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { applyKeyword, keywordReply } = await import("@/lib/messaging/outbox.server");
+        const { applyKeyword } = await import("@/lib/messaging/outbox.server");
         const store = await storeForNumber(supabaseAdmin, to);
         if (!store) return twiml();
         const sender = await resolveSender(supabaseAdmin, store, from);
@@ -43,9 +43,7 @@ export const Route = createFileRoute("/api/sms/inbound")({
               keyword,
               source: "sms",
             });
-            await sendTwilio({ to: from, from: to, body: keywordReply(keyword, store.name) }).catch(
-              () => {},
-            );
+            // Twilio sends the STOP/START/HELP confirmation itself.
           }
           return twiml();
         }

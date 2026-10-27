@@ -260,14 +260,19 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
         source: data.source,
       });
     const reply = keywordReply(keyword, store?.name ?? "Hiring team");
-    const row = await queueText(sb, {
-      applicationId: app.id,
-      party: data.party,
-      body: reply,
-      purpose: "keyword",
-      to: senderPhone,
-      isKeywordReply: true,
-    });
+    // On real texts Twilio already answers STOP/START/HELP itself; a second reply would
+    // be a duplicate (and texts to a number that just said STOP are refused anyway).
+    const carrierReplies = data.source === "sms" && settings.mode === "live";
+    const row = carrierReplies
+      ? null
+      : await queueText(sb, {
+          applicationId: app.id,
+          party: data.party,
+          body: reply,
+          purpose: "keyword",
+          to: senderPhone,
+          isKeywordReply: true,
+        });
     await admin.from("application_events").insert({
       org_id: app.org_id,
       application_id: app.id,

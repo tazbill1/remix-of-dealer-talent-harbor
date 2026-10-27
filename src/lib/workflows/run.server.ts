@@ -238,6 +238,7 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
             assistant: store.assistant_name ?? "Your hiring assistant",
             name: app.full_name,
             job: title,
+            store: store.name,
             summary: app.ai_summary || "They've finished the screening questions.",
             rating: app.rating,
           }),
@@ -410,7 +411,7 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
           applicationId: h.id,
           party: "manager",
           purpose: PURPOSE.checkin(due.mark),
-          body: text.checkin({ name: h.full_name, mark: due.mark }),
+          body: text.checkin({ name: h.full_name, mark: due.mark, store: store.name }),
           now,
         });
         await admin.from("retention_checkins").upsert(

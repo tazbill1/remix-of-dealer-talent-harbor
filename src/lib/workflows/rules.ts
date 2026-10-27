@@ -167,6 +167,9 @@ export function dueReminders(input: {
 // Message text
 // ---------------------------------------------------------------------------
 
+/** Every manager text names the program, as registered with the carriers. */
+export const BRAND = "hireme by WerkandMe";
+
 export const text = {
   welcome: (a: { first: string; store: string; assistant: string; job: string }) =>
     `Hi ${a.first}! This is ${a.assistant}, the hiring assistant for ${a.store} (hireme by WerkandMe). Thanks for applying for ${a.job}! A few quick questions so we can get you in front of the team. First: how many years of experience do you have? Reply STOP to opt out.`,
@@ -174,14 +177,15 @@ export const text = {
     assistant: string;
     name: string;
     job: string;
+    store: string;
     summary: string;
     rating: number | null;
   }) =>
-    `${a.assistant} here. ${a.name} applied for ${a.job}. ${trim(a.summary, 170)}${a.rating ? ` Fit: ${a.rating}/5.` : ""} Reply 1 to interview, 2 to pass, or text me a question.`,
+    `${BRAND}: ${a.name} applied for ${a.job} at ${a.store}. ${trim(a.summary, 130)}${a.rating ? ` Fit: ${a.rating}/5.` : ""} Reply 1 to interview, 2 to pass, or text me a question. Reply STOP to opt out.`,
   nudge: (a: { name: string; job: string }) =>
-    `Friendly reminder: ${a.name} (${a.job}) is waiting on you. Reply 1 to interview or 2 to pass.`,
+    `${BRAND}: Friendly reminder, ${a.name} (${a.job}) is waiting on you. Reply 1 to interview or 2 to pass.`,
   escalation: (a: { manager: string; name: string; job: string; hours: number }) =>
-    `Heads up: ${a.manager} hasn't answered about ${a.name} (${a.job}) in ${a.hours} texting hours. Reply 1 to interview or 2 to pass.`,
+    `${BRAND}: Heads up, ${a.manager} hasn't answered about ${a.name} (${a.job}) in ${a.hours} texting hours. Reply 1 to interview or 2 to pass. Reply STOP to opt out.`,
   ackInterview: (a: { name: string }) =>
     `Got it! I'll reach out to ${a.name} to set up the interview and confirm the time with you.`,
   ackPass: (a: { name: string }) => `Got it, I'll let ${a.name} know. Thanks!`,
@@ -194,9 +198,9 @@ export const text = {
   reminderSoon: (a: { first: string; when: string; store: string }) =>
     `See you soon, ${a.first}! Your interview at ${a.store} is at ${a.when}. Reply if you're running late.`,
   reminderManager: (a: { name: string; job: string; when: string }) =>
-    `Reminder: you're interviewing ${a.name} for ${a.job} at ${a.when}.`,
-  checkin: (a: { name: string; mark: number }) =>
-    `Quick ${a.mark}-day check-in: is ${a.name} still on your team? Reply Y or N.`,
+    `${BRAND}: Reminder, you're interviewing ${a.name} for ${a.job} at ${a.when}.`,
+  checkin: (a: { name: string; mark: number; store: string }) =>
+    `${BRAND}: Quick ${a.mark}-day check-in. Is ${a.name} still on your team at ${a.store}? Reply Y or N. Reply STOP to opt out.`,
   checkinThanks: (stillHere: boolean) =>
     stillHere
       ? "Thanks! Glad to hear it."

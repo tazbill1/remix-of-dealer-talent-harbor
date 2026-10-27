@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils";
 import { deliveryLabel } from "@/lib/messaging/labels";
 import { EmailHistory } from "@/components/email-compose";
+import { useMessagingMode } from "@/lib/texting-mode";
 
 const toB64 = (f: File) => new Promise<string>((res, rej) => {
   const r = new FileReader();
@@ -112,6 +113,8 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
     queryFn: async () => (await supabase.from("messages").select("*").eq("application_id", appId).order("created_at")).data ?? [],
   });
   const thread = msgs.filter((m) => m.party === party && m.channel !== "email");
+  // Once a group is live, replies come from real phones, so typing as them is turned off.
+  const { textLive } = useMessagingMode(orgId);
   async function submit() {
     if (!text.trim()) return;
     setBusy(true);
@@ -128,7 +131,6 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
     qc.invalidateQueries({ queryKey: ["interviews", appId] });
     onChanged();
   }
-  void orgId;
   return (
     <>
     <div className="rounded-xl border">
@@ -153,10 +155,14 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
         })}
         {busy && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" />{assistantName} is typing...</div>}
       </div>
+      {textLive ? (
+        <p className="border-t p-3 text-xs text-muted-foreground">Live texting is on: replies here come from the {party === "candidate" ? "candidate's" : "hiring manager's"} real phone.</p>
+      ) : (
       <form className="flex gap-2 border-t p-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={party === "candidate" ? "Text as the candidate..." : "Text as the hiring manager..."} />
+        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={party === "candidate" ? "Practice: text as the candidate..." : "Practice: text as the hiring manager..."} />
         <Button size="icon" disabled={busy || !text.trim()} aria-label="Send"><Send /></Button>
       </form>
+      )}
     </div>
     <EmailHistory messages={msgs} />
     </>
