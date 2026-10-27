@@ -19,6 +19,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
+import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
@@ -72,6 +73,12 @@ const StatusTokenRoute = StatusTokenRouteImport.update({
   path: '/status/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedStoresStoreIdRoute =
+  AuthenticatedStoresStoreIdRouteImport.update({
+    id: '/stores_/$storeId',
+    path: '/stores/$storeId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   id: '/c/$orgSlug/',
   path: '/c/$orgSlug/',
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/status/$token': typeof StatusTokenRoute
+  '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -112,6 +120,7 @@ export interface FileRoutesByTo {
   '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/status/$token': typeof StatusTokenRoute
+  '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -128,6 +137,7 @@ export interface FileRoutesById {
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/status/$token': typeof StatusTokenRoute
+  '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/platform'
     | '/stores'
     | '/status/$token'
+    | '/stores/$storeId'
     | '/c/$orgSlug/'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/platform'
     | '/stores'
     | '/status/$token'
+    | '/stores/$storeId'
     | '/c/$orgSlug'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
     | '/_authenticated/platform'
     | '/_authenticated/stores'
     | '/status/$token'
+    | '/_authenticated/stores_/$storeId'
     | '/c/$orgSlug/'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/stores_/$storeId': {
+      id: '/_authenticated/stores_/$storeId'
+      path: '/stores/$storeId'
+      fullPath: '/stores/$storeId'
+      preLoaderRoute: typeof AuthenticatedStoresStoreIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/c/$orgSlug/': {
       id: '/c/$orgSlug/'
       path: '/c/$orgSlug'
@@ -291,6 +311,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
+  AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -300,6 +321,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
+  AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
