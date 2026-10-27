@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Membership = {
   org_id: string;
-  role: "group_admin" | "dealer_manager" | "hiring_manager" | "recruiter";
+  role: "group_admin" | "dealer_manager" | "hiring_manager" | "recruiter" | "regional_leader";
   organizations: { id: string; name: string; slug: string } | null;
 };
 
@@ -29,7 +29,7 @@ export const meQuery = queryOptions({
   },
 });
 
-export type OrgCtx = { orgId: string; orgName: string; orgSlug: string; role: Membership["role"] };
+export type OrgCtx = { orgId: string; orgName: string; orgSlug: string; role: Membership["role"]; isPlatformAdmin: boolean };
 export const OrgContext = createContext<OrgCtx | null>(null);
 export function useOrg() {
   const ctx = useContext(OrgContext);

@@ -7,6 +7,7 @@ import { getPublicJob, submitApplication } from "@/lib/public.functions";
 import { formatPay } from "@/lib/jobs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand";
@@ -32,6 +33,7 @@ function JobPage() {
   const { source } = Route.useSearch();
   const navigate = useNavigate();
   const [f, setF] = useState({ fullName: "", email: "", phone: "" });
+  const [smsConsent, setSmsConsent] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const pay = formatPay(job.pay_min, job.pay_max, job.pay_period);
@@ -49,7 +51,7 @@ function JobPage() {
     if (file && file.size > 10 * 1024 * 1024) return toast.error("Resume must be under 10 MB.");
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }
@@ -81,8 +83,12 @@ function JobPage() {
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="r">Resume (optional)</Label><Input id="r" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
+          <label className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Checkbox id="sms" className="mt-0.5" checked={smsConsent} onCheckedChange={(c) => setSmsConsent(c === true)} />
+            <span>Yes, text me updates about my application and interview times at the number above. Message and data rates may apply. Reply STOP anytime to opt out.</span>
+          </label>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Sending..." : "Submit application"}</Button>
-          <p className="text-xs text-muted-foreground">By applying you agree to get updates about this job by email and text.</p>
+          <p className="text-xs text-muted-foreground">By applying you agree to get updates about this job by email.</p>
         </form>
       </div>
       <footer className="flex items-center justify-center gap-2 pb-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>

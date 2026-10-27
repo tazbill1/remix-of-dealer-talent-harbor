@@ -46,6 +46,7 @@ export type Database = {
       }
       application_events: {
         Row: {
+          actor_id: string | null
           application_id: string
           created_at: string
           id: string
@@ -54,6 +55,7 @@ export type Database = {
           org_id: string
         }
         Insert: {
+          actor_id?: string | null
           application_id: string
           created_at?: string
           id?: string
@@ -62,6 +64,7 @@ export type Database = {
           org_id: string
         }
         Update: {
+          actor_id?: string | null
           application_id?: string
           created_at?: string
           id?: string
@@ -89,10 +92,14 @@ export type Database = {
       applications: {
         Row: {
           ai_summary: string | null
+          candidate_id: string | null
           created_at: string
           dealership_id: string
+          departed_at: string | null
+          departure_reason: string | null
           email: string
           full_name: string
+          hired_at: string | null
           id: string
           job_id: string
           notes: string | null
@@ -103,16 +110,21 @@ export type Database = {
           rating: number | null
           resume_path: string | null
           source: string
+          start_date: string | null
           status: Database["public"]["Enums"]["application_status"]
           status_token: string
           updated_at: string
         }
         Insert: {
           ai_summary?: string | null
+          candidate_id?: string | null
           created_at?: string
           dealership_id: string
+          departed_at?: string | null
+          departure_reason?: string | null
           email: string
           full_name: string
+          hired_at?: string | null
           id?: string
           job_id: string
           notes?: string | null
@@ -123,16 +135,21 @@ export type Database = {
           rating?: number | null
           resume_path?: string | null
           source?: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           status_token?: string
           updated_at?: string
         }
         Update: {
           ai_summary?: string | null
+          candidate_id?: string | null
           created_at?: string
           dealership_id?: string
+          departed_at?: string | null
+          departure_reason?: string | null
           email?: string
           full_name?: string
+          hired_at?: string | null
           id?: string
           job_id?: string
           notes?: string | null
@@ -143,11 +160,19 @@ export type Database = {
           rating?: number | null
           resume_path?: string | null
           source?: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           status_token?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "applications_dealership_id_fkey"
             columns: ["dealership_id"]
@@ -171,6 +196,62 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          city: string | null
+          consent_source: string | null
+          created_at: string
+          email: string | null
+          email_opted_out_at: string | null
+          full_name: string
+          id: string
+          org_id: string
+          phone: string | null
+          sms_opt_in: boolean
+          sms_opt_in_at: string | null
+          sms_opted_out_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email?: string | null
+          email_opted_out_at?: string | null
+          full_name: string
+          id?: string
+          org_id: string
+          phone?: string | null
+          sms_opt_in?: boolean
+          sms_opt_in_at?: string | null
+          sms_opted_out_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email?: string | null
+          email_opted_out_at?: string | null
+          full_name?: string
+          id?: string
+          org_id?: string
+          phone?: string | null
+          sms_opt_in?: boolean
+          sms_opt_in_at?: string | null
+          sms_opted_out_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealerships: {
         Row: {
           address: string | null
@@ -183,6 +264,7 @@ export type Database = {
           manager_phone: string | null
           name: string
           org_id: string
+          region_id: string | null
           state: string | null
         }
         Insert: {
@@ -196,6 +278,7 @@ export type Database = {
           manager_phone?: string | null
           name: string
           org_id: string
+          region_id?: string | null
           state?: string | null
         }
         Update: {
@@ -209,6 +292,7 @@ export type Database = {
           manager_phone?: string | null
           name?: string
           org_id?: string
+          region_id?: string | null
           state?: string | null
         }
         Relationships: [
@@ -217,6 +301,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealerships_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -451,6 +542,62 @@ export type Database = {
           },
         ]
       }
+      org_member_scopes: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          id: string
+          member_id: string
+          org_id: string
+          region_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          member_id: string
+          org_id: string
+          region_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          member_id?: string
+          org_id?: string
+          region_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_member_scopes_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_member_scopes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "org_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_member_scopes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_member_scopes_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           created_at: string
@@ -528,6 +675,89 @@ export type Database = {
         }
         Relationships: []
       }
+      regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retention_checkins: {
+        Row: {
+          application_id: string
+          created_at: string
+          day_mark: number
+          due_on: string
+          id: string
+          org_id: string
+          responded_at: string | null
+          response: string | null
+          sent_at: string | null
+          still_employed: boolean | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          day_mark: number
+          due_on: string
+          id?: string
+          org_id: string
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+          still_employed?: boolean | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          day_mark?: number
+          due_on?: string
+          id?: string
+          org_id?: string
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+          still_employed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retention_checkins_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retention_checkins_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -562,6 +792,7 @@ export type Database = {
         | "dealer_manager"
         | "hiring_manager"
         | "recruiter"
+        | "regional_leader"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -702,6 +933,7 @@ export const Constants = {
         "dealer_manager",
         "hiring_manager",
         "recruiter",
+        "regional_leader",
       ],
     },
   },

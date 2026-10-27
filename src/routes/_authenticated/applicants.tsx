@@ -2,16 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, Phone, FileText, Star, ArrowRightLeft, X } from "lucide-react";
+import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
+import { STATUSES, STATUS_LABEL, canPostJobs, type AppStatus } from "@/lib/jobs";
 import { statusEventRows } from "@/lib/status-log";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
@@ -145,6 +146,7 @@ function Applicants() {
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
+            isHr={canPostJobs(org.role, org.isPlatformAdmin)}
             transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}` }))}
             onTransfer={(jobId) => transfer(current.id, jobId)} orgId={org.orgId}
             assistantName={data?.stores.find((s) => s.id === current.dealership_id)?.assistant_name ?? "Assistant"}
@@ -156,12 +158,14 @@ function Applicants() {
 }
 
 type App = { profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
-  open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string };
+  open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
+  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string;
+function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
   const [target, setTarget] = useState("");
+  const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
@@ -221,6 +225,34 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
           <Button size="sm" disabled={!target} onClick={() => { onTransfer(target); setTarget(""); }}>Transfer</Button>
         </div>
       </div>
+      {(app.status === "hired" || app.hired_at) && (
+        <div className="space-y-3 rounded-xl border p-3">
+          <div className="flex items-center gap-2 text-sm font-semibold"><UserCheck className="size-4 text-lime" />Hiring & retention</div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div><div className="text-xs text-muted-foreground">Hired on</div>
+              <div>{app.hired_at ? new Date(app.hired_at).toLocaleDateString() : "—"}</div></div>
+            <div><div className="text-xs text-muted-foreground">Start date</div>
+              {isHr && !app.departed_at
+                ? <Input type="date" className="h-8" defaultValue={app.start_date ?? ""} onBlur={(e) => e.target.value !== (app.start_date ?? "") && onUpdate({ start_date: e.target.value || null })} />
+                : <div>{app.start_date ? new Date(app.start_date + "T00:00:00").toLocaleDateString() : "—"}</div>}</div>
+          </div>
+          {app.departed_at ? (
+            <p className="rounded-lg bg-destructive/10 p-2 text-sm">
+              Departed {new Date(app.departed_at + "T00:00:00").toLocaleDateString()}{app.departure_reason ? ` — ${app.departure_reason}` : ""}
+              {isHr && <button className="ml-2 text-xs text-sapphire underline" onClick={() => onUpdate({ departed_at: null, departure_reason: null })}>Undo</button>}
+            </p>
+          ) : isHr && (
+            <div className="space-y-2">
+              <Input placeholder="Reason for leaving (optional)" value={departReason} onChange={(e) => setDepartReason(e.target.value)} />
+              <Button size="sm" variant="outline" onClick={() => {
+                const today = new Date().toISOString().slice(0, 10);
+                onUpdate({ departed_at: today, departure_reason: departReason || null });
+                toast.success(`Marked ${app.full_name} as departed.`);
+              }}>Mark as departed</Button>
+            </div>
+          )}
+        </div>
+      )}
       <div>
         <div className="mb-2 text-sm font-semibold">Notes</div>
         <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => notes !== (app.notes ?? "") && onUpdate({ notes })} />
