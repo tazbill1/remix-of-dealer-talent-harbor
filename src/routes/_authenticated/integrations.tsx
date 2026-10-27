@@ -241,9 +241,9 @@ function Integrations() {
         <Card
           icon={CalendarDays}
           title="Calendar (Outlook / Google)"
-          state="not_connected"
-          what="Puts interviews on the hiring manager's calendar and spots outside bookings. Today interviews can be downloaded to any calendar from the profile."
-          needs="a Microsoft (and/or Google) sign-in app registered for hireme."
+          state="connected"
+          what="Each person subscribes once (Interviews page) and every interview at their stores appears in their Outlook or Google calendar, with changes and cancellations."
+          needs="nothing for the subscribe link. Two-way sync (booking into open times) later needs a Microsoft and/or Google sign-in app registered for hireme."
         />
 
         <Card

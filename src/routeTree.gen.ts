@@ -36,6 +36,7 @@ import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authen
 import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
 import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
 import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/cron/messages'
 import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
@@ -180,6 +181,11 @@ const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   path: '/c/$orgSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronEscalateRoute = ApiPublicCronEscalateRouteImport.update({
   id: '/api/public/cron/escalate',
   path: '/api/public/cron/escalate',
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
@@ -316,6 +324,7 @@ export interface FileRoutesById {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
@@ -353,6 +362,7 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
@@ -387,6 +397,7 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
@@ -445,6 +457,7 @@ export interface RootRouteChildren {
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
   ApiSmsStatusRoute: typeof ApiSmsStatusRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
+  ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronEscalateRoute: typeof ApiPublicCronEscalateRoute
   ApiPublicCronMessagesRoute: typeof ApiPublicCronMessagesRoute
   ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
@@ -645,6 +658,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof COrgSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/escalate': {
       id: '/api/public/cron/escalate'
       path: '/api/public/cron/escalate'
@@ -758,6 +778,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSmsInboundRoute: ApiSmsInboundRoute,
   ApiSmsStatusRoute: ApiSmsStatusRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,
+  ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronEscalateRoute: ApiPublicCronEscalateRoute,
   ApiPublicCronMessagesRoute: ApiPublicCronMessagesRoute,
   ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
+import { CalendarSubscribe } from "@/components/calendar-subscribe";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({ meta: [{ title: "Interviews | WerkandMe Hiring" }, { name: "description", content: "Upcoming interviews across your stores." }] }),
@@ -27,10 +28,7 @@ function CalendarPage() {
   return (
     <div className="space-y-6">
       <div><h1 className="text-3xl">Interviews</h1><p className="text-muted-foreground">Every interview across your stores, whether booked by the assistant or added by a manager.</p></div>
-      <div className="rounded-2xl border p-4">
-        <div className="font-semibold">Sync your Outlook or Google calendar</div>
-        <p className="text-sm text-muted-foreground">Calendar sync is almost ready. Once your WerkandMe Admin finishes the Microsoft and Google sign-in setup, managers will connect with one click so the assistant can book into open times and catch interviews scheduled outside WerkandMe. Until then, each interview has an "add to calendar" download.</p>
-      </div>
+      <CalendarSubscribe orgId={org.orgId} />
       <ul className="space-y-2">
         {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
         {data?.iv.map((i) => (
