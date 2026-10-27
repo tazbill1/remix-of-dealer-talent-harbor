@@ -1,6 +1,6 @@
 # Access rules update: store and region scoping
 
-**Status:** proposed. Nothing in this file has been applied to the database yet.
+**Status:** applied.
 
 Like the first data model update, this goes through **Lovable** (it changes database
 access rules, which live in Lovable Cloud). Paste the prompt below into Lovable's chat.

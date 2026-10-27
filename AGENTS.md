@@ -19,3 +19,4 @@
 - Brand colors are tokens in `src/styles.css` (navy, sapphire, ultramarine, lime, chartreuse); the gradient is only via `text-brand-gradient`. Why: brand rules restrict gradient to text accents.
 - Job posting is gated by `can_post_jobs` (group admins, recruiters, platform admin); other members may only insert/edit jobs with status `requested`. Why: client requires Recruiting/HR to own job reqs.
 - AI assistant logic lives in src/lib/assistant.functions.ts (resume parse, threaded SMS replies that patch applications.profile). Why: one server boundary for AI + profile updates, RLS as the signed-in user.
+- Store/region scoping: RLS uses can_access_store / can_access_application; a member with no org_member_scopes rows sees the whole group. Why: scoped managers only see their stores without breaking unscoped users.
