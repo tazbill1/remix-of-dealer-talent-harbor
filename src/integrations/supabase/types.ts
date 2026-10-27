@@ -260,8 +260,6 @@ export type Database = {
       }
       dealerships: {
         Row: {
-          interview_hours: Json
-          interview_minutes: number
           address: string | null
           assistant_name: string
           brand: string | null
@@ -282,8 +280,6 @@ export type Database = {
           timezone: string
         }
         Insert: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
@@ -304,8 +300,6 @@ export type Database = {
           timezone?: string
         }
         Update: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
