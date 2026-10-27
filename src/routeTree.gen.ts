@@ -29,6 +29,9 @@ import { Route as ApiCronWorkflowsRouteImport } from './routes/api/cron/workflow
 import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
 import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
+import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
+import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/cron/messages'
+import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
 
@@ -132,6 +135,21 @@ const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   path: '/c/$orgSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronEscalateRoute = ApiPublicCronEscalateRouteImport.update({
+  id: '/api/public/cron/escalate',
+  path: '/api/public/cron/escalate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCronMessagesRoute = ApiPublicCronMessagesRouteImport.update({
+  id: '/api/public/cron/messages',
+  path: '/api/public/cron/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCronWorkflowsRoute = ApiPublicCronWorkflowsRouteImport.update({
+  id: '/api/public/cron/workflows',
+  path: '/api/public/cron/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFeedOrgSlugRoute = ApiPublicFeedOrgSlugRouteImport.update({
   id: '/api/public/feed/$orgSlug',
   path: '/api/public/feed/$orgSlug',
@@ -163,6 +181,9 @@ export interface FileRoutesByFullPath {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
+  '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
@@ -186,6 +207,9 @@ export interface FileRoutesByTo {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
+  '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
+  '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
@@ -211,6 +235,9 @@ export interface FileRoutesById {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
+  '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
 }
@@ -236,6 +263,9 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/cron/escalate'
+    | '/api/public/cron/messages'
+    | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
@@ -259,6 +289,9 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug'
+    | '/api/public/cron/escalate'
+    | '/api/public/cron/messages'
+    | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
   id:
@@ -283,6 +316,9 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/cron/escalate'
+    | '/api/public/cron/messages'
+    | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
   fileRoutesById: FileRoutesById
@@ -298,6 +334,9 @@ export interface RootRouteChildren {
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
   ApiSmsStatusRoute: typeof ApiSmsStatusRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
+  ApiPublicCronEscalateRoute: typeof ApiPublicCronEscalateRoute
+  ApiPublicCronMessagesRoute: typeof ApiPublicCronMessagesRoute
+  ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
 }
@@ -444,6 +483,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof COrgSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/escalate': {
+      id: '/api/public/cron/escalate'
+      path: '/api/public/cron/escalate'
+      fullPath: '/api/public/cron/escalate'
+      preLoaderRoute: typeof ApiPublicCronEscalateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/messages': {
+      id: '/api/public/cron/messages'
+      path: '/api/public/cron/messages'
+      fullPath: '/api/public/cron/messages'
+      preLoaderRoute: typeof ApiPublicCronMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/workflows': {
+      id: '/api/public/cron/workflows'
+      path: '/api/public/cron/workflows'
+      fullPath: '/api/public/cron/workflows'
+      preLoaderRoute: typeof ApiPublicCronWorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/feed/$orgSlug': {
       id: '/api/public/feed/$orgSlug'
       path: '/api/public/feed/$orgSlug'
@@ -501,6 +561,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSmsInboundRoute: ApiSmsInboundRoute,
   ApiSmsStatusRoute: ApiSmsStatusRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,
+  ApiPublicCronEscalateRoute: ApiPublicCronEscalateRoute,
+  ApiPublicCronMessagesRoute: ApiPublicCronMessagesRoute,
+  ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
 }
