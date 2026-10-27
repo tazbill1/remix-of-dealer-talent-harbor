@@ -20,6 +20,7 @@ import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/j
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
@@ -80,6 +81,11 @@ const AuthenticatedStoresRoute = AuthenticatedStoresRouteImport.update({
   path: '/stores',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const StatusTokenRoute = StatusTokenRouteImport.update({
   id: '/status/$token',
   path: '/status/$token',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/platform'
     | '/stores'
+    | '/team'
     | '/status/$token'
     | '/stores/$storeId'
     | '/c/$orgSlug/'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/platform'
     | '/stores'
+    | '/team'
     | '/status/$token'
     | '/stores/$storeId'
     | '/c/$orgSlug'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/platform'
     | '/_authenticated/stores'
+    | '/_authenticated/team'
     | '/status/$token'
     | '/_authenticated/stores_/$storeId'
     | '/c/$orgSlug/'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/status/$token': {
       id: '/status/$token'
       path: '/status/$token'
@@ -351,6 +370,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
 }
 
@@ -363,6 +383,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
 }
 

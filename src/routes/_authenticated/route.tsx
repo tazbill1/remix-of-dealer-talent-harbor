@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -110,6 +110,12 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
             <n.icon className="size-4" />{n.label}
           </Link>
         ))}
+        {org && (org.role === "group_admin" || org.isPlatformAdmin) && (
+          <Link to="/team" className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
+            loc.pathname === "/team" && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+            <UserCog className="size-4" />Team
+          </Link>
+        )}
         {org && (
           <a href={`/c/${org.orgSlug}`} target="_blank" rel="noreferrer"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">

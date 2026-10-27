@@ -1,0 +1,114 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrg, type Membership } from "@/lib/org";
+
+export const Route = createFileRoute("/_authenticated/team")({
+  head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }] }),
+  component: Team,
+});
+
+const roles: { v: Membership["role"]; l: string }[] = [
+  { v: "group_admin", l: "Group admin" },
+  { v: "recruiter", l: "Recruiter / HR" },
+  { v: "regional_leader", l: "Regional leader" },
+  { v: "dealer_manager", l: "Dealer manager (GM)" },
+  { v: "hiring_manager", l: "Hiring manager" },
+];
+const scoped = new Set(["regional_leader", "dealer_manager", "hiring_manager"]);
+
+function Team() {
+  const org = useOrg();
+  const qc = useQueryClient();
+  const isAdmin = org.role === "group_admin" || org.isPlatformAdmin;
+  const { data } = useQuery({
+    queryKey: ["team", org.orgId],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const [m, s, r, d] = await Promise.all([
+        supabase.from("org_members").select("*").eq("org_id", org.orgId).order("created_at"),
+        supabase.from("org_member_scopes").select("*").eq("org_id", org.orgId),
+        supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
+        supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
+      ]);
+      return { members: m.data ?? [], scopes: s.data ?? [], regions: r.data ?? [], stores: d.data ?? [] };
+    },
+  });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["team", org.orgId] });
+
+  if (!isAdmin) return <p>Only group admins can manage the team.</p>;
+
+  async function setRole(id: string, role: Membership["role"]) {
+    const { error } = await supabase.from("org_members").update({ role }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Role updated");
+    refresh();
+  }
+  async function addScope(memberId: string, value: string) {
+    if (!value) return;
+    const [kind, id = ""] = value.split(":");
+    const { error } = await supabase.from("org_member_scopes").insert({
+      org_id: org.orgId, member_id: memberId,
+      region_id: kind === "r" ? id : null, dealership_id: kind === "s" ? id : null,
+    });
+    if (error) return toast.error(error.message);
+    refresh();
+  }
+  async function removeScope(id: string) {
+    const { error } = await supabase.from("org_member_scopes").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    refresh();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl">Team</h1>
+        <p className="text-muted-foreground">Set each person's role and which regions or stores they cover. Someone with no coverage set sees the whole group.</p>
+      </div>
+      <div className="overflow-hidden rounded-2xl bg-background shadow-sm">
+        {data?.members.map((m) => {
+          const mine = data.scopes.filter((s) => s.member_id === m.id);
+          return (
+            <div key={m.id} className="space-y-3 border-b p-4 last:border-0">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="font-semibold">{m.email ?? "Team member"}</div>
+                <select aria-label={`Role for ${m.email}`} className="h-9 rounded-md border bg-background px-2 text-sm"
+                  value={m.role} onChange={(e) => setRole(m.id, e.target.value as Membership["role"])}>
+                  {roles.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}
+                </select>
+              </div>
+              {scoped.has(m.role) ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {mine.length === 0 && <span className="text-sm text-muted-foreground">Covers: whole group</span>}
+                  {mine.map((s) => {
+                    const label = s.region_id
+                      ? `${data.regions.find((r) => r.id === s.region_id)?.name ?? "Region"} region`
+                      : data.stores.find((d) => d.id === s.dealership_id)?.name ?? "Store";
+                    return (
+                      <span key={s.id} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm">
+                        {label}
+                        <button aria-label={`Remove ${label}`} onClick={() => removeScope(s.id)} className="text-muted-foreground hover:text-destructive"><X className="size-3.5" /></button>
+                      </span>
+                    );
+                  })}
+                  <select aria-label={`Add coverage for ${m.email}`} className="h-8 rounded-md border bg-background px-2 text-xs"
+                    value="" onChange={(e) => addScope(m.id, e.target.value)}>
+                    <option value="">+ Add region or store</option>
+                    {data.regions.length > 0 && <optgroup label="Regions">{data.regions.map((r) => <option key={r.id} value={`r:${r.id}`}>{r.name}</option>)}</optgroup>}
+                    <optgroup label="Stores">{data.stores.map((d) => <option key={d.id} value={`s:${d.id}`}>{d.name}</option>)}</optgroup>
+                  </select>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">Sees every store in the group</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-sm text-muted-foreground">Inviting new people by email isn't set up yet — new teammates can sign up and be added here once invites are turned on.</p>
+    </div>
+  );
+}

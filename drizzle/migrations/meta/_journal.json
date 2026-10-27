@@ -8,6 +8,13 @@
       "when": 1793120473796,
       "tag": "0000_regions_candidates_consent_retention",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793121863382,
+      "tag": "0001_store_scoping_access_rules",
+      "breakpoints": true
     }
   ]
 }
