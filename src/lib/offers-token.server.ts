@@ -21,6 +21,9 @@ export const offerToken = (offerId: string) => idToken(offerId, "offer");
 /** One link per applicant to the page listing everything they still need to sign. */
 export const docsToken = (applicationId: string) => idToken(applicationId, "docs");
 export const readOfferToken = (token: string) => readIdToken(token, "offer");
+/** The candidate's link to pick an interview time. */
+export const bookToken = (applicationId: string) => idToken(applicationId, "book");
+export const readBookToken = (token: string) => readIdToken(token, "book");
 export const readDocsToken = (token: string) => readIdToken(token, "docs");
 
 async function readIdToken(token: string, kind: string) {
