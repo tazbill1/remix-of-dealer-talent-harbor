@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { deliveryLabel } from "@/lib/messaging/labels";
 
 const toB64 = (f: File) => new Promise<string>((res, rej) => {
   const r = new FileReader();
@@ -116,6 +117,8 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
     const body = text; setText("");
     try {
       const r = await send({ data: { applicationId: appId, party, body, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } });
+      if (r.keyword) toast.success(`${r.keyword.toUpperCase()} recorded for this number.`);
+      if (r.delivery === "blocked") toast.warning("The reply wasn't sent. See the note under the message.");
       if (r.changed.length) toast.success(`Profile updated: ${r.changed.join(", ")}`);
       if (r.interviewAt) toast.success(`Interview booked for ${new Date(r.interviewAt).toLocaleString()}`);
     } catch (e: any) { toast.error(e.message); setText(body); }
@@ -135,10 +138,17 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
       </div>
       <div className="max-h-72 space-y-2 overflow-y-auto p-3">
         {thread.length === 0 && <p className="text-center text-xs text-muted-foreground">No texts yet. Type as the {party === "candidate" ? "candidate" : "hiring manager"} to see how {assistantName} responds and updates this profile.</p>}
-        {thread.map((m) => (
-          <div key={m.id} className={cn("max-w-[85%] rounded-2xl px-3 py-2 text-sm", m.direction === "out" ? "bg-sapphire text-primary-foreground" : "ml-auto bg-secondary")}>
-            <div className="text-[10px] opacity-70">{m.direction === "out" ? assistantName : party === "candidate" ? "Candidate" : "Hiring manager"}</div>{m.body}</div>
-        ))}
+        {thread.map((m) => {
+          const label = deliveryLabel(m);
+          return (
+            <div key={m.id} className={cn("max-w-[85%]", m.direction === "out" ? "" : "ml-auto")}>
+              <div className={cn("rounded-2xl px-3 py-2 text-sm", m.direction === "out" ? "bg-sapphire text-primary-foreground" : "bg-secondary",
+                m.status === "blocked" && "opacity-60")}>
+                <div className="text-[10px] opacity-70">{m.direction === "out" ? assistantName : party === "candidate" ? "Candidate" : "Hiring manager"}</div>{m.body}</div>
+              {label && <div className={cn("mt-0.5 px-2 text-[11px] text-muted-foreground", (m.status === "blocked" || m.status === "failed") && "text-destructive")}>{label}</div>}
+            </div>
+          );
+        })}
         {busy && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" />{assistantName} is typing...</div>}
       </div>
       <form className="flex gap-2 border-t p-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>

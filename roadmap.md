@@ -20,7 +20,9 @@
 
 ## Next
 - [x] Texting setup: group settings, store contacts, job overrides, delivery tracking and phone opt-outs; verified policies and save/reopen controls
-- [ ] Live SMS delivery (blocked: Twilio connection)
+- [x] Texting engine: outbox with consent/STOP/texting-window checks, practice mode, Twilio adapter, inbound + delivery-receipt webhooks, assistant replies through the outbox, Claude switch (docs/texting-engine.md)
+- [ ] Live SMS delivery (blocked: Twilio account + carrier registration)
+- [ ] Texting workflows: welcome on apply, manager summary with 1/2 replies, nudges, escalation contact, interview reminders, 30/60/90 check-ins
 - [ ] One-click Outlook/Google calendar sync + outside-booking detection (blocked: Microsoft/Google sign-in client setup was declined)
 - [x] Track 2 analytics page: time to first contact, aging by stage, time to fill by role/rooftop, manager response, open roles (fixed ops vs variable, per store), applicant and contacted counts, breakdowns by location/role/hiring manager/source, CSV exports
 - [x] Stage changes logged to the timeline (powers first contact, aging, time to fill)
@@ -31,7 +33,7 @@
 - [x] 30/60/90 check-ins recorded on each hire's profile
 - [ ] Store/region access rules + Team page: see docs/access-rules-update.md
 - [ ] Enterprise communication templates + in-app bulk sending (needs sender domain)
-- [ ] 3-business-day untouched escalation
+- [x] 3-business-day untouched escalation (code; schedule it in Lovable: docs/escalation-schedule.md)
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
 - [ ] Questionnaires attached to jobs (knockout questions)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording

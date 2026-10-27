@@ -23,6 +23,10 @@ import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
+import { Route as ApiCronEscalateRouteImport } from './routes/api/cron/escalate'
+import { Route as ApiCronMessagesRouteImport } from './routes/api/cron/messages'
+import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
+import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
@@ -97,6 +101,26 @@ const AuthenticatedStoresStoreIdRoute =
     path: '/stores/$storeId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiCronEscalateRoute = ApiCronEscalateRouteImport.update({
+  id: '/api/cron/escalate',
+  path: '/api/cron/escalate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronMessagesRoute = ApiCronMessagesRouteImport.update({
+  id: '/api/cron/messages',
+  path: '/api/cron/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSmsInboundRoute = ApiSmsInboundRouteImport.update({
+  id: '/api/sms/inbound',
+  path: '/api/sms/inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSmsStatusRoute = ApiSmsStatusRouteImport.update({
+  id: '/api/sms/status',
+  path: '/api/sms/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   id: '/c/$orgSlug/',
   path: '/c/$orgSlug/',
@@ -127,6 +151,10 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
+  '/api/cron/escalate': typeof ApiCronEscalateRoute
+  '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/sms/inbound': typeof ApiSmsInboundRoute
+  '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -145,6 +173,10 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
+  '/api/cron/escalate': typeof ApiCronEscalateRoute
+  '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/sms/inbound': typeof ApiSmsInboundRoute
+  '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -165,6 +197,10 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/status/$token': typeof StatusTokenRoute
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
+  '/api/cron/escalate': typeof ApiCronEscalateRoute
+  '/api/cron/messages': typeof ApiCronMessagesRoute
+  '/api/sms/inbound': typeof ApiSmsInboundRoute
+  '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -185,6 +221,10 @@ export interface FileRouteTypes {
     | '/team'
     | '/status/$token'
     | '/stores/$storeId'
+    | '/api/cron/escalate'
+    | '/api/cron/messages'
+    | '/api/sms/inbound'
+    | '/api/sms/status'
     | '/c/$orgSlug/'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -203,6 +243,10 @@ export interface FileRouteTypes {
     | '/team'
     | '/status/$token'
     | '/stores/$storeId'
+    | '/api/cron/escalate'
+    | '/api/cron/messages'
+    | '/api/sms/inbound'
+    | '/api/sms/status'
     | '/c/$orgSlug'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -222,6 +266,10 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/status/$token'
     | '/_authenticated/stores_/$storeId'
+    | '/api/cron/escalate'
+    | '/api/cron/messages'
+    | '/api/sms/inbound'
+    | '/api/sms/status'
     | '/c/$orgSlug/'
     | '/api/public/feed/$orgSlug'
     | '/c/$orgSlug/jobs/$jobId'
@@ -232,6 +280,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   StatusTokenRoute: typeof StatusTokenRoute
+  ApiCronEscalateRoute: typeof ApiCronEscalateRoute
+  ApiCronMessagesRoute: typeof ApiCronMessagesRoute
+  ApiSmsInboundRoute: typeof ApiSmsInboundRoute
+  ApiSmsStatusRoute: typeof ApiSmsStatusRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
@@ -337,6 +389,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoresStoreIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/cron/escalate': {
+      id: '/api/cron/escalate'
+      path: '/api/cron/escalate'
+      fullPath: '/api/cron/escalate'
+      preLoaderRoute: typeof ApiCronEscalateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/messages': {
+      id: '/api/cron/messages'
+      path: '/api/cron/messages'
+      fullPath: '/api/cron/messages'
+      preLoaderRoute: typeof ApiCronMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sms/inbound': {
+      id: '/api/sms/inbound'
+      path: '/api/sms/inbound'
+      fullPath: '/api/sms/inbound'
+      preLoaderRoute: typeof ApiSmsInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sms/status': {
+      id: '/api/sms/status'
+      path: '/api/sms/status'
+      fullPath: '/api/sms/status'
+      preLoaderRoute: typeof ApiSmsStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/$orgSlug/': {
       id: '/c/$orgSlug/'
       path: '/c/$orgSlug'
@@ -395,6 +475,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   StatusTokenRoute: StatusTokenRoute,
+  ApiCronEscalateRoute: ApiCronEscalateRoute,
+  ApiCronMessagesRoute: ApiCronMessagesRoute,
+  ApiSmsInboundRoute: ApiSmsInboundRoute,
+  ApiSmsStatusRoute: ApiSmsStatusRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
