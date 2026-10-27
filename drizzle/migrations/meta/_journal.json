@@ -57,6 +57,13 @@
       "when": 1793134381968,
       "tag": "0007_email_from_address",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793137197832,
+      "tag": "0008_create_org_invites",
+      "breakpoints": true
     }
   ]
 }
