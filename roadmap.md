@@ -37,7 +37,8 @@
 - [ ] Per-store access for managers (limit to assigned stores) and team invites
 - [ ] Questionnaires attached to jobs (knockout questions)
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
-- [ ] Live email (blocked: sender domain setup in More → Emails, then set the sending address on Integrations) and live texts (blocked: Twilio)
+- [x] Live email (notify.workwithwerk.com verified; sending address penny@notify.workwithwerk.com, mode live)
+- [ ] Live texts (blocked: Twilio)
 - [ ] Per-store AI HR assistant: applicant chat, check-ins, manager nudges, HR summaries
 - [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
 - [ ] Automated status moves from events
