@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
+import { RetentionCheckins } from "@/components/retention-checkins";
 import { UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
@@ -30,15 +31,17 @@ function Applicants() {
   const { data } = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const [apps, jobs, stores] = await Promise.all([
+      const [apps, jobs, stores, regions] = await Promise.all([
         supabase.from("applications").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, title, dealership_id, status").eq("org_id", org.orgId),
-        supabase.from("dealerships").select("id, name, assistant_name").eq("org_id", org.orgId).order("name"),
+        supabase.from("dealerships").select("id, name, assistant_name, region_id").eq("org_id", org.orgId).order("name"),
+        supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
       ]);
-      return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [] };
+      return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
     },
   });
   const [store, setStore] = useState("all");
+  const [region, setRegion] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -69,11 +72,20 @@ function Applicants() {
     toast.success(`Transferred to ${storeName(target.dealership_id)}. Notes and history came along.`);
     qc.invalidateQueries({ queryKey: key });
   }
-  const apps = (data?.apps ?? []).filter((a) => store === "all" || a.dealership_id === store
-    || (store === "shared" && a.open_to_other_stores));
+  const regionOf = (storeId: string) => data?.stores.find((s) => s.id === storeId)?.region_id ?? null;
+  const regionName = (storeId: string) => data?.regions.find((r) => r.id === regionOf(storeId))?.name ?? null;
+  const inRegion = (storeId: string) => region === "all" || (region === "none" ? !regionOf(storeId) : regionOf(storeId) === region);
+  const storeOptions = (data?.stores ?? []).filter((s) => inRegion(s.id));
+  const apps = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
+    || (store === "shared" && a.open_to_other_stores)));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
   const current = data?.apps.find((a) => a.id === selected);
+  // Every other application from the same person, across all stores in the group.
+  const otherApps = current?.candidate_id
+    ? (data?.apps ?? []).filter((a) => a.candidate_id === current.candidate_id && a.id !== current.id)
+      .map((a) => ({ id: a.id, label: `${job(a.job_id)} · ${storeName(a.dealership_id)}`, status: a.status }))
+    : [];
 
   async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
     const before = data?.apps.find((a) => a.id === id)?.status;
@@ -89,11 +101,19 @@ function Applicants() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-3xl">Applicants</h1><p className="text-muted-foreground">Drag a card to move it along, or tick several to update them at once.</p></div>
-        <div className="flex gap-2"><Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
-        <select className="h-9 rounded-md border bg-background px-2 text-sm" value={store} onChange={(e) => setStore(e.target.value)}>
+        <div className="flex flex-wrap gap-2"><Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
+        {(data?.regions.length ?? 0) > 0 && (
+          <select aria-label="Region" className="h-9 rounded-md border bg-background px-2 text-sm" value={region}
+            onChange={(e) => { setRegion(e.target.value); if (store !== "shared") setStore("all"); }}>
+            <option value="all">All regions</option>
+            {data?.regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+            <option value="none">No region</option>
+          </select>
+        )}
+        <select aria-label="Store" className="h-9 rounded-md border bg-background px-2 text-sm" value={store} onChange={(e) => setStore(e.target.value)}>
           <option value="all">All stores</option>
           <option value="shared">Open to other stores</option>
-          {data?.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select></div>
       </div>
       <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
@@ -147,7 +167,10 @@ function Applicants() {
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             isHr={canPostJobs(org.role, org.isPlatformAdmin)}
-            transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}` }))}
+            otherApps={otherApps} onOpenApp={setSelected}
+            regionName={regionName(current.dealership_id)}
+            transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}`,
+              sameRegion: regionOf(j.dealership_id) === regionOf(current.dealership_id) }))}
             onTransfer={(jobId) => transfer(current.id, jobId)} orgId={org.orgId}
             assistantName={data?.stores.find((s) => s.id === current.dealership_id)?.assistant_name ?? "Assistant"}
             onRefresh={() => qc.invalidateQueries({ queryKey: key })} />}
@@ -161,10 +184,15 @@ type App = { profile: unknown; ai_summary: string | null; id: string; full_name:
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
-  onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string }[]; onTransfer: (jobId: string) => void }) {
+function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+  otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
+  onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
   const [target, setTarget] = useState("");
+  const [allRegions, setAllRegions] = useState(false);
+  // Transfers stay in the candidate's region by default: someone in Grand Rapids won't move to Detroit.
+  const visibleTransfers = transferOptions.filter((o) => allRegions || o.sameRegion);
+  const hiddenTransfers = transferOptions.length - visibleTransfers.length;
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
@@ -179,7 +207,22 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
   return (
     <div className="space-y-6">
       <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
-        <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}</p></SheetHeader>
+        <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
+      {otherApps.length > 0 && (
+        <div className="rounded-xl border p-3">
+          <div className="mb-2 text-sm font-semibold">Also applied for</div>
+          <div className="space-y-1">
+            {otherApps.map((o) => (
+              <button key={o.id} onClick={() => onOpenApp(o.id)}
+                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-secondary">
+                <span>{o.label}</span>
+                <span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LABEL[o.status]}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Each application keeps its own stage, so you can pass on one without closing the others.</p>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" asChild><a href={`mailto:${app.email}`}><Mail />Email</a></Button>
         {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
@@ -219,11 +262,17 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
         <p className="mb-2 text-xs text-muted-foreground">Better fit somewhere else in your group? Move them to that store's opening. Notes, rating and history come along.</p>
         <div className="flex gap-2">
           <select className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
-            <option value="">Pick an open job...</option>
-            {transferOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            <option value="">{visibleTransfers.length ? "Pick an open job..." : "No open jobs in this region"}</option>
+            {visibleTransfers.map((o) => <option key={o.id} value={o.id}>{o.label}{allRegions && !o.sameRegion ? " (other region)" : ""}</option>)}
           </select>
           <Button size="sm" disabled={!target} onClick={() => { onTransfer(target); setTarget(""); }}>Transfer</Button>
         </div>
+        {(hiddenTransfers > 0 || allRegions) && (
+          <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={allRegions} onCheckedChange={(c) => { setAllRegions(c === true); setTarget(""); }} />
+            Show jobs in other regions{hiddenTransfers > 0 && !allRegions ? ` (${hiddenTransfers})` : ""}
+          </label>
+        )}
       </div>
       {(app.status === "hired" || app.hired_at) && (
         <div className="space-y-3 rounded-xl border p-3">
@@ -236,6 +285,8 @@ function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransf
                 ? <Input type="date" className="h-8" defaultValue={app.start_date ?? ""} onBlur={(e) => e.target.value !== (app.start_date ?? "") && onUpdate({ start_date: e.target.value || null })} />
                 : <div>{app.start_date ? new Date(app.start_date + "T00:00:00").toLocaleDateString() : "—"}</div>}</div>
           </div>
+          <RetentionCheckins orgId={orgId} appId={app.id} name={app.full_name} startDate={app.start_date} hiredAt={app.hired_at}
+            departedAt={app.departed_at} canRecord={isHr} onDeparted={(d) => onUpdate({ departed_at: d })} />
           {app.departed_at ? (
             <p className="rounded-lg bg-destructive/10 p-2 text-sm">
               Departed {new Date(app.departed_at + "T00:00:00").toLocaleDateString()}{app.departure_reason ? ` — ${app.departure_reason}` : ""}

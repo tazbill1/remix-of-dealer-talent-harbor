@@ -8,12 +8,17 @@ import { DIVISIONS, STATUS_LABEL } from "@/lib/jobs";
 import { STATUS_EVENT_KIND } from "@/lib/status-log";
 import {
   computeAnalytics,
+  RETENTION_MARKS,
   toCsv,
   type AApp,
   type AEvent,
   type AJob,
   type AMessage,
+  type ARegion,
+  type AStore,
   type GroupBy,
+  type RetentionCell,
+  type RetentionRow,
 } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +38,7 @@ const PERIODS = [
 
 const GROUPS: { value: GroupBy; label: string }[] = [
   { value: "location", label: "Location" },
+  { value: "region", label: "Region" },
   { value: "role", label: "Role" },
   { value: "manager", label: "Hiring manager" },
   { value: "source", label: "Source" },
@@ -64,6 +70,7 @@ const hrs = (v: number | null) =>
         ? `${v.toFixed(1)} hrs`
         : `${(v / 24).toFixed(1)} days`;
 const days = (v: number | null) => (v === null ? "—" : `${v.toFixed(1)} days`);
+const pct = (c: RetentionCell) => (c.rate === null ? "—" : `${Math.round(c.rate * 100)}%`);
 
 function download(name: string, csv: string) {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -79,16 +86,20 @@ function AnalyticsPage() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["value"]>("30");
   const [storeId, setStoreId] = useState("all");
   const [division, setDivision] = useState("all");
+  const [regionId, setRegionId] = useState("all");
   const [groupBy, setGroupBy] = useState<GroupBy>("location");
+  const [retentionBy, setRetentionBy] = useState<"location" | "region">("location");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["analytics", org.orgId],
     queryFn: async () => {
-      const [apps, jobs, stores, events, messages] = await Promise.all([
+      const [apps, jobs, stores, regions, events, messages] = await Promise.all([
         fetchAll<AApp>((f, t) =>
           supabase
             .from("applications")
-            .select("id, job_id, dealership_id, status, source, created_at, updated_at")
+            .select(
+              "id, job_id, dealership_id, status, source, created_at, updated_at, hired_at, start_date, departed_at",
+            )
             .eq("org_id", org.orgId)
             .order("created_at")
             .range(f, t),
@@ -103,9 +114,17 @@ function AnalyticsPage() {
             .order("created_at")
             .range(f, t),
         ),
-        fetchAll<{ id: string; name: string }>((f, t) =>
+        fetchAll<AStore>((f, t) =>
           supabase
             .from("dealerships")
+            .select("id, name, region_id")
+            .eq("org_id", org.orgId)
+            .order("name")
+            .range(f, t),
+        ),
+        fetchAll<ARegion>((f, t) =>
+          supabase
+            .from("regions")
             .select("id, name")
             .eq("org_id", org.orgId)
             .order("name")
@@ -130,7 +149,7 @@ function AnalyticsPage() {
             .range(f, t),
         ),
       ]);
-      return { apps, jobs, stores, events, messages };
+      return { apps, jobs, stores, regions, events, messages };
     },
   });
 
@@ -141,10 +160,17 @@ function AnalyticsPage() {
     return computeAnalytics({
       ...data,
       range: { from, to: now },
-      filters: { storeId, division },
+      filters: { storeId, division, regionId },
       now,
     });
-  }, [data, period, storeId, division]);
+  }, [data, period, storeId, division, regionId]);
+
+  // Stores offered in the store filter follow the region filter.
+  const storeOptions = (data?.stores ?? []).filter(
+    (s) => regionId === "all" || (regionId === "none" ? !s.region_id : s.region_id === regionId),
+  );
+  const retentionRows: RetentionRow[] =
+    (retentionBy === "region" ? a?.retention.byRegion : a?.retention.byLocation) ?? [];
 
   const rows = a?.breakdown(groupBy) ?? [];
   const groupLabel = GROUPS.find((g) => g.value === groupBy)!.label;
@@ -183,6 +209,7 @@ function AnalyticsPage() {
         .filter(
           (x) =>
             (storeId === "all" || x.dealership_id === storeId) &&
+            storeOptions.some((s) => s.id === x.dealership_id) &&
             (division === "all" || (jobs.get(x.job_id)?.division ?? "general") === division),
         )
         .map((x) => {
@@ -199,6 +226,32 @@ function AnalyticsPage() {
         }),
     );
     download(`applicants-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+  }
+  function exportRetention() {
+    if (!a) return;
+    const label = retentionBy === "region" ? "Region" : "Location";
+    const all = [{ ...a.retention.enterprise, label: "Enterprise" }, ...retentionRows];
+    const csv = toCsv(
+      [
+        label,
+        "Hires",
+        ...RETENTION_MARKS.flatMap((m) => [
+          `${m}-day eligible`,
+          `${m}-day retained`,
+          `${m}-day rate`,
+        ]),
+      ],
+      all.map((r) => [
+        r.label,
+        r.hires,
+        ...RETENTION_MARKS.flatMap((m) => [
+          r[m].eligible,
+          r[m].retained,
+          r[m].rate === null ? "" : `${Math.round(r[m].rate! * 100)}%`,
+        ]),
+      ]),
+    );
+    download(`retention-by-${retentionBy}.csv`, csv);
   }
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading analytics...</div>;
@@ -246,8 +299,8 @@ function AnalyticsPage() {
         <div>
           <h1 className="text-3xl">Analytics</h1>
           <p className="text-muted-foreground">
-            Hiring speed and pipeline health across{" "}
-            {storeId === "all" ? "every store" : "this store"}.
+            Hiring speed, pipeline health and retention across{" "}
+            {storeId !== "all" ? "this store" : regionId !== "all" ? "this region" : "every store"}.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -263,6 +316,25 @@ function AnalyticsPage() {
               </option>
             ))}
           </select>
+          {data.regions.length > 0 && (
+            <select
+              aria-label="Region"
+              className="h-9 rounded-md border bg-background px-2 text-sm"
+              value={regionId}
+              onChange={(e) => {
+                setRegionId(e.target.value);
+                setStoreId("all");
+              }}
+            >
+              <option value="all">All regions</option>
+              {data.regions.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+              <option value="none">No region</option>
+            </select>
+          )}
           <select
             aria-label="Store"
             className="h-9 rounded-md border bg-background px-2 text-sm"
@@ -270,7 +342,7 @@ function AnalyticsPage() {
             onChange={(e) => setStoreId(e.target.value)}
           >
             <option value="all">All stores</option>
-            {data.stores.map((s) => (
+            {storeOptions.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
@@ -487,19 +559,101 @@ function AnalyticsPage() {
         ))}
       </div>
 
-      <section className="flex gap-3 rounded-2xl border border-dashed bg-background p-5">
-        <Info className="mt-0.5 size-5 shrink-0 text-sapphire" />
-        <div className="text-sm">
-          <p className="font-semibold">
-            30/60/90-day retention is coming with the next data update.
-          </p>
-          <p className="text-muted-foreground">
-            It needs a start date and departure date for each hire, captured from 30/60/90-day
-            check-ins or a termination import. First contact and stage aging are measured from stage
-            changes, which are now logged automatically. Older applicants show their apply date
-            until they move.
-          </p>
+      <section className="rounded-2xl bg-background p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg">30/60/90-day retention</h2>
+            <p className="text-sm text-muted-foreground">
+              Share of hires still on the team at each mark, counted from their start date (or hire
+              date if no start date is entered). All hires to date.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div
+              className="flex overflow-hidden rounded-md border text-sm"
+              role="group"
+              aria-label="Retention by"
+            >
+              {(["location", "region"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setRetentionBy(v)}
+                  aria-pressed={retentionBy === v}
+                  className={cn(
+                    "px-3 py-1.5",
+                    retentionBy === v
+                      ? "bg-sapphire text-primary-foreground"
+                      : "hover:bg-secondary",
+                  )}
+                >
+                  {v === "location" ? "Location" : "Region"}
+                </button>
+              ))}
+            </div>
+            <Button size="sm" variant="outline" onClick={exportRetention}>
+              <Download />
+              Export CSV
+            </Button>
+          </div>
         </div>
+        <div className="mb-4 grid grid-cols-3 gap-3 text-center">
+          {RETENTION_MARKS.map((m) => {
+            const c = a.retention.enterprise[m];
+            return (
+              <div key={m} className="rounded-xl bg-secondary p-3">
+                <div className="text-2xl font-extrabold">{pct(c)}</div>
+                <div className="text-xs text-muted-foreground">
+                  {m}-day · {c.eligible ? `${c.retained} of ${c.eligible} hires` : "no hires yet"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="py-2 font-medium">
+                  {retentionBy === "region" ? "Region" : "Location"}
+                </th>
+                <th className="py-2 text-right font-medium">Hires</th>
+                {RETENTION_MARKS.map((m) => (
+                  <th key={m} className="py-2 text-right font-medium">
+                    {m}-day
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {retentionRows.map((r) => (
+                <tr key={r.label} className="border-b last:border-0">
+                  <td className="py-2">{r.label}</td>
+                  <td className="py-2 text-right tabular-nums">{r.hires}</td>
+                  {RETENTION_MARKS.map((m) => (
+                    <td key={m} className="py-2 text-right tabular-nums">
+                      {pct(r[m])}
+                      {r[m].eligible > 0 && (
+                        <span className="text-muted-foreground"> ({r[m].eligible})</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {retentionRows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                    No hires yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 flex gap-2 text-xs text-muted-foreground">
+          <Info className="size-4 shrink-0 text-sapphire" />
+          Departures come from "Mark as departed" and 30/60/90 check-ins on each hire's profile.
+          Numbers in brackets are hires old enough to count at that mark.
+        </p>
       </section>
     </div>
   );

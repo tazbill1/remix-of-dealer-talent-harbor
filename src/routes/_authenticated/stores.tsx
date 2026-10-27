@@ -58,6 +58,9 @@ function Stores() {
   }
   async function removeRegion(id: string) {
     if (!confirm("Remove this region? Stores in it stay, they just become unassigned.")) return;
+    // Unassign stores first: the region link on stores blocks deleting a region that's still in use.
+    const { error: unassignError } = await supabase.from("dealerships").update({ region_id: null }).eq("region_id", id);
+    if (unassignError) return toast.error(unassignError.message);
     const { error } = await supabase.from("regions").delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["regions", org.orgId] });

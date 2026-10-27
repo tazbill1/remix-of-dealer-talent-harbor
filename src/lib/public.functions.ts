@@ -63,11 +63,17 @@ export const submitApplication = createServerFn({ method: "POST" })
     if (!job || job.status !== "open") throw new Error("This job is no longer accepting applications.");
     const email = data.email.toLowerCase();
     const phone = data.phone || null;
-    // Find an existing candidate in this group by email or phone, or create one.
+    // Find an existing candidate in this group by email, then by phone, or create one.
+    // Separate .eq() lookups keep user input out of a hand-built filter string.
     let candidateId: string | null = null;
-    const { data: found } = await supabaseAdmin.from("candidates").select("id, sms_opt_in")
-      .eq("org_id", job.org_id).or(`email.eq.${email}${phone ? `,phone.eq.${phone}` : ""}`).limit(1);
-    const existing = found?.[0];
+    const byEmail = await supabaseAdmin.from("candidates").select("id, sms_opt_in")
+      .eq("org_id", job.org_id).eq("email", email).limit(1);
+    let existing = byEmail.data?.[0];
+    if (!existing && phone) {
+      const byPhone = await supabaseAdmin.from("candidates").select("id, sms_opt_in")
+        .eq("org_id", job.org_id).eq("phone", phone).limit(1);
+      existing = byPhone.data?.[0];
+    }
     if (existing) {
       candidateId = existing.id;
       if (data.smsConsent && !existing.sms_opt_in) {
