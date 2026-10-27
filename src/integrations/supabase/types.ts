@@ -260,8 +260,6 @@ export type Database = {
       }
       dealerships: {
         Row: {
-          interview_hours: Json
-          interview_minutes: number
           address: string | null
           assistant_name: string
           brand: string | null
@@ -270,6 +268,8 @@ export type Database = {
           escalation_name: string | null
           escalation_phone: string | null
           id: string
+          interview_hours: Json
+          interview_minutes: number
           manager_name: string | null
           manager_phone: string | null
           name: string
@@ -280,8 +280,6 @@ export type Database = {
           timezone: string
         }
         Insert: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
@@ -290,6 +288,8 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
+          interview_hours?: Json
+          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name: string
@@ -300,8 +300,6 @@ export type Database = {
           timezone?: string
         }
         Update: {
-          interview_hours?: Json
-          interview_minutes?: number
           address?: string | null
           assistant_name?: string
           brand?: string | null
@@ -310,6 +308,8 @@ export type Database = {
           escalation_name?: string | null
           escalation_phone?: string | null
           id?: string
+          interview_hours?: Json
+          interview_minutes?: number
           manager_name?: string | null
           manager_phone?: string | null
           name?: string
@@ -1222,7 +1222,22 @@ export type Database = {
           last_error?: string | null
           org_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "store_calendars_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_calendars_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
