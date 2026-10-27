@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { shouldMove, statusFromEvent, OFFER_LABEL } from "@/lib/offers";
+import { hireOnSign, shouldMove, statusFromEvent, OFFER_LABEL } from "@/lib/offers";
 
 /** BoldSign tells hireme when an offer is viewed, signed, declined or expires. */
 export const Route = createFileRoute("/api/public/boldsign/webhook")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/boldsign/webhook")({
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: offer } = await db
           .from("offers")
-          .select("id, org_id, application_id, status, job_title")
+          .select("id, org_id, application_id, status, job_title, template_name, is_offer_letter")
           .eq("provider_document_id", documentId)
           .maybeSingle();
         if (!offer || !shouldMove(offer.status, to)) return new Response("ok");
@@ -37,13 +37,27 @@ export const Route = createFileRoute("/api/public/boldsign/webhook")({
           .from("offers")
           .update({ status: to, updated_at: now, ...(to === "signed" ? { completed_at: now } : {}) })
           .eq("id", offer.id);
+        const docName = offer.is_offer_letter ? `Offer` : (offer.template_name ?? "Document");
         if (to !== "viewed")
           await db.from("application_events").insert({
             org_id: offer.org_id,
             application_id: offer.application_id,
             kind: "offer",
-            message: `Offer ${OFFER_LABEL[to].toLowerCase()}: ${offer.job_title}`,
+            message: `${docName} ${OFFER_LABEL[to].toLowerCase()}: ${offer.job_title}`,
           });
+
+        if (to === "signed") {
+          const [{ data: ms }, { data: app }] = await Promise.all([
+            db.from("messaging_settings").select("hire_on_offer_signed").eq("org_id", offer.org_id).maybeSingle(),
+            db.from("applications").select("status").eq("id", offer.application_id).single(),
+          ]);
+          if (hireOnSign({ status: to, isOfferLetter: offer.is_offer_letter, setting: !!ms?.hire_on_offer_signed, appStatus: app?.status ?? "" })) {
+            const { statusEventRows } = await import("@/lib/status-log");
+            await db.from("applications").update({ status: "hired" }).eq("id", offer.application_id);
+            await db.from("application_events").insert(statusEventRows(offer.org_id, [offer.application_id], "hired"));
+          }
+        }
+        if (!offer.is_offer_letter) return new Response("ok");
 
         if (to === "signed" || to === "declined") {
           try {
