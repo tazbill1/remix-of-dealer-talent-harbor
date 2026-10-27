@@ -92,6 +92,7 @@ export type Database = {
       applications: {
         Row: {
           ai_summary: string | null
+          answers: Json
           candidate_id: string | null
           created_at: string
           dealership_id: string
@@ -117,6 +118,7 @@ export type Database = {
         }
         Insert: {
           ai_summary?: string | null
+          answers?: Json
           candidate_id?: string | null
           created_at?: string
           dealership_id: string
@@ -142,6 +144,7 @@ export type Database = {
         }
         Update: {
           ai_summary?: string | null
+          answers?: Json
           candidate_id?: string | null
           created_at?: string
           dealership_id?: string
@@ -534,6 +537,7 @@ export type Database = {
           pay_max: number | null
           pay_min: number | null
           pay_period: string
+          questions: Json
           req_type: string
           requested_by: string | null
           status: string
@@ -556,6 +560,7 @@ export type Database = {
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          questions?: Json
           req_type?: string
           requested_by?: string | null
           status?: string
@@ -578,6 +583,7 @@ export type Database = {
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          questions?: Json
           req_type?: string
           requested_by?: string | null
           status?: string
