@@ -74,10 +74,10 @@ function Dashboard() {
         <h2 className="mb-4 text-lg">Stores by applicants</h2>
         <div className="divide-y">
           {ranking.map((s, i) => (
-            <div key={s.id} className="flex items-center justify-between py-3 text-sm">
+            <Link key={s.id} to="/stores/$storeId" params={{ storeId: s.id }} className="flex items-center justify-between py-3 text-sm hover:text-sapphire">
               <span><span className="mr-3 text-muted-foreground">{i + 1}</span>{s.name}</span>
               <span className="text-muted-foreground">{s.total} applicants · <span className="font-semibold text-foreground">{s.hired} hired</span></span>
-            </div>
+            </Link>
           ))}
           {ranking.length === 0 && <p className="py-3 text-sm text-muted-foreground">No stores yet.</p>}
         </div>

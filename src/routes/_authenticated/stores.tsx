@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -63,15 +63,19 @@ function Stores() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stores.map((s) => (
-          <div key={s.id} className="rounded-2xl bg-background p-5 shadow-sm">
+          <div key={s.id} className="relative rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md">
+            <Link to="/stores/$storeId" params={{ storeId: s.id }} className="absolute inset-0 rounded-2xl" aria-label={`Open ${s.name} dashboard`} />
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg">{s.name}</h3>
                 <p className="text-sm text-muted-foreground">{[s.brand, [s.city, s.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
               </div>
-              <Button variant="ghost" size="icon" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>
+              <Button variant="ghost" size="icon" className="relative z-10" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>
             </div>
-            <p className="mt-4 text-sm">Assistant: <span className="font-semibold text-sapphire">{s.assistant_name}</span></p>
+            <div className="mt-4 flex items-center justify-between text-sm">
+              <span>Assistant: <span className="font-semibold text-sapphire">{s.assistant_name}</span></span>
+              <span className="font-semibold text-sapphire">Open dashboard →</span>
+            </div>
           </div>
         ))}
       </div>
