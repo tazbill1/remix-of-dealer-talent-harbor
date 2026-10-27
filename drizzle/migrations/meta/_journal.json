@@ -85,6 +85,13 @@
       "when": 1793140548518,
       "tag": "0011_offer_letters_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793140859619,
+      "tag": "0012_signature_documents",
+      "breakpoints": true
     }
   ]
 }

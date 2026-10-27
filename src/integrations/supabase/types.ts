@@ -749,6 +749,7 @@ export type Database = {
           email_mode: string
           email_reply_to: string | null
           escalate_after_hours: number
+          hire_on_offer_signed: boolean
           mode: string
           nudge_after_hours: number
           offer_template_id: string | null
@@ -765,6 +766,7 @@ export type Database = {
           email_mode?: string
           email_reply_to?: string | null
           escalate_after_hours?: number
+          hire_on_offer_signed?: boolean
           mode?: string
           nudge_after_hours?: number
           offer_template_id?: string | null
@@ -781,6 +783,7 @@ export type Database = {
           email_mode?: string
           email_reply_to?: string | null
           escalate_after_hours?: number
+          hire_on_offer_signed?: boolean
           mode?: string
           nudge_after_hours?: number
           offer_template_id?: string | null
@@ -807,6 +810,7 @@ export type Database = {
           created_at: string
           error: string | null
           id: string
+          is_offer_letter: boolean
           job_title: string
           note: string | null
           org_id: string
@@ -816,6 +820,8 @@ export type Database = {
           sent_by: string | null
           start_date: string | null
           status: string
+          template_id: string | null
+          template_name: string | null
           updated_at: string
         }
         Insert: {
@@ -824,6 +830,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          is_offer_letter?: boolean
           job_title: string
           note?: string | null
           org_id: string
@@ -833,6 +840,8 @@ export type Database = {
           sent_by?: string | null
           start_date?: string | null
           status?: string
+          template_id?: string | null
+          template_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -841,6 +850,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          is_offer_letter?: boolean
           job_title?: string
           note?: string | null
           org_id?: string
@@ -850,6 +860,8 @@ export type Database = {
           sent_by?: string | null
           start_date?: string | null
           status?: string
+          template_id?: string | null
+          template_name?: string | null
           updated_at?: string
         }
         Relationships: [
