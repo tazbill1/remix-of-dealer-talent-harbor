@@ -743,6 +743,7 @@ export type Database = {
       }
       messaging_settings: {
         Row: {
+          offer_template_id: string | null
           ai_provider: string
           email_from_address: string | null
           email_from_name: string | null
@@ -758,6 +759,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          offer_template_id?: string | null
           ai_provider?: string
           email_from_address?: string | null
           email_from_name?: string | null
@@ -773,6 +775,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          offer_template_id?: string | null
           ai_provider?: string
           email_from_address?: string | null
           email_from_name?: string | null
@@ -796,6 +799,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      offers: {
+        Row: {
+          application_id: string
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          job_title: string
+          note: string | null
+          org_id: string
+          pay: string | null
+          provider: string
+          provider_document_id: string | null
+          sent_by: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_title: string
+          note?: string | null
+          org_id: string
+          pay?: string | null
+          provider?: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_title?: string
+          note?: string | null
+          org_id?: string
+          pay?: string | null
+          provider?: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       org_invites: {
         Row: {

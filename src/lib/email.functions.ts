@@ -140,10 +140,13 @@ export const integrationStatus = createServerFn({ method: "POST" })
     const has = (k: string) => !!process.env[k];
     const { data: ms } = await context.supabase
       .from("messaging_settings")
-      .select("email_from_address")
+      .select("email_from_address, offer_template_id")
       .eq("org_id", data.orgId)
       .maybeSingle();
     return {
+      boldsign: has("BOLDSIGN_API_KEY"),
+      boldsignWebhook: has("BOLDSIGN_WEBHOOK_SECRET"),
+      offerTemplateId: ms?.offer_template_id ?? null,
       twilio: has("TWILIO_ACCOUNT_SID") && has("TWILIO_AUTH_TOKEN"),
       email: has("LOVABLE_API_KEY"),
       emailFrom: ms?.email_from_address ?? null,

@@ -19,6 +19,7 @@ import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/compone
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
 import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
+import { OfferPanel } from "@/components/offer-panel";
 import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
@@ -254,6 +255,9 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       <ProfileFacts profile={app.profile as Record<string, unknown>} />
       <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
+      {app.status !== "rejected" && !app.departed_at && (
+        <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
+      )}
       <div>
         <div className="mb-2 text-sm font-semibold">Stage</div>
         <div className="flex flex-wrap gap-2">

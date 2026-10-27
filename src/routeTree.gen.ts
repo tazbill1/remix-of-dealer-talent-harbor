@@ -36,11 +36,13 @@ import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authen
 import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
 import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
+import { Route as ApiPublicBoldsignWebhookRouteImport } from './routes/api/public/boldsign/webhook'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
 import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/cron/messages'
 import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
+import { Route as ApiPublicOfferTokenRouteImport } from './routes/api/public/offer/$token'
 import { Route as ApiPublicUnsubscribeTokenRouteImport } from './routes/api/public/unsubscribe/$token'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -181,6 +183,12 @@ const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   path: '/c/$orgSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBoldsignWebhookRoute =
+  ApiPublicBoldsignWebhookRouteImport.update({
+    id: '/api/public/boldsign/webhook',
+    path: '/api/public/boldsign/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   id: '/api/public/calendar/$token',
   path: '/api/public/calendar/$token',
@@ -204,6 +212,11 @@ const ApiPublicCronWorkflowsRoute = ApiPublicCronWorkflowsRouteImport.update({
 const ApiPublicFeedOrgSlugRoute = ApiPublicFeedOrgSlugRouteImport.update({
   id: '/api/public/feed/$orgSlug',
   path: '/api/public/feed/$orgSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOfferTokenRoute = ApiPublicOfferTokenRouteImport.update({
+  id: '/api/public/offer/$token',
+  path: '/api/public/offer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicUnsubscribeTokenRoute =
@@ -251,11 +264,13 @@ export interface FileRoutesByFullPath {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -286,11 +301,13 @@ export interface FileRoutesByTo {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
+  '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -324,11 +341,13 @@ export interface FileRoutesById {
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
+  '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -362,11 +381,13 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
     | '/lovable/email/transactional/preview'
@@ -397,11 +418,13 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug'
+    | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
     | '/lovable/email/transactional/preview'
@@ -434,11 +457,13 @@ export interface FileRouteTypes {
     | '/api/sms/inbound'
     | '/api/sms/status'
     | '/c/$orgSlug/'
+    | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
     | '/api/public/cron/workflows'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
     | '/lovable/email/transactional/preview'
@@ -457,11 +482,13 @@ export interface RootRouteChildren {
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
   ApiSmsStatusRoute: typeof ApiSmsStatusRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
+  ApiPublicBoldsignWebhookRoute: typeof ApiPublicBoldsignWebhookRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronEscalateRoute: typeof ApiPublicCronEscalateRoute
   ApiPublicCronMessagesRoute: typeof ApiPublicCronMessagesRoute
   ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
+  ApiPublicOfferTokenRoute: typeof ApiPublicOfferTokenRoute
   ApiPublicUnsubscribeTokenRoute: typeof ApiPublicUnsubscribeTokenRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -658,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof COrgSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/boldsign/webhook': {
+      id: '/api/public/boldsign/webhook'
+      path: '/api/public/boldsign/webhook'
+      fullPath: '/api/public/boldsign/webhook'
+      preLoaderRoute: typeof ApiPublicBoldsignWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/calendar/$token': {
       id: '/api/public/calendar/$token'
       path: '/api/public/calendar/$token'
@@ -691,6 +725,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/feed/$orgSlug'
       fullPath: '/api/public/feed/$orgSlug'
       preLoaderRoute: typeof ApiPublicFeedOrgSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/offer/$token': {
+      id: '/api/public/offer/$token'
+      path: '/api/public/offer/$token'
+      fullPath: '/api/public/offer/$token'
+      preLoaderRoute: typeof ApiPublicOfferTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/unsubscribe/$token': {
@@ -778,11 +819,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSmsInboundRoute: ApiSmsInboundRoute,
   ApiSmsStatusRoute: ApiSmsStatusRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,
+  ApiPublicBoldsignWebhookRoute: ApiPublicBoldsignWebhookRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronEscalateRoute: ApiPublicCronEscalateRoute,
   ApiPublicCronMessagesRoute: ApiPublicCronMessagesRoute,
   ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
+  ApiPublicOfferTokenRoute: ApiPublicOfferTokenRoute,
   ApiPublicUnsubscribeTokenRoute: ApiPublicUnsubscribeTokenRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
