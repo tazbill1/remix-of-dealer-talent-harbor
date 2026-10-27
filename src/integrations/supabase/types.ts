@@ -92,6 +92,7 @@ export type Database = {
       applications: {
         Row: {
           ai_summary: string | null
+          answers: Json
           candidate_id: string | null
           created_at: string
           dealership_id: string
@@ -102,6 +103,7 @@ export type Database = {
           hired_at: string | null
           id: string
           job_id: string
+          knockout_failed: boolean
           notes: string | null
           open_to_other_stores: boolean
           org_id: string
@@ -117,6 +119,7 @@ export type Database = {
         }
         Insert: {
           ai_summary?: string | null
+          answers?: Json
           candidate_id?: string | null
           created_at?: string
           dealership_id: string
@@ -127,6 +130,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           job_id: string
+          knockout_failed?: boolean
           notes?: string | null
           open_to_other_stores?: boolean
           org_id: string
@@ -142,6 +146,7 @@ export type Database = {
         }
         Update: {
           ai_summary?: string | null
+          answers?: Json
           candidate_id?: string | null
           created_at?: string
           dealership_id?: string
@@ -152,6 +157,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           job_id?: string
+          knockout_failed?: boolean
           notes?: string | null
           open_to_other_stores?: boolean
           org_id?: string
@@ -534,6 +540,7 @@ export type Database = {
           pay_max: number | null
           pay_min: number | null
           pay_period: string
+          questions: Json
           req_type: string
           requested_by: string | null
           status: string
@@ -556,6 +563,7 @@ export type Database = {
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          questions?: Json
           req_type?: string
           requested_by?: string | null
           status?: string
@@ -578,6 +586,7 @@ export type Database = {
           pay_max?: number | null
           pay_min?: number | null
           pay_period?: string
+          questions?: Json
           req_type?: string
           requested_by?: string | null
           status?: string

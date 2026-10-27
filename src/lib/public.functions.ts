@@ -159,3 +159,52 @@ export const getApplicationStatus = createServerFn({ method: "GET" })
       events: (events ?? []).map((e) => ({ kind: e.kind, message: e.message, at: e.created_at })),
     };
   });
+
+const contactSchema = z.object({
+  orgSlug: z.string().min(1).max(60),
+  jobId: z.string().uuid().nullable(),
+  fullName: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(255),
+  phone: z.string().trim().max(30).optional(),
+  message: z.string().trim().min(1).max(2000),
+  /** Hidden field real people leave empty. */
+  website: z.string().max(0).optional(),
+});
+
+/**
+ * Careers-site contact form. Each message lands in the pipeline as a new applicant
+ * (stage New, source "Our website") with the message in their notes. With no job
+ * picked, it goes on the group's newest open job, flagged "any role".
+ */
+export const submitContact = createServerFn({ method: "POST" })
+  .inputValidator((d: z.input<typeof contactSchema>) => contactSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: org } = await supabaseAdmin.from("organizations").select("id").eq("slug", data.orgSlug).maybeSingle();
+    if (!org) throw new Error("This careers site isn't available.");
+    let q = supabaseAdmin.from("jobs").select("id, dealership_id").eq("org_id", org.id).eq("status", "open");
+    q = data.jobId ? q.eq("id", data.jobId) : q.order("created_at", { ascending: false });
+    const { data: jobs } = await q.limit(1);
+    const job = jobs?.[0];
+    if (!job) throw new Error("There are no open jobs right now. Please check back soon.");
+    const email = data.email.toLowerCase();
+    const { data: cand } = await supabaseAdmin.from("candidates").select("id").eq("org_id", org.id).eq("email", email).limit(1);
+    let candidateId = cand?.[0]?.id ?? null;
+    if (!candidateId) {
+      const { data: created } = await supabaseAdmin.from("candidates")
+        .insert({ org_id: org.id, full_name: data.fullName, email, phone: data.phone || null }).select("id").single();
+      candidateId = created?.id ?? null;
+    }
+    const note = `${data.jobId ? "" : "Interested in any open role. "}Message from the careers site:\n${data.message}`;
+    const { data: app, error } = await supabaseAdmin.from("applications").insert({
+      org_id: org.id, job_id: job.id, dealership_id: job.dealership_id, full_name: data.fullName, email,
+      phone: data.phone || null, source: "own_site", candidate_id: candidateId, notes: note,
+    }).select("id").single();
+    if (error || !app) throw new Error("We couldn't send your message. Please try again.");
+    await supabaseAdmin.from("application_events").insert({
+      org_id: org.id, application_id: app.id, kind: "applied", message: "Contacted us through the careers site",
+    });
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    await emailApplicant(supabaseAdmin, app.id, { kind: "confirmation" });
+    return { ok: true };
+  });
