@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
+import { STATUSES, STATUS_LABEL, canPostJobs, type AppStatus } from "@/lib/jobs";
 import { statusEventRows } from "@/lib/status-log";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -145,6 +145,7 @@ function Applicants() {
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile app={current} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
+            isHr={canPostJobs(org.role, org.isPlatformAdmin)}
             transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}` }))}
             onTransfer={(jobId) => transfer(current.id, jobId)} orgId={org.orgId}
             assistantName={data?.stores.find((s) => s.id === current.dealership_id)?.assistant_name ?? "Assistant"}
@@ -156,12 +157,14 @@ function Applicants() {
 }
 
 type App = { profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
-  open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string };
+  open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
+  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
 
-function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string;
+function Profile({ app, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr }: { orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string }[]; onTransfer: (jobId: string) => void }) {
   const [notes, setNotes] = useState(app.notes ?? "");
   const [target, setTarget] = useState("");
+  const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
