@@ -93,8 +93,11 @@ describe("calendar links", () => {
     expect(checkCalendarUrl("webcal://p42-caldav.icloud.com/published/2/abc")).toEqual({ url: "https://p42-caldav.icloud.com/published/2/abc" });
     expect(checkCalendarUrl("https://outlook.office365.com/owa/calendar/x/y/calendar.ics")).toHaveProperty("url");
   });
-  it("rejects public Google links, other sites and plain http", () => {
-    expect(checkCalendarUrl("https://calendar.google.com/calendar/ical/x%40gmail.com/public/basic.ics")).toHaveProperty("error");
+  it("accepts Google's public free/busy address too", () => {
+    expect(checkCalendarUrl("https://calendar.google.com/calendar/ical/x%40company.com/public/basic.ics")).toHaveProperty("url");
+  });
+  it("rejects Google page links, other sites and plain http", () => {
+    expect(checkCalendarUrl("https://calendar.google.com/calendar/embed?src=x%40gmail.com")).toHaveProperty("error");
     expect(checkCalendarUrl("https://evil.example.com/cal.ics")).toHaveProperty("error");
     expect(checkCalendarUrl("http://calendar.google.com/x/private-a/basic.ics")).toHaveProperty("error");
     expect(checkCalendarUrl("not a link")).toHaveProperty("error");

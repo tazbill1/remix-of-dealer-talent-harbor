@@ -43,12 +43,21 @@ export function CalendarLinkHelp() {
         </ol>
       )}
       {help === "google" && (
-        <ol className="list-decimal space-y-1 rounded-xl bg-accent p-3 pl-8">
-          <li>Open Google Calendar on a computer, click the gear, then <b>Settings</b>.</li>
-          <li>Under <b>Settings for my calendars</b>, click your calendar.</li>
-          <li>Scroll to <b>Integrate calendar</b> and copy <b>Secret address in iCal format</b>.</li>
-          <li>Paste it here. Treat it like a password.</li>
-        </ol>
+        <div className="space-y-2 rounded-xl bg-accent p-3">
+          <div className="font-medium">Option A: free/busy only (works on most company accounts)</div>
+          <ol className="list-decimal space-y-1 pl-5">
+            <li>Open Google Calendar on a computer, click the gear, then <b>Settings</b>.</li>
+            <li>Under <b>Settings for my calendars</b>, click your calendar.</li>
+            <li>In <b>Access permissions for events</b>, tick <b>Make available to public</b> and choose <b>See only free/busy (hide details)</b>.</li>
+            <li>Scroll to <b>Integrate calendar</b>, copy <b>Public address in iCal format</b>, and paste it here.</li>
+          </ol>
+          <p className="text-muted-foreground">People with the link only see "Busy" blocks, never what or where.</p>
+          <div className="font-medium">Option B: secret address</div>
+          <p>
+            Same page, under <b>Integrate calendar</b>: copy <b>Secret address in iCal format</b>. If it's missing, your company
+            has turned it off, so use Option A.
+          </p>
+        </div>
       )}
     </div>
   );
