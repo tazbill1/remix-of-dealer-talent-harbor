@@ -257,8 +257,10 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
       {app.status !== "rejected" && !app.departed_at && (
-        <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
-        <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} />
+        <>
+          <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
+          <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} />
+        </>
       )}
       <div>
         <div className="mb-2 text-sm font-semibold">Stage</div>
