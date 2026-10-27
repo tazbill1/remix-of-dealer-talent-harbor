@@ -158,14 +158,14 @@ Return:
 
     // Apply updates
     const u = out.profile_updates;
-    const profile: Record<string, any> = { ...(app.profile as any) };
+    const profile: any = { ...(app.profile as any) };
     const changed: string[] = [];
     for (const k of ["years_experience", "certifications", "availability", "desired_pay", "earliest_start", "has_drivers_license"] as const) {
       const v = (u as any)[k];
       if (v !== null && v !== undefined && JSON.stringify(v) !== JSON.stringify(profile[k])) { profile[k] = v; changed.push(k.replace(/_/g, " ")); }
     }
     if (u.other_facts?.length) profile.facts = [...new Set([...(profile.facts ?? []), ...u.other_facts])];
-    const patch: Record<string, any> = { profile, ai_summary: out.summary };
+    const patch: any = { profile, ai_summary: out.summary };
     if (u.full_name && data.party === "candidate") patch.full_name = u.full_name;
     if (u.email) patch.email = u.email;
     if (u.phone) patch.phone = u.phone;
