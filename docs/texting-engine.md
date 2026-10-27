@@ -64,7 +64,15 @@ Anthropic on the Team page. Without the key it keeps using Lovable AI. Optional
 2. Add Lovable secrets: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `PUBLIC_APP_URL`
    (the app's public address, e.g. `https://hireme.werkandme.com`, so webhook
    signatures check out).
-3. For each store's Twilio number, set "A message comes in" to
-   `POST https://<app>/api/sms/inbound`.
+3. Put each store's Twilio number in the "hireme by WerkandMe" messaging service, whose
+   incoming-message webhook is `POST https://workwithwerk.com/api/sms/inbound` (must match
+   `PUBLIC_APP_URL`, or signatures won't verify).
 4. Enter each store's texting number on the Stores page.
-5. Flip the group to **Live** on the Team page. Test with your own phone first.
+5. Flip the group to **Live** on the Team page. The confirm step lets you skip manager
+   summaries for candidates already in Screening, so managers aren't flooded on day one.
+   Test with your own phone first.
+
+Once live: the sidebar shows **Texts: Live**, practice typing is hidden on profiles, and
+Twilio itself answers STOP/START/HELP (hireme records the opt-out but doesn't send a second
+reply). Every manager text starts with "hireme by WerkandMe:", matching the registered
+campaign.

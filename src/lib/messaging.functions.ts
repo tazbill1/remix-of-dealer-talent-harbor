@@ -21,7 +21,8 @@ export const screeningBacklog = createServerFn({ method: "POST" })
       }),
       context.supabase.rpc("is_platform_admin", { _uid: context.userId }),
     ]);
-    if (!admin.data && !platform.data) throw new Error("Only group admins can change texting mode.");
+    if (!admin.data && !platform.data)
+      throw new Error("Only group admins can change texting mode.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { chunk, fetchAll } = await import("@/lib/fetch-all");

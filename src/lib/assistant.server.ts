@@ -286,7 +286,7 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
       changed: [] as string[],
       status: null,
       interviewAt: null,
-      delivery: row?.status ?? null,
+      delivery: row?.status ?? (carrierReplies ? "carrier" : null),
     };
   }
 
