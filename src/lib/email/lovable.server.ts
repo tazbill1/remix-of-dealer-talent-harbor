@@ -1,5 +1,5 @@
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
+import { EmailAPIError, sendLovableEmail as sendLovableEmailApi } from '@lovable.dev/email-js'
 
 const SITE_NAME = 'WerkandMe'
 // Verified sender subdomain delegated to Lovable's nameservers. Never the root domain.
@@ -60,7 +60,7 @@ export async function sendLovableEmail({
   }
   if (!to) throw new Error('Recipient is required')
 
-  const response = await sendLovableEmail(
+  const response = await sendLovableEmailApi(
     {
       to,
       from: { name: SITE_NAME, address: FROM_ADDRESS },
