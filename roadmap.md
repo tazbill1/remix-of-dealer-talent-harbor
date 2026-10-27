@@ -42,3 +42,5 @@
 - [ ] Per-store AI HR assistant: applicant chat, check-ins, manager nudges, HR summaries
 - [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
 - [ ] Automated status moves from events
+
+- [x] Simplify BoldSign connection and setup into one section; verified connection checks, template save/reopen, copied production address and mobile layout.
