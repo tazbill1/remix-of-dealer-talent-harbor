@@ -51,7 +51,7 @@ function Layout() {
 
   const ctx: OrgCtx | null = membership ? {
     orgId: membership.org_id, orgName: membership.organizations?.name ?? "",
-    orgSlug: membership.organizations?.slug ?? "", role: membership.role,
+    orgSlug: membership.organizations?.slug ?? "", role: membership.role, isPlatformAdmin: me.isPlatformAdmin,
   } : null;
 
   // Group pages only render once a dealer group exists; onboarding and the admin console never need one.
