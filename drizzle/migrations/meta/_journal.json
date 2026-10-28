@@ -190,6 +190,13 @@
       "when": 1793162200878,
       "tag": "0026_adverse_action_report_copy_time",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793199561997,
+      "tag": "0027_platform_admin_only_store_texting",
+      "breakpoints": true
     }
   ]
 }
