@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Download, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
+import { SourceReport } from "@/components/source-report";
 import { DIVISIONS, STATUS_LABEL } from "@/lib/jobs";
 import {
   computeAnalytics,
@@ -620,6 +621,7 @@ function AnalyticsPage() {
           Numbers in brackets are hires old enough to count at that mark.
         </p>
       </section>
+      <SourceReport orgId={org.orgId} stores={(data?.stores ?? []).map((s) => ({ id: s.id, name: s.name }))} />
     </div>
   );
 }
