@@ -155,6 +155,20 @@
       "when": 1793156423320,
       "tag": "0021_interview_kits_and_scorecards",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793160483273,
+      "tag": "0022_applicant_consents_and_adverse_actions",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793160523862,
+      "tag": "0023_restrict_compliance_record_grants",
+      "breakpoints": true
     }
   ]
 }
