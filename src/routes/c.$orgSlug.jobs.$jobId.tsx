@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { z } from "zod";
 import { getPublicJob, submitApplication } from "@/lib/public.functions";
+import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
 import { formatPay } from "@/lib/jobs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ function JobPage() {
     if (file && file.size > 10 * 1024 * 1024) return toast.error("Resume must be under 10 MB.");
     const missing = questions.find((q) => q.required && q.kind === "yes_no" && !answers[q.id]);
     if (missing) return toast.error(`Please answer: ${missing.text}`);
+    if (f.linkedinUrl.trim() && !normalizeLinkedInUrl(f.linkedinUrl)) return toast.error(LINKEDIN_ERROR);
     setBusy(true);
     try {
       const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent, answers } });
@@ -89,6 +91,12 @@ function JobPage() {
           <div className="space-y-1.5"><Label htmlFor="n">Full name</Label><Input id="n" required value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+          <div className="space-y-1.5">
+            <Label htmlFor="li">LinkedIn profile</Label>
+            <Input id="li" type="text" placeholder="https://www.linkedin.com/in/yourname" value={f.linkedinUrl} onChange={(e) => setF({ ...f, linkedinUrl: e.target.value })} />
+            <p className="text-xs text-muted-foreground">Optional. Paste the link to your LinkedIn profile.</p>
+            {f.linkedinUrl.trim() && !normalizeLinkedInUrl(f.linkedinUrl) && <p className="text-xs text-destructive">{LINKEDIN_ERROR}</p>}
+          </div>
           <div className="space-y-1.5"><Label htmlFor="r">Resume (optional)</Label><Input id="r" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
           {questions.map((q) => (
             <div key={q.id} className="space-y-1.5">
