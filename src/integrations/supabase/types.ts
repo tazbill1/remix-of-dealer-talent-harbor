@@ -94,6 +94,9 @@ export type Database = {
           ai_paused_at: string | null
           ai_summary: string | null
           answers: Json
+          background_check_note: string | null
+          background_check_status: string | null
+          background_check_updated_at: string | null
           candidate_id: string | null
           created_at: string
           dealership_id: string
@@ -123,6 +126,9 @@ export type Database = {
           ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
+          background_check_note?: string | null
+          background_check_status?: string | null
+          background_check_updated_at?: string | null
           candidate_id?: string | null
           created_at?: string
           dealership_id: string
@@ -152,6 +158,9 @@ export type Database = {
           ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
+          background_check_note?: string | null
+          background_check_status?: string | null
+          background_check_updated_at?: string | null
           candidate_id?: string | null
           created_at?: string
           dealership_id?: string
