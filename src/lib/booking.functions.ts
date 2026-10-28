@@ -220,7 +220,7 @@ export const rescheduleInterview = createServerFn({ method: "POST" })
     const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
     await emailApplicant(supabaseAdmin, iv.application_id, { kind: "interview", startsAt: data.startsAt });
     const invite = await emailInterviewStaff(supabaseAdmin, iv.id);
-    return { demo: false, note: invite.note ?? null };
+    return { demo: false, note: ("note" in invite ? invite.note : null) ?? null };
   });
 
 /** Staff: text the candidate their booking link (e.g. to reschedule). */

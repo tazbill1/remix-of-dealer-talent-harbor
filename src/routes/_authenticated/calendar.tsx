@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { RescheduleButton, isUpcoming } from "@/components/applicant-tools";
 import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 
 function CalendarPage() {
   const org = useOrg();
+  const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["interviews-all", org.orgId],
     queryFn: async () => {
@@ -36,7 +38,7 @@ function CalendarPage() {
       <ul className="space-y-2">
         {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
         {data?.iv.map((i) => (
-          <li key={i.id}>
+          <li key={i.id} className="flex items-center gap-2">
             <Button asChild variant="ghost" className="h-auto w-full cursor-pointer justify-start gap-3 whitespace-normal rounded-2xl border p-4 text-left hover:bg-secondary">
               <Link to="/applicants" search={{ applicant: i.application_id, tab: "interview", interview: i.id }}>
             <CalendarDays className="size-5 text-sapphire" />
@@ -45,6 +47,9 @@ function CalendarPage() {
             <div className="text-right text-sm font-medium">{new Date(i.starts_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
               </Link>
             </Button>
+            {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
+              <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
+            )}
           </li>
         ))}
       </ul>
