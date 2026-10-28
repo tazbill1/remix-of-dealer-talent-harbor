@@ -19,7 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] Interview invite email to the staff member when an interview is booked, with an .ics attachment so it lands on their Google/Outlook calendar (Tom's preferred path over Google sign-in).
+- [ ] Interview invite email to one staff interviewer when booked or moved, with a signed .ics download link (attachments unsupported); flag ambiguous store coverage instead of broadcasting.
 - [ ] Choose a connected Google calendar when staff set an interview time and create its calendar event (requires Google app-user connection setup).
 - [x] Analytics Reports: four read-only reports, date/region/store filters, test toggle, print and PDF; verified real admin (7 stores) and manager (4 assigned Dallas-region stores), PDF download and phone layout. No group logo is stored, so reports use a group monogram; unavailable historical attention is labeled current.
 - [x] Clean Integrations wording and matching cards, move Texting settings from Team, and verify unchanged values plus sidebar tooltip.
