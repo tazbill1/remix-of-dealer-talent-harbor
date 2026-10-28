@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { removeMemberCalendar, setMemberCalendar } from "@/lib/member-calendars.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 export type CalStatus =
@@ -95,18 +96,32 @@ export function CalendarLinkForm({
           </Button>
         )}
         {status.linked && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={async () => {
-              await remove({ data: { orgId, memberId: memberId ?? null } });
-              toast.success("Calendar unlinked");
-              onChanged();
-            }}
-          >
-            Unlink
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground">
+                Unlink
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unlink this calendar?</AlertDialogTitle>
+                <AlertDialogDescription>Busy times from this calendar will stop showing when interviews are scheduled. You can link it again anytime.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async () => {
+                    await remove({ data: { orgId, memberId: memberId ?? null } });
+                    toast.success("Calendar unlinked");
+                    onChanged();
+                  }}
+                >
+                  Unlink
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
       {editing && (

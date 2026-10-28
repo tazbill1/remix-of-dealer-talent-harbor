@@ -8,6 +8,7 @@ import { TeamInvites } from "@/components/team-invites";
 import { useServerFn } from "@tanstack/react-start";
 import { teamCalendars } from "@/lib/member-calendars.functions";
 import { CalendarLinkForm } from "@/components/calendar-link";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({ meta: [{ title: "Team | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe team roles, coverage and group texting settings." }, { property: "og:title", content: "Team | WerkandMe Hiring" }, { property: "og:description", content: "Manage team roles, coverage and group texting settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -67,7 +68,6 @@ function Team() {
     refresh();
   }
   async function removeMember(id: string, who: string) {
-    if (!window.confirm(`Remove ${who} from this group? They'll lose access right away.`)) return;
     const { error } = await supabase.from("org_members").delete().eq("id", id);
     if (error) return toast.error(error.message.includes("at least one group admin") ? "A group must keep at least one group admin." : error.message);
     toast.success(`${who} removed`);
@@ -92,7 +92,21 @@ function Team() {
             <div key={m.id} className="space-y-3 border-b p-4 last:border-0">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="font-semibold">{m.email ?? "Team member"}</div>
-                <button onClick={() => removeMember(m.id, m.email ?? "this person")} className="ml-auto text-xs text-muted-foreground hover:text-destructive sm:order-last">Remove</button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="ml-auto text-xs text-muted-foreground hover:text-destructive sm:order-last">Remove</button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {m.email ?? "this person"} from the team?</AlertDialogTitle>
+                      <AlertDialogDescription>They'll lose access right away. You can invite them again later.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => removeMember(m.id, m.email ?? "this person")}>Remove</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <select aria-label={`Role for ${m.email}`} className="h-9 rounded-md border bg-background px-2 text-sm"
                   value={m.role} onChange={(e) => setRole(m.id, e.target.value as Membership["role"])}>
                   {roles.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}

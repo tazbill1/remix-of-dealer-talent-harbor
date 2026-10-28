@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/org";
@@ -23,7 +23,8 @@ function Platform() {
       return { orgs: orgs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [] };
     },
   });
-  if (!me?.isPlatformAdmin) return <p>This area is for the WerkandMe Admin only.</p>;
+  if (me && !me.isPlatformAdmin) return <Navigate to="/dashboard" />;
+  if (!me) return null;
   return (
     <div className="space-y-6">
       <div><h1 className="text-3xl">WerkandMe Admin</h1><p className="text-muted-foreground">{data?.orgs.length ?? 0} dealer groups</p></div>
