@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { rememberReferral, recallReferral } from "@/lib/referral-capture";
 import { toast } from "sonner";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { z } from "zod";
-import { getPublicJob, submitApplication } from "@/lib/public.functions";
+import { getPublicJob, getReferrer, submitApplication } from "@/lib/public.functions";
 import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
 import { formatPay } from "@/lib/jobs";
 import { AI_NOTICE_TEXT } from "@/lib/ai-notice";
@@ -19,7 +20,7 @@ const SMS_TERMS_URL = "/terms";
 const SMS_PRIVACY_URL = "/privacy";
 
 export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
-  validateSearch: z.object({ source: z.string().max(40).optional() }),
+  validateSearch: z.object({ source: z.string().max(40).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
   loader: async ({ params }) => {
     const d = await getPublicJob({ data: { jobId: params.jobId } });
     if (!d || !d.org || d.org.slug !== params.orgSlug) throw notFound();
@@ -37,7 +38,16 @@ export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
 function JobPage() {
   const { job, store, org, questions } = Route.useLoaderData();
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const { source } = Route.useSearch();
+  const { source, ref, via } = Route.useSearch();
+  const [referral, setReferral] = useState<{ code: string; via: "link" | "qr"; name: string } | null>(null);
+  const [referredBy, setReferredBy] = useState("");
+  useEffect(() => {
+    rememberReferral(org!.slug, ref, via);
+    const r = recallReferral(org!.slug);
+    if (!r) return;
+    getReferrer({ data: { orgId: org!.id, code: r.code } })
+      .then((x) => setReferral(x ? { ...r, name: x.name } : null)).catch(() => setReferral(null));
+  }, [org, ref, via]);
   const navigate = useNavigate();
   const [f, setF] = useState({ fullName: "", email: "", phone: "", linkedinUrl: "" });
   const [smsConsent, setSmsConsent] = useState(false);
@@ -61,7 +71,7 @@ function JobPage() {
     if (f.linkedinUrl.trim() && !normalizeLinkedInUrl(f.linkedinUrl)) return toast.error(LINKEDIN_ERROR);
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, resumeFileName: file?.name, smsConsent, answers } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source, ref: referral?.code, refVia: referral?.via, referredBy: referral ? undefined : referredBy, resumeFileName: file?.name, smsConsent, answers } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }
@@ -124,6 +134,12 @@ function JobPage() {
               )}
             </div>
           ))}
+          {referral ? (
+            <p className="rounded-lg bg-accent px-3 py-2 text-sm">Referred by <span className="font-semibold">{referral.name}</span></p>
+          ) : (
+            <div className="space-y-1.5"><Label htmlFor="ref">Did someone refer you? (optional)</Label>
+              <Input id="ref" maxLength={120} placeholder="Employee's name" value={referredBy} onChange={(e) => setReferredBy(e.target.value)} /></div>
+          )}
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
             <Checkbox id="sms" className="mt-0.5" checked={smsConsent} onCheckedChange={(c) => setSmsConsent(c === true)} />
             <span>
