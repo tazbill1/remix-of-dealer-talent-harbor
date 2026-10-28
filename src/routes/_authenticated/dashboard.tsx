@@ -37,6 +37,9 @@ const selectClass = "h-9 rounded-md border bg-background px-2 text-sm";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | WerkandMe Hiring" }] }),
   component: Dashboard,
+  // While the dashboard (and its sign-in check) is loading, show a spinner, not a blank page.
+  pendingComponent: RouteSpinner,
+  pendingMs: 0,
 });
 
 function Dashboard() {
