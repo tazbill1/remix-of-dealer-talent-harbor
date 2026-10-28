@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Bot, Rss, Video, ShieldCheck, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { RouteSpinner } from "@/components/route-spinner";
 import { Button } from "@/components/ui/button";
 import { Logo, GradientText } from "@/components/brand";
 import { Journey, FaqList, groupJourney, groupFaqs } from "@/components/journey-faq";
