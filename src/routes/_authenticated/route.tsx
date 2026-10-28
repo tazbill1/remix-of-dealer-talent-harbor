@@ -110,7 +110,7 @@ type Me = NonNullable<Awaited<ReturnType<NonNullable<typeof meQuery.queryFn>>>>;
 function LogoLink({ light, className }: { light?: boolean; className?: string }) {
   return (
     <Link to="/dashboard" aria-label="Go to dashboard" className={cn("inline-flex cursor-pointer", className)}>
-      <Logo light={light} className="h-full w-auto" />
+      <Logo {...(light ? { light: true } : {})} className="h-full w-auto" />
     </Link>
   );
 }
