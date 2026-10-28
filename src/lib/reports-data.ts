@@ -27,7 +27,7 @@ export async function fetchReportData(orgId: string): Promise<ReportData> {
   const stores = assignedStores(allStores, groupWide, scopes).sort((a,b) => a.name.localeCompare(b.name));
   const storeChunks = chunk(stores.map(s => s.id));
   const [apps, jobs] = await Promise.all([
-    Promise.all(storeChunks.map(ids => fetchAll<ReportApp>((f,t) => supabase.from("applications").select("id,job_id,dealership_id,status,source,full_name,created_at,updated_at,hired_at,needs_attention").eq("org_id",orgId).in("dealership_id",ids).order("id").range(f,t)))).then(x=>x.flat()),
+    Promise.all(storeChunks.map(ids => fetchAll<ReportApp>((f,t) => supabase.from("applications").select("id,job_id,dealership_id,status,source:source_channel,full_name,created_at,updated_at,hired_at,needs_attention").eq("org_id",orgId).in("dealership_id",ids).order("id").range(f,t)))).then(x=>x.flat()),
     Promise.all(storeChunks.map(ids => fetchAll<AJob>((f,t) => supabase.from("jobs").select("id,title,dealership_id,status,division,department,hiring_manager,created_at").eq("org_id",orgId).in("dealership_id",ids).order("id").range(f,t)))).then(x=>x.flat()),
   ]);
   const batches = chunk(apps.map(a=>a.id));

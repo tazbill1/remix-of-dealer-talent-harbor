@@ -11,7 +11,7 @@ export async function loadAnalyticsInputs(orgId: string) {
       supabase
         .from("applications")
         .select(
-          "id, job_id, dealership_id, status, source, full_name, created_at, updated_at, hired_at, start_date, departed_at",
+          "id, job_id, dealership_id, status, source:source_channel, full_name, created_at, updated_at, hired_at, start_date, departed_at",
         )
         .eq("org_id", orgId)
         .order("created_at")
