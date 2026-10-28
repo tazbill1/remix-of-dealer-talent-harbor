@@ -21,6 +21,8 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { InterviewRecording, RecordingSuggestion, useInterviewRecordings } from "@/components/interview-recording";
+import { validSuggestions } from "@/lib/interview-recording";
 
 const cardsKey = (appId: string) => ["scorecards", appId];
 
@@ -149,6 +151,9 @@ function ScorecardDialog({
   const { data: me } = useQuery(meQuery);
   const { data: kit, isLoading } = useKit(appId);
   const questions: KitQuestion[] = kit?.questions ?? [];
+  const { data: recordings = [] } = useInterviewRecordings(interviewId);
+  const recording = recordings.find(r => r.transcript && (r.status === "ready" || r.status === "audio_deleted"));
+  const suggestions = recording ? validSuggestions({ suggestions: recording.ai_suggestions }, recording.transcript ?? "", questions.map(q => q.id)) : [];
   const [answers, setAnswers] = useState<ScoreAnswer[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(
     existing?.recommendation ?? null,
@@ -212,6 +217,7 @@ function ScorecardDialog({
               Score what you heard about the job only. Your scorecard is shared with others who can
               see this applicant.
             </p>
+            <InterviewRecording orgId={orgId} interviewId={interviewId} />
             {questions.map((q, i) => {
               const a = answers.find((x) => x.questionId === q.id);
               return (
@@ -222,6 +228,7 @@ function ScorecardDialog({
                   {q.lookFor && (
                     <p className="text-xs text-muted-foreground">What a 5 looks like: {q.lookFor}</p>
                   )}
+                  <RecordingSuggestion suggestion={suggestions.find(s => s.questionId === q.id)} onAccept={score => patch(q.id, { score })} />
                   <div
                     className="flex flex-wrap gap-1"
                     role="radiogroup"
@@ -279,7 +286,7 @@ function ScorecardDialog({
               />
             </div>
             <div className="flex gap-2">
-              <Button className="flex-1" disabled={busy} onClick={() => save(true)}>
+              <Button className="flex-1" disabled={busy || !!problem} onClick={() => save(true)}>
                 {existing?.submitted_at ? "Update scorecard" : "Submit"}
               </Button>
               {!existing?.submitted_at && (
