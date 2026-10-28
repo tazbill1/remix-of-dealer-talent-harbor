@@ -294,7 +294,7 @@ function Applicants() {
                     <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
                       onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
                       className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
-                      <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
+                      <div className="flex items-start justify-between gap-1"><div className="flex min-w-0 items-center gap-1 truncate text-sm font-semibold"><span className="truncate">{a.full_name}</span>{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</div>
                         <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
                       <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                       {a.knockout_failed && (
@@ -332,7 +332,7 @@ function Applicants() {
             <tbody>
               {sortedApps.map((a) => (
                 <tr key={a.id} onClick={() => setSelected(a.id)} className="cursor-pointer border-b last:border-0 hover:bg-secondary/60">
-                  <td className="px-3 py-2.5 font-medium">{a.full_name}</td>
+                  <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
                   <td className="px-3 py-2.5">{STATUS_LABEL[a.status]}</td>
@@ -451,6 +451,25 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
+              <div className="min-w-0">
+                <div className="text-xs text-muted-foreground">LinkedIn profile</div>
+                {editingLinkedin ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <Input className="h-8" placeholder="https://www.linkedin.com/in/yourname" value={linkedinDraft} onChange={(e) => setLinkedinDraft(e.target.value)} />
+                    <Button size="sm" onClick={saveLinkedin}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingLinkedin(false); setLinkedinDraft(app.linkedin_url ?? ""); }}>Cancel</Button>
+                  </div>
+                ) : app.linkedin_url ? (
+                  <a href={app.linkedin_url} target="_blank" rel="noreferrer" className="mt-0.5 block truncate text-sapphire underline">{app.linkedin_url}</a>
+                ) : (
+                  <div className="mt-0.5 text-muted-foreground">Not provided</div>
+                )}
+              </div>
+              {!editingLinkedin && (
+                <Button size="sm" variant="outline" onClick={() => { setLinkedinDraft(app.linkedin_url ?? ""); setEditingLinkedin(true); }}><Pencil />Edit</Button>
+              )}
+            </div>
             {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
             <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
             <ProfileFacts profile={app.profile as Record<string, unknown>} />
