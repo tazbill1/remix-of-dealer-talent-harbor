@@ -21,6 +21,7 @@ import { EmailCompose } from "@/components/email-compose";
 import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
 import { OfferPanel } from "@/components/offer-panel";
 import { DocumentsPanel } from "@/components/documents-panel";
+import { BackgroundCheckBadge, BackgroundCheckPanel } from "@/components/background-check-panel";
 import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
@@ -170,6 +171,7 @@ function Applicants() {
                     {a.knockout_failed && (
                       <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
                     )}
+                    <BackgroundCheckBadge status={a.background_check_status} />
                     {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
@@ -205,7 +207,8 @@ function Applicants() {
 
 type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
-  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null };
+  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
+  background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null };
 
 function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
@@ -257,6 +260,8 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       <ProfileFacts profile={app.profile as Record<string, unknown>} />
       <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} paused={!!app.ai_paused_at} needsAttention={app.needs_attention} />
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
+      <BackgroundCheckPanel key={app.id} orgId={orgId} appId={app.id} status={app.background_check_status} note={app.background_check_note}
+        updatedAt={app.background_check_updated_at} canEdit={isHr} onChanged={onRefresh} />
       {app.status !== "rejected" && !app.departed_at && (
         <>
           <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />

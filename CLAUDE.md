@@ -72,6 +72,7 @@ Review its diffs before relying on them; keep what's better, fix bugs, don't fig
 | Knockout questions | `src/lib/questions.ts`, `src/components/job-questions.tsx` |
 | Job share links / QR | `src/lib/share.ts`, `src/components/job-share.tsx` |
 | Public site / apply | `src/routes/c.$orgSlug.*`, `src/routes/careers*`, `src/lib/public.functions.ts` |
+| Background checks (manual tracking) | `src/lib/background-check.ts`, `src/components/background-check-panel.tsx` (columns `applications.background_check_*`) |
 | Signed links (offers, docs, booking) | `src/lib/offers-token.server.ts` (`kind|id`-scoped HMAC tokens) |
 
 ## Open items (see roadmap.md)

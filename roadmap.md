@@ -54,7 +54,7 @@
 - [x] AI assistant settings: tone, facts it may share, screening topics, hand-off to a person, pause/take-over, books only real open times
 
 ## Still to do
-- [ ] Background checks (partner TBD) — tracking on the profile first
+- [ ] Background checks (partner TBD) — tracking on the profile done (Requested / In progress / Clear / Flagged, set by Recruiting/HR); vendor hookup still to do
 - [x] Weekly HR summary per store: one email per person for the stores they cover, chosen day/time, preview button (off until turned on)
 - [ ] Interview intelligence: question kits, recording/transcripts, AI scorecards (needs consent handling)
 - [ ] Separate Twilio brand per client before go-live; bulk email via Resend/SES
