@@ -892,7 +892,6 @@ export type Database = {
           calendar_url: string | null
           accepted_at: string | null
           accepted_by: string | null
-          calendar_url: string | null
           created_at: string
           email: string
           expires_at: string
@@ -908,7 +907,6 @@ export type Database = {
           calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
-          calendar_url?: string | null
           created_at?: string
           email: string
           expires_at?: string
@@ -924,7 +922,6 @@ export type Database = {
           calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
-          calendar_url?: string | null
           created_at?: string
           email?: string
           expires_at?: string
