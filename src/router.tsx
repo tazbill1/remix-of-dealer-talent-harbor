@@ -11,6 +11,9 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Show a spinner (not a blank page) while a route loads, including the dashboard.
+    defaultPendingComponent: RouteSpinner,
+    defaultPendingMs: 200,
   });
 
   return router;
