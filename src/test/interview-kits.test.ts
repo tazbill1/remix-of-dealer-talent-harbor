@@ -67,6 +67,13 @@ describe("scorecards", () => {
     ).toBe(4.5);
     expect(averageScore([])).toBeNull();
   });
+  it("shows 3.7 for three scores out of eight and retains the five-left submit rule", () => {
+    const questions = Array.from({ length: 8 }, (_, i) => ({ id: `q_${i}`, text: "Interview question" }));
+    const answers = answersFor(questions, []).map((a, i) => ({ ...a, score: [4, 4, 3][i] ?? null }));
+    expect(answers.filter((a) => a.score != null)).toHaveLength(3);
+    expect(averageScore(answers)).toBe(3.7);
+    expect(submitProblem(questions, answers, "hire")).toBe("Score every question first (5 left).");
+  });
   it("rolls up submitted cards and skips drafts", () => {
     const s = summarizeScorecards([
       {

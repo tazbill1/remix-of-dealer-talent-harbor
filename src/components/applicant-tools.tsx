@@ -228,7 +228,7 @@ function ics(i: { id: string; starts_at: string; duration_min: number; location:
     `DTSTART:${f(s)}`, `DTEND:${f(e)}`, `SUMMARY:${title}`, `LOCATION:${i.location ?? ""}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
 }
 
-export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: string; orgId: string; title: string; onChanged: () => void }) {
+export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterviewId }: { appId: string; orgId: string; title: string; onChanged: () => void; focusInterviewId?: string | undefined }) {
   const qc = useQueryClient();
   const [when, setWhen] = useState("");
   const schedule = useServerFn(scheduleStaffInterview);
@@ -261,16 +261,18 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
       {list.length === 0 && <p className="mb-2 text-xs text-muted-foreground">None yet. The assistant books these automatically when a time is agreed by text, or add one here.</p>}
       <ul className="mb-2 space-y-1 text-sm">
         {list.map((i) => (
-          <li key={i.id} className="flex items-center justify-between rounded-lg bg-secondary px-2 py-1">
+          <li key={i.id} ref={(node) => { if (node && i.id === focusInterviewId) node.scrollIntoView({ block: "nearest" }); }} className="rounded-lg bg-secondary px-2 py-1">
+            <div className="flex flex-wrap items-center justify-between gap-1">
             <span className={i.status === "cancelled" ? "text-muted-foreground line-through" : ""}>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.status === "cancelled" ? "cancelled" : i.source === "werkandme" ? "booked in WerkandMe" : i.source === "self_scheduled" ? "picked by the candidate" : `found on ${i.source} calendar`}</span></span>
             <span className="flex shrink-0 items-center">
-              {i.status !== "cancelled" && <ScorecardButton interviewId={i.id} appId={appId} orgId={orgId} />}
+              <ScorecardButton interviewId={i.id} appId={appId} orgId={orgId} />
               <Button size="sm" variant="ghost" onClick={() => download(i)} aria-label="Add to calendar"><Download /></Button>
             </span>
+            </div>
+            <ScorecardSummary appId={appId} interviewId={i.id} />
           </li>
         ))}
       </ul>
-      <ScorecardSummary appId={appId} />
       <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
         <Button size="sm" onClick={add} disabled={!when || scheduleBusy}>{scheduleBusy ? "Saving…" : "Schedule"}</Button></div>
       {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}

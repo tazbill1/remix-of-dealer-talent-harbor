@@ -19,6 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
+- [x] Interview row links, sticky scorecard progress and per-interview submitted summaries; authenticated click verified, two scores picked and closed without saving, existing access unchanged.
 - [x] Interview invite emails wired into manual, self-service and assistant bookings; one assigned store interviewer, signed .ics download link, ambiguous coverage flagged. Tests and real interview download verified; no live test email sent to other staff.
 - [ ] Choose a connected Google calendar when staff set an interview time and create its calendar event (requires Google app-user connection setup).
 - [x] Analytics Reports: four read-only reports, date/region/store filters, test toggle, print and PDF; verified real admin (7 stores) and manager (4 assigned Dallas-region stores), PDF download and phone layout. No group logo is stored, so reports use a group monogram; unavailable historical attention is labeled current.

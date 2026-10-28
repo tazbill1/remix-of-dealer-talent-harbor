@@ -33,7 +33,7 @@ import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applic
 type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
-  head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }] }),
+  head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }, { name: "description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:title", content: "Applicants | WerkandMe Hiring" }, { property: "og:description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   validateSearch: z.object({
     q: z.string().optional(),
     job: z.string().optional(),
@@ -47,6 +47,9 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     region: z.string().optional(),
     store: z.string().optional(),
     tests: z.string().optional(),
+    applicant: z.string().uuid().optional(),
+    tab: z.enum(["overview", "messages", "interview", "offer", "notes"]).optional(),
+    interview: z.string().uuid().optional(),
   }),
   component: Applicants,
 });
@@ -85,7 +88,12 @@ function Applicants() {
   const store = search.store ?? "all";
   const showTests = search.tests === "1";
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedLocal, setSelectedLocal] = useState<string | null>(null);
+  const selected = search.applicant ?? selectedLocal;
+  const setSelected = (id: string | null) => {
+    setSelectedLocal(id);
+    if (search.applicant) void navigate({ search: (prev) => ({ ...prev, applicant: undefined, tab: undefined, interview: undefined }), replace: true });
+  };
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
@@ -345,6 +353,7 @@ function Applicants() {
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile key={current.id} app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
+            initialTab={search.tab} interviewId={search.interview}
             isHr={canPostJobs(org.role, org.isPlatformAdmin)}
             otherApps={otherApps} onOpenApp={setSelected}
             regionName={regionName(current.dealership_id)}
@@ -376,7 +385,7 @@ type PanelTab = (typeof PANEL_TABS)[number]["id"];
 // Remembered for the session so reopening the panel lands on the last tab used.
 let lastPanelTab: PanelTab = "overview";
 
-function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => Promise<boolean>; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [target, setTarget] = useState("");
@@ -385,7 +394,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   const visibleTransfers = transferOptions.filter((o) => allRegions || o.sameRegion);
   const hiddenTransfers = transferOptions.length - visibleTransfers.length;
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
-  const [tab, setTab] = useState<PanelTab>(lastPanelTab);
+  const [tab, setTab] = useState<PanelTab>(initialTab ?? lastPanelTab);
   const pickTab = (t: PanelTab) => { lastPanelTab = t; setTab(t); };
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
@@ -510,7 +519,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         )}
 
         {tab === "interview" && (
-          <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
+          <InterviewsPanel appId={app.id} orgId={orgId} focusInterviewId={interviewId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
         )}
 
         {tab === "offer" && (

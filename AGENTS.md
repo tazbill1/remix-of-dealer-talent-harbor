@@ -10,7 +10,8 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- Applicant notes use explicit Save notes in applicant-notes.tsx, keyed by applicant ID; updates verify a returned row. Why: no blur-only losses or silent denied saves.
+- Notes explicitly save per applicant and verify a returned row. Why: prevent silent losses.
+- Calendar links open the applicant Interview tab; summaries use per-interview RLS reads. Why: reuse panel and access rules.
 - Reports use separate authenticated RLS reads, RPC-verified roles and explicit manager assignments; math is in reports.ts and PDF capture uses semantic blocks. Why: preserve Analytics, deny unassigned managers, avoid chart splits.
 - Multi-tenant: every tenant table has `org_id`; RLS uses `is_org_member` / `has_org_role` / `is_platform_admin`. Why: dealer groups' data must never mix.
 - Roles live in `org_members` and `platform_admins`, never on profiles. Why: prevents privilege escalation.
@@ -37,4 +38,4 @@
 - Staff interview emails use emailInterviewStaff in manual/self/assistant bookings, one scoped interviewer, fixed React template, signed expiring ICS download, managed idempotency and audit-only messages. Why: no broadcasts, OAuth, attachments or new queue; ambiguous recipients flag attention.
 - Status rules use tested status-rules.ts and status-rules.server.ts via workflows cron; settings are automations.statusRules, edited only through saveStatusRules/can_post_jobs. Clocks start on activation unless include-waiting is checked; applicant email is opt-in. Why: no surprise backlog moves or messages.
 - Display wording helpers live in src/lib/display.ts (plural, sourceLabel, isTestName; pure, tested). Why: counts, source names and test-applicant hiding must read the same on every page without changing stored values.
-- Interview question kits (interview_kits, attached via jobs.interview_kit_id) are edited only by can_post_jobs on the Interview kits page; each interviewer has one interview_scorecards row per interview (author_id = auth.uid(), editable only by its author), and rules live in src/lib/interview-kits.ts. Why: one shared set of questions per role, and scores inform people but never move a stage.
+- Interview question kits (interview_kits, attached via jobs.interview_kit_id) are edited only by can_post_jobs on the Interview kits page; each interviewer has one interview_scorecards row per interview (author_id = auth.uid(), editable only by its author), and rules live in src/lib/interview-kits.ts. Why: shared questions; scores never move stages.
