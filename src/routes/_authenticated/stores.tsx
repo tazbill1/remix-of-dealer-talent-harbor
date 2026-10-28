@@ -148,7 +148,7 @@ function Stores() {
                   <option value="">No region</option>
                   {regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
-                <StoreTextingContact store={s} />
+                <StoreTextingContact store={s} canEditNumber={org.isPlatformAdmin} />
               </div>
             )}
           </div>

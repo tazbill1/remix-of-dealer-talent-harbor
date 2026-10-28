@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { IntegrationCard as Card } from "@/components/integration-card";
-import { TextingSettings } from "@/components/texting-settings";
+import { textingStatusLine } from "@/lib/store-texting";
 import { canEditIntegrationSettings } from "@/lib/integration-access";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
@@ -54,6 +54,14 @@ function Integrations() {
           .eq("org_id", org.orgId)
           .maybeSingle()
       ).data,
+  });
+  const { data: texting } = useQuery({
+    queryKey: ["store-texting-status", org.orgId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("store_texting_status", { _org: org.orgId });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
   const [fromName, setFromName] = useState("");
   const [replyTo, setReplyTo] = useState("");
@@ -97,14 +105,20 @@ function Integrations() {
         <Card
           icon={MessageSquare}
           title="Texting (Twilio)"
-          state="demo"
+          state={texting?.some((t) => t.live && t.sms_number) ? "connected" : "demo"}
           what="Two-way texts with candidates and hiring managers: welcome, screening, manager summaries, nudges, reminders and 30/60/90 check-ins."
-          note="Texts run in demo mode. You can try every step, and no real texts are sent."
+          note="WerkandMe sets up and manages each store's texting number."
         >
-          <details className="mt-4 border-t pt-4">
-            <summary className="cursor-pointer text-sm font-medium">Texting settings</summary>
-            <TextingSettings orgId={org.orgId} canEdit={canEdit} />
-          </details>
+          <ul className="mt-4 space-y-1 border-t pt-4 text-sm" aria-label="Store texting">
+            {texting === undefined && <li className="text-muted-foreground">Loading stores…</li>}
+            {texting?.length === 0 && <li className="text-muted-foreground">No stores yet.</li>}
+            {texting?.map((t) => (
+              <li key={t.store_id}>
+                <span className="font-medium">{t.store_name}</span>
+                <span className="block text-muted-foreground">{textingStatusLine(t)}</span>
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card
