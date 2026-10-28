@@ -243,6 +243,7 @@ export type Database = {
           ai_paused_at: string | null
           ai_summary: string | null
           answers: Json
+          archived_at: string | null
           background_check_note: string | null
           background_check_status: string | null
           background_check_updated_at: string | null
@@ -254,6 +255,7 @@ export type Database = {
           departed_at: string | null
           departure_reason: string | null
           email: string
+          email_norm: string | null
           full_name: string
           hired_at: string | null
           id: string
@@ -262,6 +264,7 @@ export type Database = {
           knockout_failed: boolean
           last_reminded_at: string | null
           linkedin_url: string | null
+          merged_into_id: string | null
           moved_to_pool_at: string | null
           needs_attention: string | null
           notes: string | null
@@ -269,6 +272,7 @@ export type Database = {
           org_id: string
           original_store_id: string | null
           phone: string | null
+          phone_norm: string | null
           pool_reason: string | null
           profile: Json
           rating: number | null
@@ -294,6 +298,7 @@ export type Database = {
           ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
+          archived_at?: string | null
           background_check_note?: string | null
           background_check_status?: string | null
           background_check_updated_at?: string | null
@@ -305,6 +310,7 @@ export type Database = {
           departed_at?: string | null
           departure_reason?: string | null
           email: string
+          email_norm?: string | null
           full_name: string
           hired_at?: string | null
           id?: string
@@ -313,6 +319,7 @@ export type Database = {
           knockout_failed?: boolean
           last_reminded_at?: string | null
           linkedin_url?: string | null
+          merged_into_id?: string | null
           moved_to_pool_at?: string | null
           needs_attention?: string | null
           notes?: string | null
@@ -320,6 +327,7 @@ export type Database = {
           org_id: string
           original_store_id?: string | null
           phone?: string | null
+          phone_norm?: string | null
           pool_reason?: string | null
           profile?: Json
           rating?: number | null
@@ -345,6 +353,7 @@ export type Database = {
           ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
+          archived_at?: string | null
           background_check_note?: string | null
           background_check_status?: string | null
           background_check_updated_at?: string | null
@@ -356,6 +365,7 @@ export type Database = {
           departed_at?: string | null
           departure_reason?: string | null
           email?: string
+          email_norm?: string | null
           full_name?: string
           hired_at?: string | null
           id?: string
@@ -364,6 +374,7 @@ export type Database = {
           knockout_failed?: boolean
           last_reminded_at?: string | null
           linkedin_url?: string | null
+          merged_into_id?: string | null
           moved_to_pool_at?: string | null
           needs_attention?: string | null
           notes?: string | null
@@ -371,6 +382,7 @@ export type Database = {
           org_id?: string
           original_store_id?: string | null
           phone?: string | null
+          phone_norm?: string | null
           pool_reason?: string | null
           profile?: Json
           rating?: number | null
@@ -412,6 +424,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
             referencedColumns: ["id"]
           },
           {
@@ -1917,6 +1936,65 @@ export type Database = {
         }
         Relationships: []
       }
+      possible_duplicates: {
+        Row: {
+          created_at: string
+          id: string
+          kept_id: string | null
+          match_reason: string
+          org_id: string
+          record_a_id: string
+          record_a_type: string
+          record_b_id: string
+          record_b_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          store_a_id: string | null
+          store_b_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kept_id?: string | null
+          match_reason: string
+          org_id: string
+          record_a_id: string
+          record_a_type: string
+          record_b_id: string
+          record_b_type: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          store_a_id?: string | null
+          store_b_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kept_id?: string | null
+          match_reason?: string
+          org_id?: string
+          record_a_id?: string
+          record_a_type?: string
+          record_b_id?: string
+          record_b_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          store_a_id?: string | null
+          store_b_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "possible_duplicates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiting_events: {
         Row: {
           code: string
@@ -2272,10 +2350,12 @@ export type Database = {
           created_by: string | null
           department: string | null
           email: string | null
+          email_norm: string | null
           employee_name: string
           id: string
           org_id: string
           phone: string | null
+          phone_norm: string | null
           referral_code: string
           role_title: string | null
           store_id: string | null
@@ -2286,10 +2366,12 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           email?: string | null
+          email_norm?: string | null
           employee_name: string
           id?: string
           org_id: string
           phone?: string | null
+          phone_norm?: string | null
           referral_code?: string
           role_title?: string | null
           store_id?: string | null
@@ -2300,10 +2382,12 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           email?: string | null
+          email_norm?: string | null
           employee_name?: string
           id?: string
           org_id?: string
           phone?: string | null
+          phone_norm?: string | null
           referral_code?: string
           role_title?: string | null
           store_id?: string | null
@@ -2779,6 +2863,10 @@ export type Database = {
         Args: { _name: string; _slug: string }
         Returns: string
       }
+      detect_duplicates_for: {
+        Args: { _id: string; _org: string; _type: string }
+        Returns: number
+      }
       five_business_days_after: { Args: { _start: string }; Returns: string }
       has_org_role: {
         Args: {
@@ -2794,6 +2882,14 @@ export type Database = {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      mark_not_duplicate: { Args: { _dup: string }; Returns: boolean }
+      merge_duplicate: {
+        Args: { _dup: string; _keep: string }
+        Returns: string
+      }
+      norm_email: { Args: { _e: string }; Returns: string }
+      norm_name: { Args: { _n: string }; Returns: string }
+      norm_phone: { Args: { _p: string }; Returns: string }
       onboarding_by_token: { Args: { _token: string }; Returns: Json }
       onboarding_complete_item: {
         Args: {
@@ -2803,6 +2899,17 @@ export type Database = {
           _token: string
         }
         Returns: boolean
+      }
+      person_records: {
+        Args: { _org: string }
+        Returns: {
+          email_n: string
+          name_n: string
+          phone_n: string
+          rid: string
+          rtype: string
+          store_id: string
+        }[]
       }
       pick_referral_drawing_winner: {
         Args: { _org: string; _quarter: string }
