@@ -248,6 +248,8 @@ export type Database = {
           background_check_updated_at: string | null
           candidate_id: string | null
           created_at: string
+          created_by: string | null
+          created_manually: boolean
           dealership_id: string
           departed_at: string | null
           departure_reason: string | null
@@ -268,7 +270,9 @@ export type Database = {
           referral_source: string | null
           referred_by_text: string | null
           referrer_id: string | null
+          resume_file_name: string | null
           resume_path: string | null
+          resume_url: string | null
           source: string
           start_date: string | null
           status: Database["public"]["Enums"]["application_status"]
@@ -284,6 +288,8 @@ export type Database = {
           background_check_updated_at?: string | null
           candidate_id?: string | null
           created_at?: string
+          created_by?: string | null
+          created_manually?: boolean
           dealership_id: string
           departed_at?: string | null
           departure_reason?: string | null
@@ -304,7 +310,9 @@ export type Database = {
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
+          resume_file_name?: string | null
           resume_path?: string | null
+          resume_url?: string | null
           source?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
@@ -320,6 +328,8 @@ export type Database = {
           background_check_updated_at?: string | null
           candidate_id?: string | null
           created_at?: string
+          created_by?: string | null
+          created_manually?: boolean
           dealership_id?: string
           departed_at?: string | null
           departure_reason?: string | null
@@ -340,7 +350,9 @@ export type Database = {
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
+          resume_file_name?: string | null
           resume_path?: string | null
+          resume_url?: string | null
           source?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]

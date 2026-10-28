@@ -253,6 +253,13 @@
       "when": 1793209427141,
       "tag": "0035_store_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793210395405,
+      "tag": "0036_manual_candidates_resumes",
+      "breakpoints": true
     }
   ]
 }
