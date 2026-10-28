@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List } from "lucide-react";
+import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List, Linkedin, Pencil } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,7 @@ import { UserPlus } from "lucide-react";
 import { z } from "zod";
 import { isTestName, plural, sourceLabel } from "@/lib/display";
 import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applicant-filters";
+import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
 
 type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
 
@@ -369,7 +370,7 @@ function Applicants() {
   );
 }
 
-type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
+type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null };
@@ -396,6 +397,13 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const [tab, setTab] = useState<PanelTab>(initialTab ?? lastPanelTab);
   const pickTab = (t: PanelTab) => { lastPanelTab = t; setTab(t); };
+  const [editingLinkedin, setEditingLinkedin] = useState(false);
+  const [linkedinDraft, setLinkedinDraft] = useState(app.linkedin_url ?? "");
+  async function saveLinkedin() {
+    const trimmed = linkedinDraft.trim();
+    if (trimmed && !normalizeLinkedInUrl(trimmed)) return toast.error(LINKEDIN_ERROR);
+    if (await onUpdate({ linkedin_url: normalizeLinkedInUrl(trimmed) })) setEditingLinkedin(false);
+  }
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
@@ -414,6 +422,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
           {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
+          {app.linkedin_url && <Button size="sm" variant="outline" asChild><a href={app.linkedin_url} target="_blank" rel="noreferrer"><Linkedin />LinkedIn</a></Button>}
           {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
           <select aria-label="Stage" className="h-9 rounded-md border bg-background px-2 text-sm" value={app.status}
             onChange={(e) => onUpdate({ status: e.target.value as AppStatus })}>
