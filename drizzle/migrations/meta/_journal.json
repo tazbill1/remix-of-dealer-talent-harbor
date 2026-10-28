@@ -295,6 +295,13 @@
       "when": 1793212516684,
       "tag": "0041_onboarding_checklists",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793212942268,
+      "tag": "0042_guard_store_region_change",
+      "breakpoints": true
     }
   ]
 }
