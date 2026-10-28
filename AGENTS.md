@@ -36,7 +36,7 @@
 - The public careers site lives under /careers (layout careers.tsx loads one group via CAREERS_ORG_SLUG in src/lib/site.ts); its contact form (submitContact) adds a New applicant with source own_site. Why: keeps the product homepage at / while one group gets a branded hiring site.
 - Signature documents are BoldSign templates built in BoldSign and listed live (src/lib/documents.functions.ts); each send is a row in `offers` (is_offer_letter marks the group's offer template), and BoldSign calls go through the linked connector gateway in src/lib/esign/boldsign.server.ts. Why: documents change often and must not need app changes.
 
-- BoldSign connection, offer-template selection and signing-update setup share `src/components/boldsign-setup.tsx` on Integrations and reuse existing server functions. Why: one setup surface avoids duplicate or conflicting connection states.
+- BoldSign connection, offer-template selection and signing-update setup share `src/components/boldsign-setup.tsx` on Integrations and reuse existing server functions. Why: one setup surface.
 - Staff interview emails use emailInterviewStaff in manual/self/assistant bookings, one scoped interviewer, fixed React template, signed expiring ICS download, managed idempotency and audit-only messages. Why: no broadcasts, OAuth, attachments or new queue; ambiguous recipients flag attention.
 - Interview kits use can_post_jobs; scorecards are author-owned per interview, with pure rules in interview-kits.ts. Why: scores inform humans, never stages.
 - Interview recording is hidden (code/table/bucket kept, setting off). Why: paused, data preserved.
