@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Applicant notes use explicit Save notes in applicant-notes.tsx, keyed by applicant ID; updates verify a returned row. Why: no blur-only losses or silent denied saves.
 - Reports use separate authenticated RLS reads, RPC-verified roles and explicit manager assignments; math is in reports.ts and PDF capture uses semantic blocks. Why: preserve Analytics, deny unassigned managers, avoid chart splits.
 - Multi-tenant: every tenant table has `org_id`; RLS uses `is_org_member` / `has_org_role` / `is_platform_admin`. Why: dealer groups' data must never mix.
 - Roles live in `org_members` and `platform_admins`, never on profiles. Why: prevents privilege escalation.
