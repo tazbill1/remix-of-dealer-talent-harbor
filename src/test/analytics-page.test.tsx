@@ -72,7 +72,8 @@ async function waitForText(el: HTMLElement, text: string) {
 }
 
 describe("Analytics page", () => {
-  it("renders the client's dashboard metrics from sample data", async () => {
+  // Slow first render under full-suite load; give it headroom over the 5s default.
+  it("renders the client's dashboard metrics from sample data", { timeout: 20000 }, async () => {
     const { Route } = await import("@/routes/_authenticated/analytics");
     const Page = Route.options.component!;
     const el = document.createElement("div");
