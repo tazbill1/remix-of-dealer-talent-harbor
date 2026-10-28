@@ -19,7 +19,7 @@ export async function processInterviewRecording(request:Request){
  const token=request.headers.get('authorization')?.replace(/^Bearer /i,'');if(!token)return Response.json({error:'Sign in required.'},{status:401});
  const {data:{user}}=await db.auth.getUser(token);if(!user)return Response.json({error:'Sign in required.'},{status:401});
  const {createClient}=await import('@supabase/supabase-js');
- const client=createClient<Database>(process.env['SUPABASE_URL']??'',process.env['SUPABASE_PUBLISHABLE_KEY']??import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY??'',{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}});
+ const client=createClient<Database>(process.env['SUPABASE_URL']??'',process.env['SUPABASE_PUBLISHABLE_KEY']??import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY']??'',{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}});
  const body=await request.json() as {id?:string;retry?:boolean};if(!body.id||! /^[0-9a-f-]{36}$/i.test(body.id))return Response.json({error:'Invalid recording.'},{status:400});
  const {data:r}=await db.from('interview_recordings').select('*').eq('id',body.id).single();if(!r)return Response.json({error:'Recording not found.'},{status:404});
  const {app}=await authorizeInterview(client,user.id,r.interview_id);
@@ -67,7 +67,7 @@ function streamWork(work:(emit:(data:unknown)=>void)=>Promise<void>,db:SupabaseC
 }
 async function readTranscript(response:Response,emit:(data:unknown)=>void){
  if(!response.body)throw new Error('Empty transcription response.');const reader=response.body.getReader();const decoder=new TextDecoder();let buffer='',text='',done=false;
- while(true){const chunk=await reader.read();if(chunk.done)break;buffer+=decoder.decode(chunk.value,{stream:true});let boundary;while((boundary=buffer.indexOf('\n\n'))>=0){const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);for(const line of frame.split('\n'))if(line.startsWith('data: ')){const data=line.slice(6);if(data==='[DONE]')continue;const j=JSON.parse(data);if(j.type==='transcript.text.delta'){text+=j.delta??'';emit({delta:j.delta});}if(j.type==='transcript.text.done'){text=j.text??text;done=true;}if(j.type==='error'||j.error)throw new Error(j.message??j.error?.message??'Transcription failed.');}}}
+ while(true){const chunk=await reader.read();if(chunk.done)break;buffer+=decoder.decode(chunk.value,{stream:true}).replace(/\r\n/g,'\n');let boundary;while((boundary=buffer.indexOf('\n\n'))>=0){const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);for(const line of frame.split('\n'))if(line.startsWith('data: ')){const data=line.slice(6);if(data==='[DONE]')continue;const j=JSON.parse(data);if(j.type==='transcript.text.delta'){text+=j.delta??'';emit({delta:j.delta});}if(j.type==='transcript.text.done'||j.type==='transcription.done'||j.type==='transcript.done'){text=j.text??text;done=true;}if(j.type==='error'||j.error)throw new Error(j.message??j.error?.message??'Transcription failed.');}}}
  if(!done)throw new Error('Transcription ended before it completed.');return text;
 }
 async function suggest(db:SupabaseClient<Database>,id:string,jobId:string,transcript:string,key:string,gateway:ReturnType<typeof createLovableAiGatewayRunIdFetch>,signal:AbortSignal,emit:(data:unknown)=>void,runId:string){
