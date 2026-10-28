@@ -750,6 +750,7 @@ export type Database = {
       messaging_settings: {
         Row: {
           ai_provider: string
+          automations: Json
           email_from_address: string | null
           email_from_name: string | null
           email_mode: string
@@ -767,6 +768,7 @@ export type Database = {
         }
         Insert: {
           ai_provider?: string
+          automations?: Json
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
@@ -784,6 +786,7 @@ export type Database = {
         }
         Update: {
           ai_provider?: string
+          automations?: Json
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
@@ -889,9 +892,9 @@ export type Database = {
       }
       org_invites: {
         Row: {
-          calendar_url: string | null
           accepted_at: string | null
           accepted_by: string | null
+          calendar_url: string | null
           created_at: string
           email: string
           expires_at: string
@@ -904,9 +907,9 @@ export type Database = {
           token: string
         }
         Insert: {
-          calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
+          calendar_url?: string | null
           created_at?: string
           email: string
           expires_at?: string
@@ -919,9 +922,9 @@ export type Database = {
           token?: string
         }
         Update: {
-          calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
+          calendar_url?: string | null
           created_at?: string
           email?: string
           expires_at?: string
