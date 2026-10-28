@@ -1,3 +1,4 @@
+import { OnboardingPanel } from "@/components/onboarding-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -61,7 +62,7 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     tests: z.string().optional(),
     overdue: z.coerce.string().optional(),
     applicant: z.string().uuid().optional(),
-    tab: z.enum(["overview", "messages", "interview", "offer", "notes"]).optional(),
+    tab: z.enum(["overview", "messages", "interview", "offer", "notes", "onboarding"]).optional(),
     interview: z.string().uuid().optional(),
   }),
   component: Applicants,
@@ -434,6 +435,7 @@ const PANEL_TABS = [
   { id: "interview", label: "Interview" },
   { id: "offer", label: "Offer & checks" },
   { id: "notes", label: "Notes & timeline" },
+  { id: "onboarding", label: "Onboarding" },
 ] as const;
 type PanelTab = (typeof PANEL_TABS)[number]["id"];
 // Remembered for the session so reopening the panel lands on the last tab used.
@@ -513,7 +515,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
         {/* Tabs always stay on one row; on narrow widths the row scrolls
             sideways instead of wrapping, so the sticky header never overlaps content. */}
         <div className="flex flex-nowrap gap-x-1 overflow-x-auto text-[13px]">
-          {PANEL_TABS.map((t) => (
+          {PANEL_TABS.filter((t) => t.id !== "onboarding" || app.status === "hired").map((t) => (
             <button key={t.id} onClick={() => pickTab(t.id)}
               className={cn("whitespace-nowrap border-b-2 px-1.5 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
               {t.label}</button>
@@ -647,6 +649,8 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             )}
           </>
         )}
+
+        {tab === "onboarding" && app.status === "hired" && <OnboardingPanel appId={app.id} />}
 
         {tab === "notes" && (
           <>

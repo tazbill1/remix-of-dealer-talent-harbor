@@ -28,7 +28,9 @@ import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
+import { Route as AuthenticatedNewHiresRouteImport } from './routes/_authenticated/new-hires'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedOnboardingTemplatesRouteImport } from './routes/_authenticated/onboarding-templates'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
@@ -42,6 +44,7 @@ import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
 import { Route as ECodeRouteImport } from './routes/e.$code'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as OnboardTokenRouteImport } from './routes/onboard.$token'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
@@ -164,11 +167,22 @@ const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNewHiresRoute = AuthenticatedNewHiresRouteImport.update({
+  id: '/new-hires',
+  path: '/new-hires',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOnboardingTemplatesRoute =
+  AuthenticatedOnboardingTemplatesRouteImport.update({
+    id: '/onboarding-templates',
+    path: '/onboarding-templates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
   id: '/platform',
   path: '/platform',
@@ -233,6 +247,11 @@ const ECodeRoute = ECodeRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardTokenRoute = OnboardTokenRouteImport.update({
+  id: '/onboard/$token',
+  path: '/onboard/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SCodeRoute = SCodeRouteImport.update({
@@ -377,7 +396,9 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
+  '/new-hires': typeof AuthenticatedNewHiresRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -390,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -433,7 +455,9 @@ export interface FileRoutesByTo {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
+  '/new-hires': typeof AuthenticatedNewHiresRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -446,6 +470,7 @@ export interface FileRoutesByTo {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -492,7 +517,9 @@ export interface FileRoutesById {
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
+  '/_authenticated/new-hires': typeof AuthenticatedNewHiresRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -505,6 +532,7 @@ export interface FileRoutesById {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -551,7 +579,9 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
+    | '/new-hires'
     | '/onboarding'
+    | '/onboarding-templates'
     | '/platform'
     | '/referrals'
     | '/status-rules'
@@ -564,6 +594,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -607,7 +638,9 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
+    | '/new-hires'
     | '/onboarding'
+    | '/onboarding-templates'
     | '/platform'
     | '/referrals'
     | '/status-rules'
@@ -620,6 +653,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -665,7 +699,9 @@ export interface FileRouteTypes {
     | '/_authenticated/integrations'
     | '/_authenticated/interview-kits'
     | '/_authenticated/jobs'
+    | '/_authenticated/new-hires'
     | '/_authenticated/onboarding'
+    | '/_authenticated/onboarding-templates'
     | '/_authenticated/platform'
     | '/_authenticated/referrals'
     | '/_authenticated/status-rules'
@@ -678,6 +714,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -715,6 +752,7 @@ export interface RootRouteChildren {
   BookTokenRoute: typeof BookTokenRoute
   ECodeRoute: typeof ECodeRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  OnboardTokenRoute: typeof OnboardTokenRoute
   SCodeRoute: typeof SCodeRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
@@ -874,11 +912,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/new-hires': {
+      id: '/_authenticated/new-hires'
+      path: '/new-hires'
+      fullPath: '/new-hires'
+      preLoaderRoute: typeof AuthenticatedNewHiresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding-templates': {
+      id: '/_authenticated/onboarding-templates'
+      path: '/onboarding-templates'
+      fullPath: '/onboarding-templates'
+      preLoaderRoute: typeof AuthenticatedOnboardingTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/platform': {
@@ -970,6 +1022,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboard/$token': {
+      id: '/onboard/$token'
+      path: '/onboard/$token'
+      fullPath: '/onboard/$token'
+      preLoaderRoute: typeof OnboardTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/s/$code': {
@@ -1149,7 +1208,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
+  AuthenticatedNewHiresRoute: typeof AuthenticatedNewHiresRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOnboardingTemplatesRoute: typeof AuthenticatedOnboardingTemplatesRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
@@ -1173,7 +1234,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
+  AuthenticatedNewHiresRoute: AuthenticatedNewHiresRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOnboardingTemplatesRoute: AuthenticatedOnboardingTemplatesRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
@@ -1213,6 +1276,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookTokenRoute: BookTokenRoute,
   ECodeRoute: ECodeRoute,
   InviteTokenRoute: InviteTokenRoute,
+  OnboardTokenRoute: OnboardTokenRoute,
   SCodeRoute: SCodeRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,
