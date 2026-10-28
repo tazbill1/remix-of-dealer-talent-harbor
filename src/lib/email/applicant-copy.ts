@@ -3,6 +3,7 @@
  * updates). Pure functions so the rules are testable. The outbox adds the footer.
  */
 import type { AppStatus } from "@/lib/jobs";
+import { aiDisclosureLine } from "@/lib/ai-notice";
 
 export type ApplicantEmailKind =
   | { kind: "confirmation" }
@@ -28,7 +29,7 @@ export function applicantEmail(
   if (e.kind === "confirmation")
     return {
       subject: `We got your application — ${a.job} at ${a.store}`,
-      body: `Hi ${a.first},\n\nThanks for applying for ${a.job} at ${a.store}! Our team is reviewing your application and we'll reach out soon with next steps.\n\n${check}\n\n${sign}`,
+      body: `Hi ${a.first},\n\nThanks for applying for ${a.job} at ${a.store}! Our team is reviewing your application and we'll reach out soon with next steps.\n\n${aiDisclosureLine(a.assistant, a.store)}\n\n${check}\n\n${sign}`,
     };
   if (e.kind === "interview") {
     const when = e.startsAt

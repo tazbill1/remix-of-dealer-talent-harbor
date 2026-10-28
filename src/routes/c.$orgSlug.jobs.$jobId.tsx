@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getPublicJob, submitApplication } from "@/lib/public.functions";
 import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
 import { formatPay } from "@/lib/jobs";
+import { AI_NOTICE_TEXT } from "@/lib/ai-notice";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -131,6 +132,11 @@ function JobPage() {
               <a href={SMS_PRIVACY_URL} target="_blank" rel="noreferrer" className="underline">Privacy</a>
             </span>
           </label>
+          <p className="rounded-lg bg-accent p-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">How we use AI:</span>{" "}
+            {AI_NOTICE_TEXT.replace(/^How we use AI: /, "")}{" "}
+            <Link to="/ai-notice" target="_blank" className="underline">Learn more</Link>
+          </p>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Sending..." : "Submit application"}</Button>
           <p className="text-xs text-muted-foreground">By applying you agree to get updates about this job by email.</p>
         </form>

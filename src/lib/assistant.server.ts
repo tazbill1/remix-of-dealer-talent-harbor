@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isHumanRequest, WANTS_PERSON } from "@/lib/ai-notice";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { statusEventRows } from "@/lib/status-log";
@@ -297,6 +298,21 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
       interviewAt: null,
       delivery: row.status,
     };
+  }
+
+  // "HUMAN": stop the assistant and automated messages, flag for a person, tell staff in the app.
+  if (data.party === "candidate" && isHumanRequest(data.body)) {
+    await admin
+      .from("applications")
+      .update({ ai_paused_at: app.ai_paused_at ?? new Date().toISOString(), needs_attention: WANTS_PERSON })
+      .eq("id", app.id);
+    await admin.from("application_events").insert({
+      org_id: app.org_id,
+      application_id: app.id,
+      kind: "texting",
+      message: `Candidate replied HUMAN and wants a person. ${manager.name} should follow up.`,
+    });
+    return { reply: "", keyword: null, changed: [] as string[], status: null, interviewAt: null, delivery: "paused" };
   }
 
   // Carrier keywords never reach the AI.

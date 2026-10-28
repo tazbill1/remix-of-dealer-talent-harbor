@@ -1,3 +1,3 @@
-export const CONSENT_LABELS: Record<string,string> = {sms:'Text messages',ai_screening:'AI screening',background_check:'Background check',recording:'Interview recording',privacy_notice:'Privacy notice'};
+export const CONSENT_LABELS: Record<string,string> = {sms:'Text messages',ai_screening:'AI screening',background_check:'Background check',recording:'Interview recording',privacy_notice:'Privacy notice',ai_notice:'AI-use notice'};
 export function consentState(row:{granted:boolean;revoked_at:string|null}){return row.revoked_at?'Withdrawn':row.granted?'Agreed':'Declined';}
 export function withdrawalPatch(row:{granted:boolean;revoked_at:string|null},now:string){if(row.revoked_at)throw new Error('This consent has already been withdrawn.');if(!row.granted)throw new Error('Declined consent cannot be withdrawn.');return {revoked_at:now,revoked_source:'staff_entry'};}
