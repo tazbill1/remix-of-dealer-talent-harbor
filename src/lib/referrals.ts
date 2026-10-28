@@ -79,6 +79,72 @@ export function bonusesToAlert<T extends { status: string; due_date: string | nu
 
 export const STAGE_LABEL: Record<string, string> = { "30_day": "30-day", "90_day": "90-day" };
 
-export function bonusDueMessage(employee: string, applicant: string, stage: string): string {
-  return `${STAGE_LABEL[stage] ?? stage} referral bonus due: ${employee} for referring ${applicant}.`;
+export function bonusDueMessage(employee: string, applicant: string, days = 90): string {
+  return `Referral bonus due (${days} days): ${employee} for referring ${applicant}.`;
+}
+
+// ---- Role-based bonus program (tiers, eligibility, quarterly drawing) ----
+
+export type Tier = { id: string; name: string; amount: number; covers: string[]; excludes: string[]; is_default: boolean; sort_order: number };
+
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Whole-word, case-insensitive match of any phrase (mirrors the database's referral_word_match). */
+export function wordMatch(text: string | null | undefined, words: string[]): boolean {
+  const t = text ?? "";
+  return words.some((w) => w.trim() !== "" && new RegExp(`(^|[^A-Za-z0-9_])${esc(w.trim())}($|[^A-Za-z0-9_])`, "i").test(t));
+}
+
+/** Suggested tier for a job title: first covering tier (by order) not excluded, else the catch-all. */
+export function suggestTier<T extends Tier>(title: string | null | undefined, tiers: T[]): T | null {
+  const sorted = [...tiers].sort((a, b) => a.sort_order - b.sort_order);
+  return sorted.find((t) => !t.is_default && wordMatch(title, t.covers) && !wordMatch(title, t.excludes))
+    ?? sorted.find((t) => t.is_default) ?? null;
+}
+
+/** Why a referrer can't earn a bonus, or null if they can. */
+export function referrerIneligible(roleTitle: string | null | undefined, excluded: string[]): string | null {
+  return roleTitle && wordMatch(roleTitle, excluded) ? `Not eligible: referrer role (${roleTitle}) is excluded` : null;
+}
+
+/** "2026-Q4" for a yyyy-mm-dd date. */
+export function quarterKey(dateIso: string): string {
+  const [y, m] = dateIso.split("-").map(Number);
+  return `${y}-Q${Math.floor((m! - 1) / 3) + 1}`;
+}
+
+/** Last weekday of the quarter's final month (Mar, Jun, Sep, Dec), yyyy-mm-dd. */
+export function drawingDate(quarter: string): string {
+  const [y, q] = quarter.split("-Q").map(Number);
+  const d = new Date(Date.UTC(y!, q! * 3, 0));
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+export function bonusStatusLabel(b: { status: string; ineligible_reason?: string | null }): string {
+  if (b.status === "not_eligible") return b.ineligible_reason || "Not eligible";
+  return b.status.charAt(0).toUpperCase() + b.status.slice(1);
+}
+
+export type BonusStatus = "pending" | "paid" | "void" | "not_eligible";
+export type TotalsRow = { key: string; label: string } & Record<BonusStatus, { count: number; amount: number }>;
+
+/** Bonus counts and dollar totals by tier and by store, split by status. */
+export function bonusTotals(
+  bonuses: { applicant_id: string; status: string; amount: number | null; tier_name: string | null }[],
+  appStore: Map<string, string>, stores: { id: string; name: string }[],
+) {
+  const storeNames = new Map(stores.map((s) => [s.id, s.name]));
+  const blank = (key: string, label: string): TotalsRow => ({ key, label,
+    pending: { count: 0, amount: 0 }, paid: { count: 0, amount: 0 }, void: { count: 0, amount: 0 }, not_eligible: { count: 0, amount: 0 } });
+  const byTier = new Map<string, TotalsRow>(); const byStore = new Map<string, TotalsRow>();
+  for (const b of bonuses) {
+    const st = b.status as BonusStatus;
+    if (!["pending", "paid", "void", "not_eligible"].includes(st)) continue;
+    const tk = b.tier_name ?? "No tier"; const sk = appStore.get(b.applicant_id) ?? "unknown";
+    const t = byTier.get(tk) ?? blank(tk, tk); const s = byStore.get(sk) ?? blank(sk, storeNames.get(sk) ?? "Unknown store");
+    for (const row of [t, s]) { row[st].count++; row[st].amount += Number(b.amount ?? 0); }
+    byTier.set(tk, t); byStore.set(sk, s);
+  }
+  const sort = (m: Map<string, TotalsRow>) => [...m.values()].sort((a, b) => a.label.localeCompare(b.label));
+  return { byTier: sort(byTier), byStore: sort(byStore) };
 }

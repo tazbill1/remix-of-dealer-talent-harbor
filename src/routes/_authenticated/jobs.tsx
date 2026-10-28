@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { suggestTier, type Tier } from "@/lib/referrals";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/jobs")({
 const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager: "",
   hiring_manager_phone: "", escalation_name: "", escalation_phone: "",
   employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "",
-  questions: [] as Question[], interview_kit_id: "" };
+  questions: [] as Question[], interview_kit_id: "", referral_tier_id: "" };
 type Form = typeof empty;
 
 const fromAi = (j: AiJobDraft["job"]) => (prev: Form): Form => ({
@@ -54,7 +55,10 @@ function JobPreview({ f, store }: { f: Form; store?: string }) {
 
 type KitOption = { id: string; name: string };
 
-function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: KitOption[] }) {
+type TierOption = Tier;
+
+function JobFields({ f, setF, kits, tiers = [], showTier = false }: { f: Form; setF: (f: Form) => void; kits: KitOption[]; tiers?: TierOption[]; showTier?: boolean }) {
+  const suggested = suggestTier(f.title, tiers);
   return (
     <>
       <div className="space-y-1.5"><Label>Job title</Label><Input required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
@@ -102,6 +106,14 @@ function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: 
         </select>
         <p className="text-xs text-muted-foreground">The interviewer sees these questions on the scorecard. Recruiting/HR manages them under Interview kits.</p>
       </div>
+      {showTier && tiers.length > 0 && (
+        <div className="space-y-1.5 border-t pt-3"><Label>Referral bonus tier</Label>
+          <select aria-label="Referral bonus tier" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.referral_tier_id} onChange={(e) => setF({ ...f, referral_tier_id: e.target.value })}>
+            <option value="">Suggested: {suggested ? `${suggested.name} ($${Number(suggested.amount).toLocaleString()})` : "none"}</option>
+            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} (${Number(t.amount).toLocaleString()})</option>)}
+          </select>
+        </div>
+      )}
     </>
   );
 }
@@ -114,6 +126,7 @@ const payload = (f: Form) => ({
   // Drop half-finished questions rather than failing the save.
   questions: f.questions.filter((q) => questionSchema.safeParse(q).success),
   interview_kit_id: f.interview_kit_id || null,
+  referral_tier_id: f.referral_tier_id || null,
 });
 
 function Jobs() {
@@ -122,14 +135,15 @@ function Jobs() {
   const { data } = useQuery({
     queryKey: ["jobs", org.orgId],
     queryFn: async () => {
-      const [jobs, stores, apps, templates, kits] = await Promise.all([
+      const [jobs, stores, apps, templates, kits, tiers] = await Promise.all([
         supabase.from("jobs").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
         supabase.from("applications").select("job_id").eq("org_id", org.orgId),
         supabase.from("job_templates").select("*").eq("org_id", org.orgId).order("title"),
         supabase.from("interview_kits").select("id, name").eq("org_id", org.orgId).order("name"),
+        supabase.from("referral_tiers").select("id, name, amount, covers, excludes, is_default, sort_order").eq("org_id", org.orgId).order("sort_order"),
       ]);
-      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [], kits: kits.data ?? [] };
+      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [], kits: kits.data ?? [], tiers: (tiers.data ?? []) as Tier[] };
     },
   });
   const [open, setOpen] = useState(false);
@@ -168,12 +182,17 @@ function Jobs() {
   const stores = data?.stores ?? [];
   const storeName = (id: string) => stores.find((s) => s.id === id)?.name ?? "";
   const refresh = () => qc.invalidateQueries({ queryKey: ["jobs", org.orgId] });
+  // HR saves the suggested referral tier when none was picked; other members leave it for the hire-time suggestion.
+  const withTier = (form: Form) => {
+    const p = payload(form);
+    return hr && !p.referral_tier_id ? { ...p, referral_tier_id: suggestTier(form.title, data?.tiers ?? [])?.id ?? null } : p;
+  };
   const viewing = (data?.jobs ?? []).find((j) => j.id === viewId);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!picked.length) return toast.error("Pick at least one store.");
-    const rows = picked.map((dealership_id) => ({ org_id: org.orgId, dealership_id, ...payload(f), status: hr ? "open" : "requested" }));
+    const rows = picked.map((dealership_id) => ({ org_id: org.orgId, dealership_id, ...withTier(f), status: hr ? "open" : "requested" }));
     const { error } = await supabase.from("jobs").insert(rows);
     if (error) return toast.error(error.message);
     toast.success(hr ? `Posted to ${rows.length} store${rows.length > 1 ? "s" : ""}! It's live on your careers site and job feed.`
@@ -187,14 +206,14 @@ function Jobs() {
       target_start_date: j.target_start_date ?? "", hiring_manager: j.hiring_manager ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
       hiring_manager_phone: j.hiring_manager_phone ?? "", escalation_name: j.escalation_name ?? "", escalation_phone: j.escalation_phone ?? "",
       description: j.description ?? "", pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
-      questions: parseQuestions(j.questions), interview_kit_id: j.interview_kit_id ?? "",
+      questions: parseQuestions(j.questions), interview_kit_id: j.interview_kit_id ?? "", referral_tier_id: j.referral_tier_id ?? "",
     });
     setEditing(false); setViewId(j.id);
   }
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!viewId) return;
-    const { error } = await supabase.from("jobs").update(payload(ef)).eq("id", viewId);
+    const { error } = await supabase.from("jobs").update(withTier(ef)).eq("id", viewId);
     if (error) return toast.error(error.message);
     toast.success("Changes saved! Your careers site and job feed are updated.");
     setEditing(false); refresh();
@@ -236,7 +255,7 @@ function Jobs() {
               {!savedTemplates.length && <p className="text-xs text-muted-foreground">Starter roles shown. {hr ? "Save your own to build your group's job bank." : ""}</p>}
             </div>
             <form onSubmit={save} className="space-y-3">
-              <JobFields f={f} setF={setF} kits={data?.kits ?? []} />
+              <JobFields f={f} setF={setF} kits={data?.kits ?? []} tiers={data?.tiers ?? []} showTier={hr} />
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Stores</Label>
                   <button type="button" className="text-xs text-sapphire" onClick={() => setPicked(picked.length === stores.length ? [] : stores.map((s) => s.id))}>
@@ -265,7 +284,7 @@ function Jobs() {
                   <VoiceJobWriter onDraft={(j) => setEf(fromAi(j))} />
                   <JobPreview f={ef} store={storeName(viewing.dealership_id)} />
                   <form onSubmit={saveEdit} className="space-y-3">
-                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} />
+                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} tiers={data?.tiers ?? []} showTier={hr} />
                     <div className="flex gap-2">
                       <Button type="submit" className="flex-1">Save changes</Button>
                       <Button type="button" variant="outline" onClick={() => openJob(viewing)}>Cancel</Button>
