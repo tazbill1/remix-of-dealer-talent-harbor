@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "anon read store basics" ON public.dealerships;
