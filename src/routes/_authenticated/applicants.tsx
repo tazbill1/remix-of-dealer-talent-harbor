@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { AddCandidateDialog } from "@/components/add-candidate-dialog";
 import { canAddCandidate } from "@/lib/manual-candidate";
 import { SOURCE_CHANNELS } from "@/lib/sources";
-import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
+import { AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
 import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
@@ -115,7 +115,6 @@ function Applicants() {
     if (search.applicant) void navigate({ search: (prev) => ({ ...prev, applicant: undefined, tab: undefined, interview: undefined }), replace: true });
   };
   const [dragId, setDragId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
   const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [emailing, setEmailing] = useState<string[] | null>(null);
@@ -217,7 +216,6 @@ function Applicants() {
               className={cn("flex items-center gap-1.5 px-3 py-1.5", view === "list" ? "bg-sapphire text-primary-foreground" : "hover:bg-secondary")}>
               <List className="size-4" />List</button>
           </div>
-          <Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
           {canAddCandidate(org.role, org.isPlatformAdmin) && <Button onClick={() => setAddingManual(true)}><UserPlus />Add candidate</Button>}
         </div>
       </div>
@@ -306,8 +304,6 @@ function Applicants() {
         )}
       </div>
 
-      <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
-        jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, dealership_id: j.dealership_id, label: `${storeName(j.dealership_id)} · ${j.title}` }))} />
       <AddCandidateDialog open={addingManual} onOpenChange={setAddingManual} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
         stores={(data?.stores ?? []).map((s) => ({ id: s.id, name: s.name }))}
         jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, title: j.title, dealership_id: j.dealership_id }))} />

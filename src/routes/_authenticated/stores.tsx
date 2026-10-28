@@ -159,6 +159,16 @@ function Stores() {
                 <StoreTextingContact store={s} />
               </div>
             )}
+            {!isHr && (org.role === "dealer_manager" || org.role === "hiring_manager") && (
+              <div className="relative z-10 mt-3" onClick={(e) => e.stopPropagation()}>
+                <select disabled className="h-8 w-full cursor-not-allowed rounded-md border bg-muted px-2 text-xs text-muted-foreground opacity-70"
+                  value={s.region_id ?? ""} aria-label={`Region for ${s.name}`}>
+                  <option value="">No region</option>
+                  {regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">Only HR can change regions</p>
+              </div>
+            )}
           </div>
         ))}
       </div>

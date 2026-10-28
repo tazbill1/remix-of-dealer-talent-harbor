@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Upload, Loader2, Send, CalendarPlus, Download, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { parseResume, assistantMessage, type ParsedResume } from "@/lib/assistant.functions";
+import { assistantMessage } from "@/lib/assistant.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,95 +15,6 @@ import { deliveryLabel } from "@/lib/messaging/labels";
 import { EmailHistory } from "@/components/email-compose";
 import { useMessagingMode } from "@/lib/texting-mode";
 import { ScorecardButton, ScorecardSummary } from "@/components/interview-scorecard";
-
-const toB64 = (f: File) => new Promise<string>((res, rej) => {
-  const r = new FileReader();
-  r.onload = () => res(String(r.result).split(",")[1] ?? "");
-  r.onerror = rej; r.readAsDataURL(f);
-});
-const ACCEPT = ".pdf,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/*,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-export function AddApplicantDialog({ open, onOpenChange, orgId, jobs, onCreated }: {
-  open: boolean; onOpenChange: (o: boolean) => void; orgId: string;
-  jobs: { id: string; label: string; dealership_id: string }[]; onCreated: () => void;
-}) {
-  const parse = useServerFn(parseResume);
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [over, setOver] = useState(false);
-  const [p, setP] = useState<ParsedResume | null>(null);
-  const [jobId, setJobId] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function reset() { setFile(null); setP(null); setJobId(""); setBusy(false); }
-  async function handle(f: File) {
-    if (f.size > 10_000_000) return toast.error("That file is over 10 MB.");
-    setFile(f); setBusy(true);
-    try {
-      const out = await parse({ data: { file: await toB64(f), mime: f.type || (f.name.endsWith(".docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : ""), jobs: jobs.map(({ id, label }) => ({ id, label })) } });
-      setP(out);
-      if (out.suggested_job_id && jobs.some((j) => j.id === out.suggested_job_id)) setJobId(out.suggested_job_id);
-    } catch (e: any) { toast.error(e.message); setFile(null); }
-    setBusy(false);
-  }
-  async function save() {
-    if (!p || !file) return;
-    const job = jobs.find((j) => j.id === jobId);
-    if (!job) return toast.error("Pick the job they're applying for.");
-    if (!p.full_name.trim() || !p.email.trim()) return toast.error("Name and email are needed.");
-    setBusy(true);
-    const profile = { years_experience: p.years_experience, certifications: p.certifications, current_title: p.current_title,
-      past_employers: p.past_employers, skills: p.skills, city: p.city };
-    const { data: app, error } = await supabase.from("applications").insert({ org_id: orgId, job_id: job.id, dealership_id: job.dealership_id,
-      full_name: p.full_name.trim(), email: p.email.trim(), phone: p.phone.trim() || null, source: "manual", profile, ai_summary: p.summary }).select("id").single();
-    if (error || !app) { setBusy(false); return toast.error(error?.message ?? "Couldn't save."); }
-    const path = `${orgId}/${app.id}/${file.name.replace(/[^\w.-]/g, "_")}`;
-    const up = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type });
-    if (!up.error) await supabase.from("applications").update({ resume_path: path }).eq("id", app.id);
-    await supabase.from("application_events").insert({ org_id: orgId, application_id: app.id, kind: "manual", message: "Added from an uploaded resume" });
-    toast.success(`${p.full_name} added to New.`);
-    reset(); onOpenChange(false); onCreated();
-  }
-  const set = (k: keyof ParsedResume, v: any) => setP((x) => (x ? { ...x, [k]: v } : x));
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader><DialogTitle>Add an applicant</DialogTitle></DialogHeader>
-        {!p ? (
-          <button type="button" onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-            onDrop={(e) => { e.preventDefault(); setOver(false); const f = e.dataTransfer.files[0]; if (f) handle(f); }}
-            className={cn("flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed p-10 text-center transition", over ? "border-sapphire bg-accent" : "hover:border-sapphire")}>
-            {busy ? <><Loader2 className="size-8 animate-spin text-sapphire" /><b>Reading {file?.name}...</b><span className="text-sm text-muted-foreground">Pulling out name, contact info, experience and certifications.</span></>
-              : <><Upload className="size-8 text-sapphire" /><b>Drop a resume here</b><span className="text-sm text-muted-foreground">PDF, Word (.docx) or a photo. We'll fill everything in for you.</span></>}
-            <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handle(f); }} />
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-xl bg-accent p-3 text-sm"><Sparkles className="size-4 text-sapphire" />Filled in from {file?.name}. Check it over, then save.</div>
-            {(["full_name", "email", "phone", "current_title"] as const).map((k) => (
-              <label key={k} className="block text-sm"><span className="font-medium capitalize">{k.replace("_", " ")}</span>
-                <Input value={p[k]} onChange={(e) => set(k, e.target.value)} /></label>
-            ))}
-            <label className="block text-sm"><span className="font-medium">Years of experience</span>
-              <Input type="number" value={p.years_experience ?? ""} onChange={(e) => set("years_experience", e.target.value ? Number(e.target.value) : null)} /></label>
-            <label className="block text-sm"><span className="font-medium">Certifications (comma separated)</span>
-              <Input value={p.certifications.join(", ")} onChange={(e) => set("certifications", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} /></label>
-            {p.summary && <p className="rounded-xl bg-secondary p-3 text-sm">{p.summary}</p>}
-            <label className="block text-sm"><span className="font-medium">Job {p.suggested_job_id && jobId === p.suggested_job_id && <span className="text-sapphire">(suggested match)</span>}</span>
-              <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={jobId} onChange={(e) => setJobId(e.target.value)}>
-                <option value="">Pick a job...</option>
-                {jobs.map((j) => <option key={j.id} value={j.id}>{j.label}</option>)}
-              </select></label>
-            <div className="flex justify-end gap-2"><Button variant="outline" onClick={reset}>Start over</Button>
-              <Button onClick={save} disabled={busy}>{busy && <Loader2 className="animate-spin" />}Save applicant</Button></div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function AssistantThreads({ appId, orgId, assistantName, onChanged, paused, needsAttention }: { appId: string; orgId: string; assistantName: string; onChanged: () => void; paused?: boolean; needsAttention?: string | null }) {
   const send = useServerFn(assistantMessage);
