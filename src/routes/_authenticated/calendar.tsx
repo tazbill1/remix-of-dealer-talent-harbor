@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RescheduleButton, isUpcoming } from "@/components/applicant-tools";
-import { CalendarDays } from "lucide-react";
+import { RescheduleButton, isUpcoming, ics } from "@/components/applicant-tools";
+import { CalendarDays, CalendarPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { CalendarSubscribe } from "@/components/calendar-subscribe";
