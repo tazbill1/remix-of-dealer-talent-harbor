@@ -65,7 +65,7 @@ function Templates() {
         <h1 className="flex items-center gap-2 text-3xl"><ClipboardCheck className="size-7 text-sapphire" />Onboarding templates</h1>
         <p className="text-muted-foreground">
           New hires get their store's template, or the default if their store doesn't have one. Changes apply to future hires only.{" "}
-          {canEdit ? "" : "Only Recruiting/HR and group admins can make changes."} <Link to="/onboarding" className="text-sapphire underline">Back to Onboarding</Link>
+          {canEdit ? "" : "Only Recruiting/HR and group admins can make changes."} <Link to="/new-hires" className="text-sapphire underline">Back to Onboarding</Link>
         </p>
       </div>
       {data.templates.map((t) => (

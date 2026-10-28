@@ -26,7 +26,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/applicants", label: "Applicants", icon: Users },
   { to: "/talent-pool", label: "Talent pool", icon: Waves },
-  { to: "/onboarding", label: "Onboarding", icon: ClipboardCheck },
+  { to: "/new-hires", label: "Onboarding", icon: ClipboardCheck },
   { to: "/ask", label: "Ask", icon: Sparkles },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/calendar", label: "Interviews", icon: CalendarDays },
@@ -182,7 +182,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
       <nav className="space-y-1">
         {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions" && n.to !== "/referrals") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter" || (n.to === "/referrals" && org.role === "regional_leader"))
           .filter(n => n.to !== "/events" || org.isPlatformAdmin || ["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(org.role))
-          .filter(n => n.to !== "/onboarding" || org.isPlatformAdmin || org.role !== "regional_leader")
+          .filter(n => n.to !== "/new-hires" || org.isPlatformAdmin || org.role !== "regional_leader")
           .filter(n => org.isPlatformAdmin || !isStoreRole(org.role) || !ADMIN_ONLY.has(n.to)).map((n) => (
           <Link key={n.to} to={n.to}
             className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
