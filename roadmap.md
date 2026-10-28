@@ -19,7 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] Fix explicit apply-link source priority over remembered store QR scans; preserve events/referrals and verify desktop applicant tabs fit.
+- [x] Fix explicit apply-link source priority over remembered store QR scans; preserve events/referrals. Nine source/scan tests passed, blocked-submit payload verified, and all six desktop applicant tabs fit and Onboarding opens. No applicant saved or messages sent.
 - [x] Employee referrals: Referrals page (links, QR, bonus amounts, Paid/Void, report), ?ref= apply tagging, typed-name field, Referred-by badge with HR linking, auto 30/90-day bonuses on Hired, bell alerts when due. No texts/emails.
 - [x] Add “New dealer group” on WerkandMe Admin, linking to the existing group setup page.
 - [x] HR adverse-action page: pre-notice, five-business-day wait, final notice and dated report-copy confirmation; authenticated form/read verified and rule tests pass. No actual notices marked delivered in testing.
