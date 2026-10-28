@@ -9,6 +9,8 @@ import { dayKey } from "@/lib/applicant-filters";
 import { isTestName } from "@/lib/display";
 import { InterviewHoursCard } from "@/components/interview-hours";
 import { StoreInterviewersCard } from "@/components/store-interviewers";
+import { StoreVideosCard } from "@/components/store-videos";
+import { canPostJobs } from "@/lib/jobs";
 
 export const Route = createFileRoute("/_authenticated/stores_/$storeId")({
   head: () => ({ meta: [{ title: "Store dashboard | WerkandMe Hiring" }] }),
@@ -86,9 +88,11 @@ function StoreDashboard() {
         onSaved={() => qc.invalidateQueries({ queryKey: ["store-dash", org.orgId, storeId] })}
       />
       <StoreInterviewersCard orgId={org.orgId} storeId={store.id} />
+      <StoreVideosCard orgId={org.orgId} storeId={store.id}
+        canEdit={canPostJobs(org.role, org.isPlatformAdmin) || org.role === "dealer_manager" || org.role === "hiring_manager"} />
       <div className="rounded-2xl bg-background p-5 shadow-sm">
         <h2 className="mb-4 text-lg">Pipeline</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-9">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-5">
           {STATUSES.map((st) => (
             <div key={st} className="rounded-xl bg-muted p-3 text-center">
               <div className="text-2xl font-extrabold">{apps.filter((a) => a.status === st).length}</div>

@@ -1,3 +1,4 @@
+import { StoreVideosCard } from "@/components/store-videos";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -161,6 +162,7 @@ function Stores() {
           </div>
         ))}
       </div>
+      {(isHr || org.role === "regional_leader") && <StoreVideosCard orgId={org.orgId} storeId={null} canEdit={isHr} />}
     </div>
   );
 }
