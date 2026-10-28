@@ -129,7 +129,7 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
         <header className="flex items-center justify-between border-b bg-background px-4 py-3 sm:hidden">
           <LogoLink className="h-6" />
           <div className="flex items-center gap-1">
-          <NotificationBell userId={me.userId} orgId={org?.orgId ?? null} />
+          <NotificationBell userId={me.user.id} orgId={org?.orgId ?? null} />
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
             <SheetContent side="left" className="w-64 border-0 bg-sidebar p-0 text-sidebar-foreground">{sidebar}</SheetContent>
@@ -137,7 +137,7 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
           </div>
         </header>
         <div className="hidden justify-end px-4 pt-3 sm:flex md:px-8">
-          <NotificationBell userId={me.userId} orgId={org?.orgId ?? null} />
+          <NotificationBell userId={me.user.id} orgId={org?.orgId ?? null} />
         </div>
         <main className="flex-1 p-4 md:p-8 sm:pt-0 md:pt-0">{children}</main>
       </div>
