@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RescheduleButton, isUpcoming, ics } from "@/components/applicant-tools";
+import { RescheduleButton, isUpcoming } from "@/components/applicant-tools";
+import { calendarLinks } from "@/lib/calendar-links";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CalendarDays, CalendarPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -49,17 +51,22 @@ function CalendarPage() {
             {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
               <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
             )}
-            {i.status !== "cancelled" && (
-              <Button size="sm" variant="outline" className="shrink-0" aria-label="Add to calendar" onClick={() => {
-                const name = app(i.application_id)?.full_name ?? "Applicant";
-                const storeName = store(app(i.application_id)?.dealership_id);
-                const url = URL.createObjectURL(new Blob([ics(i, `Interview: ${name}${storeName ? ` (${storeName})` : ""}`)], { type: "text/calendar" }));
-                const a = document.createElement("a"); a.href = url; a.download = "interview.ics"; a.click(); URL.revokeObjectURL(url);
-              }}>
-                <CalendarPlus />
-                Add to calendar
-              </Button>
-            )}
+            {i.status !== "cancelled" && (() => {
+              const name = app(i.application_id)?.full_name ?? "Applicant";
+              const storeName = store(app(i.application_id)?.dealership_id);
+              const links = calendarLinks({ title: `Interview: ${name}${storeName ? ` (${storeName})` : ""}`, startsAt: i.starts_at, minutes: i.duration_min, location: i.location ?? storeName });
+              return (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="shrink-0" aria-label="Add to calendar"><CalendarPlus />Add to calendar</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild><a href={links.google} target="_blank" rel="noreferrer">Google Calendar</a></DropdownMenuItem>
+                    <DropdownMenuItem asChild><a href={links.outlook} target="_blank" rel="noreferrer">Outlook</a></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            })()}
           </li>
         ))}
       </ul>
