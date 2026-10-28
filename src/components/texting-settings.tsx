@@ -29,7 +29,7 @@ function TextingForm({ orgId, initial, canEdit }: { orgId: string; initial: Mess
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
   const backlog = useServerFn(screeningBacklog);
-  const goingLive = initial.mode !== "live" && f.mode === "live";
+  const goingLive = false; // Live texting is now switched per store in WerkandMe Admin.
   const [skipBacklog, setSkipBacklog] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
   const waiting = useQuery({
@@ -65,7 +65,6 @@ function TextingForm({ orgId, initial, canEdit }: { orgId: string; initial: Mess
   return <form onSubmit={save} className="mt-4 space-y-4">
     <fieldset disabled={!canEdit || saving} className="min-w-0 space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-1.5"><Label asChild><span>Mode</span></Label><select aria-label="Texting mode" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value === "live" ? "live" : "practice" })}><option value="practice">Practice</option><option value="live">Live</option></select></label>
         <label className="space-y-1.5"><Label asChild><span>AI provider</span></Label><select aria-label="AI provider" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.ai_provider} onChange={(e) => setF({ ...f, ai_provider: e.target.value === "anthropic" ? "anthropic" : "lovable" })}><option value="lovable">Lovable</option><option value="anthropic" disabled>Anthropic (Claude) — Coming soon</option></select></label>
         <label className="space-y-1.5">Texting starts<Input aria-label="Texting starts" type="time" required value={f.send_start.slice(0, 5)} onChange={(e) => setF({ ...f, send_start: e.target.value })} /></label>
         <label className="space-y-1.5">Texting ends<Input aria-label="Texting ends" type="time" required value={f.send_end.slice(0, 5)} onChange={(e) => setF({ ...f, send_end: e.target.value })} /></label>

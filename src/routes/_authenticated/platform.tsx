@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/org";
 import { Button } from "@/components/ui/button";
+import { AdminTexting } from "@/components/admin-texting";
 
 export const Route = createFileRoute("/_authenticated/platform")({
   head: () => ({ meta: [
@@ -56,6 +57,7 @@ function Platform() {
           </div>
         ))}
       </div>
+      <AdminTexting />
     </div>
   );
 }
