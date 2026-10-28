@@ -19,7 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] Clean Integrations wording and matching cards, move Texting settings from Team, and verify unchanged values plus sidebar tooltip.
+- [x] Clean Integrations wording and matching cards, move Texting settings from Team, and verify unchanged values plus sidebar tooltip.
 - [x] Texting setup: group settings, store contacts, job overrides, delivery tracking and phone opt-outs; verified policies and save/reopen controls
 - [x] Texting engine: outbox with consent/STOP/texting-window checks, practice mode, Twilio adapter, inbound + delivery-receipt webhooks, assistant replies through the outbox, Claude switch (docs/texting-engine.md)
 - [ ] Live SMS delivery (blocked: Twilio account + carrier registration)
