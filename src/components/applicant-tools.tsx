@@ -1,5 +1,5 @@
 import { clearAttention, getTextingOptOut, sendStaffText, setAssistantPaused, setTextingOptOut } from "@/lib/takeover.functions";
-import { scheduleStaffInterview, sendBookingLink } from "@/lib/booking.functions";
+import { rescheduleInterview, scheduleStaffInterview, sendBookingLink } from "@/lib/booking.functions";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -210,6 +210,9 @@ export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterview
             <div className="flex flex-wrap items-center justify-between gap-1">
             <span className={i.status === "cancelled" ? "text-muted-foreground line-through" : ""}>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.status === "cancelled" ? "cancelled" : i.source === "werkandme" ? "booked in WerkandMe" : i.source === "self_scheduled" ? "picked by the candidate" : `found on ${i.source} calendar`}</span></span>
             <span className="flex shrink-0 items-center">
+              {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
+                <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => { qc.invalidateQueries({ queryKey: ["interviews", appId] }); onChanged(); }} />
+              )}
               <ScorecardButton interviewId={i.id} appId={appId} orgId={orgId} />
               <Button size="sm" variant="ghost" onClick={() => download(i)} aria-label="Add to calendar"><Download /></Button>
             </span>
@@ -264,5 +267,51 @@ export function TextCompose({ open, onOpenChange, appId, name, onSent }: { open:
         {note && <p className={cn("text-xs text-muted-foreground", note.startsWith("Not sent") && "text-destructive")}>{note}</p>}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Upcoming includes anything later today. */
+export function isUpcoming(startsAt: string) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Date.parse(startsAt) >= today.getTime();
+}
+
+function toLocalInput(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Moves an existing interview to a new time (same picker as Schedule). */
+export function RescheduleButton({ interviewId, startsAt, onDone }: { interviewId: string; startsAt: string; onDone: () => void }) {
+  const move = useServerFn(rescheduleInterview);
+  const [open, setOpen] = useState(false);
+  const [when, setWhen] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    if (!when) return;
+    setBusy(true);
+    try {
+      const r = await move({ data: { interviewId, startsAt: new Date(when).toISOString() } });
+      if (r.demo) toast.success("Rescheduled (demo)");
+      else if (r.note) toast.warning(r.note);
+      else toast.success("Rescheduled");
+      setOpen(false); onDone();
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+  }
+  return (
+    <>
+      <Button size="sm" variant="ghost" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWhen(toLocalInput(startsAt)); setOpen(true); }}>Reschedule</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader><DialogTitle>Reschedule interview</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">Currently {new Date(startsAt).toLocaleString()}</p>
+          <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+            <Button size="sm" onClick={save} disabled={!when || busy}>{busy ? "Saving…" : "Reschedule"}</Button></div>
+          {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
