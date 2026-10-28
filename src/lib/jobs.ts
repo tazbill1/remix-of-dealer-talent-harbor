@@ -1,23 +1,59 @@
-export const STATUSES = ["new", "screening", "interview", "offer", "hired", "rejected"] as const;
-export type AppStatus = (typeof STATUSES)[number];
+/** Every stage the database knows. "offer" is retired (merged into Interviewing) and hidden. */
+export const ALL_STATUSES = [
+  "new", "unqualified", "screening", "interview", "other_location", "rejected", "hired", "hiring_event", "do_not_hire", "offer",
+] as const;
+export type AppStatus = (typeof ALL_STATUSES)[number];
+/** The client's stage list, in their order. Used for pills, board columns, filters and pickers. */
+export const STATUSES = [
+  "new", "unqualified", "screening", "interview", "other_location", "rejected", "hired", "hiring_event", "do_not_hire",
+] as const satisfies readonly AppStatus[];
 
 export const STATUS_LABEL: Record<AppStatus, string> = {
-  new: "New",
-  screening: "Screening",
-  interview: "Interview",
-  offer: "Offer",
+  new: "Not Contacted Yet",
+  unqualified: "Does Not Meet Basic Qualifications",
+  screening: "Contacted",
+  interview: "Interviewing",
+  other_location: "Consider for Another Location or Position",
+  rejected: "Not Selected",
   hired: "Hired",
-  rejected: "Not selected",
+  hiring_event: "Contacted for Hiring Event",
+  do_not_hire: "Do Not Hire",
+  offer: "Interviewing",
 };
+
+/** Pill / column colors (white text on each). */
+export const STATUS_COLOR: Record<AppStatus, string> = {
+  new: "#4B4B4B",
+  unqualified: "#C8762A",
+  screening: "#93199A",
+  interview: "#4A4AE8",
+  other_location: "#C2B93A",
+  rejected: "#3C8AA0",
+  hired: "#4A9A3E",
+  hiring_event: "#E687BE",
+  do_not_hire: "#E0373A",
+  offer: "#4A4AE8",
+};
+
+/** Rejection-type stages: a person must confirm before moving someone here. */
+export const REJECTION_STATUSES: readonly AppStatus[] = ["unqualified", "rejected", "do_not_hire"];
+/** Decided stages: no more scheduling, nudges or AI stage moves. */
+export const CLOSED_STATUSES: readonly AppStatus[] = ["hired", ...REJECTION_STATUSES];
+export const isRejection = (s: string) => (REJECTION_STATUSES as readonly string[]).includes(s);
+export const isClosed = (s: string) => (CLOSED_STATUSES as readonly string[]).includes(s);
 
 /** Friendly, applicant-facing wording for each stage. */
 export const APPLICANT_STATUS_COPY: Record<AppStatus, string> = {
   new: "We've got your application and our team is reviewing it.",
+  unqualified: "We've gone another direction for this role, but we'd love to keep you in mind.",
   screening: "Good news! You're being reviewed by the hiring team.",
   interview: "You're in the interview stage. We'll be in touch with times!",
-  offer: "Exciting! An offer is on its way to you.",
-  hired: "Welcome to the team! We're so glad you're here.",
+  other_location: "Good news! The hiring team is considering you for another location or position.",
   rejected: "We've gone another direction for this role, but we'd love to keep you in mind.",
+  hired: "Welcome to the team! We're so glad you're here.",
+  hiring_event: "Good news! The hiring team has invited you to a hiring event.",
+  do_not_hire: "We've gone another direction for this role, but we'd love to keep you in mind.",
+  offer: "Exciting! An offer is on its way to you.",
 };
 
 export const ROLE_TEMPLATES = [
