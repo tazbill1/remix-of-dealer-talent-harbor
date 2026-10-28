@@ -8,6 +8,8 @@ import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
 import { StoreTextingContact } from "@/components/store-texting-contact";
 import { plural } from "@/lib/display";
+import { StoreFormFields } from "@/components/store-form-fields";
+import { storeToForm, storeValues, validateStore, storeMissingInfo, type StoreErrors } from "@/lib/store-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,14 +35,19 @@ function Stores() {
   const [open, setOpen] = useState(false);
   const [regionOpen, setRegionOpen] = useState(false);
   const [regionName, setRegionName] = useState("");
-  const [f, setF] = useState({ name: "", brand: "", city: "", state: "", assistant_name: "Penny" });
+  const [f, setF] = useState(storeToForm);
+  const [errors, setErrors] = useState<StoreErrors>({});
+  const [regionId, setRegionId] = useState("");
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.from("dealerships").insert({ ...f, org_id: org.orgId });
+    const errs = validateStore(f);
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+    const { error } = await supabase.from("dealerships").insert({ ...storeValues(f), region_id: regionId || null, org_id: org.orgId });
     if (error) return toast.error(error.message);
-    toast.success(`${f.name} added!`);
-    setF({ name: "", brand: "", city: "", state: "", assistant_name: "Penny" });
+    toast.success(`${f.name.trim()} added!`);
+    setF(storeToForm()); setRegionId(""); setErrors({});
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["stores", org.orgId] });
   }
@@ -91,18 +98,17 @@ function Stores() {
               </DialogContent>
             </Dialog>
           )}
-          {isHr && <Dialog open={open} onOpenChange={setOpen}>
+          {isHr && <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
             <DialogTrigger asChild><Button><Plus />Add store</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add a store</DialogTitle></DialogHeader>
-              <form onSubmit={add} className="space-y-3">
-                <Field label="Store name" v={f.name} on={(v) => setF({ ...f, name: v })} required />
-                <Field label="Brand (e.g. Toyota)" v={f.brand} on={(v) => setF({ ...f, brand: v })} />
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="City" v={f.city} on={(v) => setF({ ...f, city: v })} />
-                  <Field label="State" v={f.state} on={(v) => setF({ ...f, state: v })} />
-                </div>
-                <Field label="AI assistant's name" v={f.assistant_name} on={(v) => setF({ ...f, assistant_name: v })} required />
+              <form onSubmit={add} noValidate className="max-h-[70vh] space-y-3 overflow-y-auto px-1">
+                <StoreFormFields f={f} setF={setF} errors={errors} />
+                {regions.length > 0 && <label className="block space-y-1.5 text-sm"><span>Region</span>
+                  <select aria-label="Region" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={regionId} onChange={(e) => setRegionId(e.target.value)}>
+                    <option value="">No region</option>{regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select></label>}
+                <p className="text-xs text-muted-foreground">Interview hours default to Mon–Fri 9am–5pm, 30 minutes; change them on the store's dashboard. The texting number is set by WerkandMe.</p>
                 <Button type="submit" className="w-full">Save store</Button>
               </form>
             </DialogContent>
@@ -129,6 +135,7 @@ function Stores() {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg">{s.name}</h3>
+                {storeMissingInfo(s) && <span className="mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Missing info</span>}
                 <p className="text-sm text-muted-foreground">{[s.brand, [s.city, s.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
               </div>
               {isHr && <Button variant="ghost" size="icon" className="relative z-10" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>}
