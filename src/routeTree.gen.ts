@@ -29,6 +29,7 @@ import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authent
 import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedOnboardingTemplatesRouteImport } from './routes/_authenticated/onboarding-templates'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
@@ -170,6 +171,12 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOnboardingTemplatesRoute =
+  AuthenticatedOnboardingTemplatesRouteImport.update({
+    id: '/onboarding-templates',
+    path: '/onboarding-templates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
   id: '/platform',
   path: '/platform',
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -441,6 +449,7 @@ export interface FileRoutesByTo {
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -501,6 +510,7 @@ export interface FileRoutesById {
   '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/interview-kits'
     | '/jobs'
     | '/onboarding'
+    | '/onboarding-templates'
     | '/platform'
     | '/referrals'
     | '/status-rules'
@@ -618,6 +629,7 @@ export interface FileRouteTypes {
     | '/interview-kits'
     | '/jobs'
     | '/onboarding'
+    | '/onboarding-templates'
     | '/platform'
     | '/referrals'
     | '/status-rules'
@@ -677,6 +689,7 @@ export interface FileRouteTypes {
     | '/_authenticated/interview-kits'
     | '/_authenticated/jobs'
     | '/_authenticated/onboarding'
+    | '/_authenticated/onboarding-templates'
     | '/_authenticated/platform'
     | '/_authenticated/referrals'
     | '/_authenticated/status-rules'
@@ -892,6 +905,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding-templates': {
+      id: '/_authenticated/onboarding-templates'
+      path: '/onboarding-templates'
+      fullPath: '/onboarding-templates'
+      preLoaderRoute: typeof AuthenticatedOnboardingTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/platform': {
@@ -1170,6 +1190,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOnboardingTemplatesRoute: typeof AuthenticatedOnboardingTemplatesRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
@@ -1194,6 +1215,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOnboardingTemplatesRoute: AuthenticatedOnboardingTemplatesRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
