@@ -227,7 +227,7 @@ function Applicants() {
           Needs attention
         </label>
         <select aria-label="Sort" className={selectCls} value={sort} onChange={(e) => set({ sort: e.target.value === "newest" ? undefined : e.target.value })}>
-          {SORT_MENU.map((s) => <option key={s} value={s}>{SORTS[s].label}</option>)}
+          {SORT_MENU.map((s) => <option key={s} value={s}>{SORTS[s]?.label ?? s}</option>)}
           {!(SORT_MENU as readonly string[]).includes(sort) && <option value={sort}>{SORTS[sort]?.label ?? sort}</option>}
         </select>
         {filtersActive && <button className="text-sm text-sapphire underline" onClick={clearFilters}>Clear filters</button>}

@@ -34,8 +34,8 @@ describe("filterApplicants", () => {
 
 describe("sortApplicants", () => {
   it("sorts newest and oldest first", () => {
-    expect(sortApplicants(apps, "newest", jobTitle, storeName)[0].full_name).toBe("Marcus Webb");
-    expect(sortApplicants(apps, "oldest", jobTitle, storeName)[0].full_name).toBe("Derek Boone");
+    expect(sortApplicants(apps, "newest", jobTitle, storeName)[0]?.full_name).toBe("Marcus Webb");
+    expect(sortApplicants(apps, "oldest", jobTitle, storeName)[0]?.full_name).toBe("Derek Boone");
   });
   it("sorts by name and rating", () => {
     expect(sortApplicants(apps, "name", jobTitle, storeName).map((a) => a.full_name)).toEqual(["Alicia Freeman", "Derek Boone", "Marcus Webb"]);

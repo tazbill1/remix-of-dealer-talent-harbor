@@ -83,5 +83,5 @@ export function sortApplicants<T extends SortableApp>(
     stage: (a, b) => STATUSES.indexOf(a.status as (typeof STATUSES)[number]) - STATUSES.indexOf(b.status as (typeof STATUSES)[number]),
     source: (a, b) => sourceLabel(a.source).localeCompare(sourceLabel(b.source)),
   };
-  return [...apps].sort(cmp[key] ?? cmp.newest);
+  return [...apps].sort(cmp[key] ?? cmp["newest"]!);
 }
