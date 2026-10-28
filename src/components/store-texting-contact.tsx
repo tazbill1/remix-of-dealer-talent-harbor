@@ -18,7 +18,7 @@ export function StoreTextingContact({ store, canEditNumber = false }: { store: T
     e.preventDefault();
     try { new Intl.DateTimeFormat("en-US", { timeZone: f.timezone }); } catch { return toast.error("Enter a valid time zone, such as America/Chicago."); }
     setSaving(true);
-    const { sms_number, ...rest } = f;
+    const { sms_number: _number, ...rest } = f;
     const patch = canEditNumber ? f : rest;
     const { error } = await supabase.from("dealerships").update(patch).eq("id", store.id).eq("org_id", store.org_id).select("id").single();
     setSaving(false);
