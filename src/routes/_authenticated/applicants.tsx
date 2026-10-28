@@ -169,8 +169,8 @@ function Applicants() {
                     <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                     {a.knockout_failed && (
                       <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
-                      {a.needs_attention && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     )}
+                    {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
                       <span>{new Date(a.created_at).toLocaleDateString()}</span>
