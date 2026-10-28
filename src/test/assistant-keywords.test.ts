@@ -31,6 +31,7 @@ function world(mode: "practice" | "live") {
     ],
     candidates: [{ id: "c1", sms_opt_in: true, sms_opted_out_at: null }],
     messaging_settings: [{ org_id: "o1", mode }],
+    store_texting: mode === "live" ? [{ store_id: "s1", live: true }] : [],
     sms_opt_outs: [],
     messages: [],
     interviews: [],

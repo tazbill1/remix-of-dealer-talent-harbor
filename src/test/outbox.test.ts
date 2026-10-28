@@ -7,7 +7,7 @@ const noon = zonedTime("2026-10-27", "12:00", "America/Chicago"); // Tuesday
 const night = zonedTime("2026-10-27", "21:00", "America/Chicago");
 
 function world(
-  over: { consent?: boolean; mode?: "practice" | "live"; managerPhone?: string | null } = {},
+  over: { consent?: boolean; mode?: "practice" | "live"; storeLive?: boolean; managerPhone?: string | null } = {},
 ) {
   return fakeSupabase({
     applications: [
@@ -34,6 +34,7 @@ function world(
     jobs: [{ id: "j1", hiring_manager: null, hiring_manager_phone: null }],
     candidates: [{ id: "c1", sms_opt_in: over.consent ?? true, sms_opted_out_at: null }],
     messaging_settings: over.mode ? [{ org_id: "o1", mode: over.mode }] : [],
+    store_texting: (over.storeLive ?? over.mode === "live") ? [{ store_id: "s1", live: true }] : [],
     sms_opt_outs: [],
     messages: [],
   });
@@ -234,5 +235,12 @@ describe("deliverDue", () => {
       status: "failed",
       error: "Texting provider isn't connected yet",
     });
+  });
+
+  it("store with live texting off only simulates, even if the group is live", async () => {
+    const { client, tables } = world({ mode: "live", storeLive: false });
+    await queueText(client, { applicationId: "a1", party: "candidate", body: "Hi!", purpose: "welcome", now: noon });
+    await deliverDue(client, { now: noon + 1000 });
+    expect(tables["messages"]![0]!["status"]).toBe("simulated");
   });
 });
