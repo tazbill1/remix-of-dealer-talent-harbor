@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
 import { GradientText } from "@/components/brand";
+import { dayKey } from "@/lib/applicant-filters";
+import { isTestName } from "@/lib/display";
 import { InterviewHoursCard } from "@/components/interview-hours";
 import { StoreInterviewersCard } from "@/components/store-interviewers";
 
@@ -34,16 +36,19 @@ function StoreDashboard() {
   if (isLoading) return <p className="text-muted-foreground">Loading...</p>;
   if (!data?.store) return <div className="space-y-4">{back}<p>Store not found.</p></div>;
 
-  const { store, jobs, apps } = data;
+  const { store, jobs } = data;
+  // Match the Applicants list, which hides test applicants by default.
+  const apps = data.apps.filter((a) => !isTestName(a.full_name));
+  const tz = store.timezone || "America/Chicago";
   const openJobs = jobs.filter((j) => j.status === "open");
   const jobTitle = (id: string) => jobs.find((j) => j.id === id)?.title ?? "";
-  const today = new Date().toDateString();
+  const today = dayKey(Date.now(), tz);
   const waiting = apps.filter((a) => a.status === "new" && Date.now() - +new Date(a.created_at) > 48 * 3600e3).length;
   const stats = [
-    { label: "Open jobs", value: openJobs.length, icon: Briefcase },
-    { label: "New today", value: apps.filter((a) => new Date(a.created_at).toDateString() === today).length, icon: Sparkles },
-    { label: "Total applicants", value: apps.length, icon: Users },
-    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy },
+    { label: "Open jobs", value: openJobs.length, icon: Briefcase, to: "/jobs" as const, search: { store: store.id, status: "open" } },
+    { label: "New today", value: apps.filter((a) => dayKey(a.created_at, tz) === today).length, icon: Sparkles, to: "/applicants" as const, search: { store: store.id, applied: "today" } },
+    { label: "Total applicants", value: apps.length, icon: Users, to: "/applicants" as const, search: { store: store.id } },
+    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy, to: "/applicants" as const, search: { store: store.id, status: "hired" } },
   ];
 
   return (
@@ -64,11 +69,12 @@ function StoreDashboard() {
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl bg-background p-5 shadow-sm">
+          <Link key={s.label} to={s.to} search={s.search} aria-label={`${s.label}: ${s.value}. View list`}
+            className="block cursor-pointer rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-sapphire/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sapphire">
             <s.icon className="size-5 text-sapphire" />
             <div className="mt-3 text-3xl font-extrabold">{s.value}</div>
             <div className="text-sm text-muted-foreground">{s.label}</div>
-          </div>
+          </Link>
         ))}
       </div>
       <InterviewHoursCard

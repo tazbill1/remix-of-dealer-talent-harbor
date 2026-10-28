@@ -100,7 +100,7 @@ function Dashboard() {
     .sort((a, b) => b.total - a.total);
 
   const stats = [
-    { label: "Open jobs", value: openJobs, icon: Briefcase, to: "/jobs" as const, search: {} },
+    { label: "Open jobs", value: openJobs, icon: Briefcase, to: "/jobs" as const, search: { status: "open" } },
     { label: "New today", value: newToday, icon: Sparkles, to: "/applicants" as const, search: { applied: "today" } },
     { label: "Total applicants", value: apps.length, icon: Users, to: "/applicants" as const, search: {} },
     { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy, to: "/applicants" as const, search: { status: "hired" } },
@@ -167,8 +167,8 @@ function Dashboard() {
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <Link key={s.label} to={s.to} search={s.search}
-            className="rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-sapphire">
+          <Link key={s.label} to={s.to} search={s.search} aria-label={`${s.label}: ${s.value}. View list`}
+            className="block cursor-pointer rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-sapphire focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sapphire">
             <s.icon className="size-5 text-sapphire" />
             <div className="mt-3 text-3xl font-extrabold">{s.value}</div>
             <div className="text-sm text-muted-foreground">{s.label}</div>

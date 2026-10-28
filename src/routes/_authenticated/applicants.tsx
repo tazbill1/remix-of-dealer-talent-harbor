@@ -67,7 +67,7 @@ function Applicants() {
       const [apps, jobs, stores, regions] = await Promise.all([
         supabase.from("applications").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, title, dealership_id, status, questions").eq("org_id", org.orgId),
-        supabase.from("dealerships").select("id, name, assistant_name, region_id").eq("org_id", org.orgId).order("name"),
+        supabase.from("dealerships").select("id, name, assistant_name, region_id, timezone").eq("org_id", org.orgId).order("name"),
         supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
       ]);
       return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
@@ -134,12 +134,13 @@ function Applicants() {
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
 
+  const storeTz = store !== "all" ? data?.stores.find((s) => s.id === store)?.timezone || undefined : undefined;
   const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
   const base = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
     || (store === "shared" && a.open_to_other_stores))
     && (showTests || !isTestName(a.full_name))
     && (!statusFilter || a.status === statusFilter));
-  const apps = filterApplicants(base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly }, job);
+  const apps = filterApplicants(base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
   const sortedApps = sortApplicants(apps, sort, job, storeName);
   const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
   const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || region !== "all" || store !== "all";
@@ -251,6 +252,18 @@ function Applicants() {
           <Checkbox checked={showTests} onCheckedChange={(c) => set({ tests: c === true ? "1" : undefined })} />
           Show test applicants
         </label>
+        {store !== "all" && store !== "shared" && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
+            Store: {storeName(store) || "Store"}
+            <button aria-label="Clear store filter" onClick={() => set({ store: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+        {applied === "today" && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
+            Applied: Today
+            <button aria-label="Clear applied filter" onClick={() => set({ applied: undefined, filter: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
         {statusFilter && (
           <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
             Showing: {STATUS_LABEL[statusFilter]}

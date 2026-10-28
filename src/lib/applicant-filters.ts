@@ -19,7 +19,19 @@ export type ApplicantFilters = {
   source?: string;
   applied?: string; // "any" | "today" | "7" | "30"
   attentionOnly?: boolean;
+  /** IANA time zone used for "today" (e.g. the store's). Defaults to the browser's. */
+  timeZone?: string;
 };
+
+/** Calendar day (YYYY-MM-DD) of a moment in a time zone; falls back to the browser's zone. */
+export function dayKey(d: Date | string | number, timeZone?: string): string {
+  const date = new Date(d);
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  }
+}
 
 export function filterApplicants<T extends FilterableApp>(
   apps: T[],
@@ -35,7 +47,7 @@ export function filterApplicants<T extends FilterableApp>(
     if (f.attentionOnly && !a.needs_attention) return false;
     if (f.applied && f.applied !== "any") {
       const t = +new Date(a.created_at);
-      if (f.applied === "today" && new Date(a.created_at).toDateString() !== new Date(now).toDateString()) return false;
+      if (f.applied === "today" && dayKey(a.created_at, f.timeZone) !== dayKey(now, f.timeZone)) return false;
       if (f.applied === "7" && t < now - 7 * dayMs) return false;
       if (f.applied === "30" && t < now - 30 * dayMs) return false;
     }
