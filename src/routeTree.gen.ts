@@ -38,7 +38,9 @@ import { Route as BookTokenRouteImport } from './routes/book.$token'
 import { Route as CareersIndexRouteImport } from './routes/careers.index'
 import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
+import { Route as ECodeRouteImport } from './routes/e.$code'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
@@ -211,9 +213,19 @@ const CareersJobsRoute = CareersJobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => CareersRoute,
 } as any)
+const ECodeRoute = ECodeRouteImport.update({
+  id: '/e/$code',
+  path: '/e/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SCodeRoute = SCodeRouteImport.update({
+  id: '/s/$code',
+  path: '/s/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusTokenRoute = StatusTokenRouteImport.update({
@@ -362,7 +374,9 @@ export interface FileRoutesByFullPath {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers/': typeof CareersIndexRoute
@@ -414,7 +428,9 @@ export interface FileRoutesByTo {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers': typeof CareersIndexRoute
@@ -469,7 +485,9 @@ export interface FileRoutesById {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers/': typeof CareersIndexRoute
@@ -524,7 +542,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers/'
@@ -576,7 +596,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers'
@@ -630,7 +652,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers/'
@@ -665,7 +689,9 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   BookTokenRoute: typeof BookTokenRoute
+  ECodeRoute: typeof ECodeRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  SCodeRoute: typeof SCodeRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
@@ -894,11 +920,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CareersJobsRouteImport
       parentRoute: typeof CareersRoute
     }
+    '/e/$code': {
+      id: '/e/$code'
+      path: '/e/$code'
+      fullPath: '/e/$code'
+      preLoaderRoute: typeof ECodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$code': {
+      id: '/s/$code'
+      path: '/s/$code'
+      fullPath: '/s/$code'
+      preLoaderRoute: typeof SCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status/$token': {
@@ -1129,7 +1169,9 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   BookTokenRoute: BookTokenRoute,
+  ECodeRoute: ECodeRoute,
   InviteTokenRoute: InviteTokenRoute,
+  SCodeRoute: SCodeRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,
   ApiSmsInboundRoute: ApiSmsInboundRoute,

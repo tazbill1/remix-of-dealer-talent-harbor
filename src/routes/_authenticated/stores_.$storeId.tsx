@@ -10,6 +10,8 @@ import { isTestName } from "@/lib/display";
 import { InterviewHoursCard } from "@/components/interview-hours";
 import { StoreInterviewersCard } from "@/components/store-interviewers";
 import { StoreVideosCard } from "@/components/store-videos";
+import { QrCard } from "@/components/qr-card";
+import { scanLink } from "@/lib/scan";
 import { canPostJobs } from "@/lib/jobs";
 
 export const Route = createFileRoute("/_authenticated/stores_/$storeId")({
@@ -88,6 +90,12 @@ function StoreDashboard() {
         onSaved={() => qc.invalidateQueries({ queryKey: ["store-dash", org.orgId, storeId] })}
       />
       <StoreInterviewersCard orgId={org.orgId} storeId={store.id} />
+      <div className="rounded-2xl bg-background p-5 shadow-sm">
+        <h2 className="mb-1 text-lg">Store QR code</h2>
+        <p className="mb-4 text-sm text-muted-foreground">Put this on signs and flyers at the store. Applicants who scan it are tagged "Store QR code".</p>
+        <QrCard name={store.name} link={scanLink(typeof window !== "undefined" ? window.location.origin : "", "store", store.qr_code)} showLink
+          caption={`Scans open ${store.name}'s jobs.`} fileName={`${store.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-store-qr.png`} />
+      </div>
       <StoreVideosCard orgId={org.orgId} storeId={store.id}
         canEdit={canPostJobs(org.role, org.isPlatformAdmin) || org.role === "dealer_manager" || org.role === "hiring_manager"} />
       <div className="rounded-2xl bg-background p-5 shadow-sm">
