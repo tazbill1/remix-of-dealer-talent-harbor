@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** Statuses display in one neutral style; saved colors (STATUS_COLOR) are kept but not shown. */
 export function StatusPill({ status, className, label }: { status: AppStatus; className?: string; label?: string | undefined }) {
   return (
-    <span className={cn("inline-block rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-foreground", className)}>
+    <span className={cn("inline-block rounded-full bg-border px-2 py-0.5 text-xs font-semibold text-foreground", className)}>
       {label ?? STATUS_LABEL[status]}
     </span>
   );
