@@ -19,7 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] Analytics Reports: four scoped reports, date/store filters, printable layout and PDF download; verify admin/manager views.
+- [x] Analytics Reports: four read-only reports, date/region/store filters, test toggle, print and PDF; verified real admin (7 stores) and manager (4 assigned Dallas-region stores), PDF download and phone layout. No group logo is stored, so reports use a group monogram; unavailable historical attention is labeled current.
 - [x] Clean Integrations wording and matching cards, move Texting settings from Team, and verify unchanged values plus sidebar tooltip.
 - [x] Texting setup: group settings, store contacts, job overrides, delivery tracking and phone opt-outs; verified policies and save/reopen controls
 - [x] Texting engine: outbox with consent/STOP/texting-window checks, practice mode, Twilio adapter, inbound + delivery-receipt webhooks, assistant replies through the outbox, Claude switch (docs/texting-engine.md)
