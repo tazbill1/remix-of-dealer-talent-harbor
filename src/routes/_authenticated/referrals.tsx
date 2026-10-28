@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
 import { isTestName } from "@/lib/display";
-import { referralLink, referralReport, STAGE_LABEL, type ReportRow } from "@/lib/referrals";
+import { bonusStatusLabel, bonusTotals, referralLink, referralReport, type ReportRow } from "@/lib/referrals";
+import { DEFAULT_SETTINGS, DrawingList, ProgramRules, TierSettings, TotalsTable, type TierRow } from "@/components/referral-program";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,9 +25,9 @@ export const Route = createFileRoute("/_authenticated/referrals")({
   component: ReferralsPage,
 });
 
-type Referrer = { id: string; employee_name: string; store_id: string | null; department: string | null; email: string | null; phone: string | null; referral_code: string; active: boolean };
-type Draft = { id?: string; employee_name: string; store_id: string; department: string; email: string; phone: string; active: boolean };
-const EMPTY: Draft = { employee_name: "", store_id: "", department: "", email: "", phone: "", active: true };
+type Referrer = { id: string; employee_name: string; store_id: string | null; department: string | null; role_title: string | null; email: string | null; phone: string | null; referral_code: string; active: boolean };
+type Draft = { id?: string; employee_name: string; store_id: string; department: string; role_title: string; email: string; phone: string; active: boolean };
+const EMPTY: Draft = { employee_name: "", store_id: "", department: "", role_title: "", email: "", phone: "", active: true };
 const selectCls = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 const money = (n: number | null) => (n == null ? "—" : `$${Number(n).toLocaleString()}`);
 
@@ -44,14 +45,19 @@ function ReferralsPage() {
     queryKey: key,
     enabled: canView,
     queryFn: async () => {
-      const [refs, stores, apps, bonuses, settings] = await Promise.all([
-        supabase.from("referrers").select("id, employee_name, store_id, department, email, phone, referral_code, active").eq("org_id", org.orgId).order("employee_name"),
+      const [refs, stores, apps, bonuses, settings, tiers, entries, drawings, members] = await Promise.all([
+        supabase.from("referrers").select("id, employee_name, store_id, department, role_title, email, phone, referral_code, active").eq("org_id", org.orgId).order("employee_name"),
         supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
         supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id", org.orgId),
-        supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at").eq("org_id", org.orgId).order("due_date"),
-        supabase.from("referral_settings").select("bonus_30_amount, bonus_90_amount").eq("org_id", org.orgId).maybeSingle(),
+        supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id", org.orgId).order("due_date"),
+        supabase.from("referral_settings").select("payout_days, full_time_only, require_before_hire, excluded_roles, drawing_enabled, drawing_amount").eq("org_id", org.orgId).maybeSingle(),
+        supabase.from("referral_tiers").select("id, name, amount, covers, excludes, is_default, sort_order").eq("org_id", org.orgId).order("sort_order"),
+        supabase.from("referral_drawing_entries").select("id, quarter, applicant_id, referrer_id").eq("org_id", org.orgId).order("created_at"),
+        supabase.from("referral_drawings").select("quarter, amount, winner_entry_id, entry_count, picked_by, picked_at").eq("org_id", org.orgId),
+        supabase.from("org_members").select("user_id, email").eq("org_id", org.orgId),
       ]);
-      return { refs: (refs.data ?? []) as Referrer[], stores: stores.data ?? [], apps: apps.data ?? [], bonuses: bonuses.data ?? [], settings: settings.data };
+      return { refs: (refs.data ?? []) as Referrer[], stores: stores.data ?? [], apps: apps.data ?? [], bonuses: bonuses.data ?? [],
+        settings: settings.data ?? DEFAULT_SETTINGS, tiers: (tiers.data ?? []) as TierRow[], entries: entries.data ?? [], drawings: drawings.data ?? [], members: members.data ?? [] };
     },
   });
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -66,12 +72,15 @@ function ReferralsPage() {
   const appName = new Map(data.apps.map((a) => [a.id, a.full_name]));
   const realApps = data.apps.filter((a) => !isTestName(a.full_name));
   const report = referralReport(realApps, data.refs, data.stores);
+  const realIds = new Set(realApps.map((a) => a.id));
+  const totals = bonusTotals(data.bonuses.filter((b) => realIds.has(b.applicant_id)), new Map(data.apps.map((a) => [a.id, a.dealership_id])), data.stores);
+  const memberEmail = (uid: string | null) => data.members.find((m) => m.user_id === uid)?.email ?? "HR";
   const refresh = () => qc.invalidateQueries({ queryKey: key });
 
   async function save(d: Draft) {
     if (!d.employee_name.trim()) return toast.error("Add the employee's name.");
     const row = {
-      employee_name: d.employee_name.trim(), store_id: d.store_id || null, department: d.department.trim() || null,
+      employee_name: d.employee_name.trim(), store_id: d.store_id || null, department: d.department.trim() || null, role_title: d.role_title.trim() || null,
       email: d.email.trim() || null, phone: d.phone.trim() || null, active: d.active,
     };
     const res = d.id
@@ -112,14 +121,14 @@ function ReferralsPage() {
               <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
                 <div className="min-w-0">
                   <div className={cn("font-semibold", !r.active && "text-muted-foreground line-through")}>{r.employee_name}</div>
-                  <div className="text-xs text-muted-foreground">{storeName(r.store_id)}{r.department ? ` · ${r.department}` : ""} · Code {r.referral_code}{r.active ? "" : " · Inactive"}</div>
+                  <div className="text-xs text-muted-foreground">{storeName(r.store_id)}{r.role_title ? ` · ${r.role_title}` : ""}{r.department ? ` · ${r.department}` : ""} · Code {r.referral_code}{r.active ? "" : " · Inactive"}</div>
                   <div className="truncate text-xs text-sapphire">{link}</div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   <Button size="sm" variant="outline" onClick={() => copy(link, "Referral link")}><Copy />Copy link</Button>
                   <Button size="sm" variant="outline" onClick={() => setQrFor(r)}><QrCode />QR code</Button>
                   {isHr && <Button size="sm" variant="ghost" aria-label={`Edit ${r.employee_name}`} onClick={() => setDraft({
-                    id: r.id, employee_name: r.employee_name, store_id: r.store_id ?? "", department: r.department ?? "",
+                    id: r.id, employee_name: r.employee_name, store_id: r.store_id ?? "", department: r.department ?? "", role_title: r.role_title ?? "",
                     email: r.email ?? "", phone: r.phone ?? "", active: r.active,
                   })}><Pencil />Edit</Button>}
                 </div>
@@ -131,11 +140,14 @@ function ReferralsPage() {
 
       <section className="space-y-3">
         <h2 className="text-xl">Bonuses</h2>
-        {isHr && <BonusAmounts orgId={org.orgId} initial={data.settings} onSaved={refresh} />}
+        <h3 className="font-semibold">Bonus tiers</h3>
+        <TierSettings key={data.tiers.map((t) => t.id).join()} orgId={org.orgId} tiers={data.tiers} canEdit={isHr} onSaved={refresh} />
+        <h3 className="font-semibold">Program rules</h3>
+        <ProgramRules orgId={org.orgId} initial={data.settings} canEdit={isHr} onSaved={refresh} />
         <div className="overflow-x-auto rounded-2xl border bg-background">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground"><tr>
-              <th className="p-3">Employee</th><th className="p-3">Applicant</th><th className="p-3">Payout</th><th className="p-3">Amount</th><th className="p-3">Due</th><th className="p-3">Status</th><th className="p-3" />
+              <th className="p-3">Employee</th><th className="p-3">Applicant</th><th className="p-3">Tier</th><th className="p-3">Amount</th><th className="p-3">Due</th><th className="p-3">Status</th><th className="p-3" />
             </tr></thead>
             <tbody className="divide-y">
               {data.bonuses.length === 0 && <tr><td colSpan={7} className="p-4 text-muted-foreground">Bonuses appear here when a referred applicant is marked Hired.</td></tr>}
@@ -143,12 +155,12 @@ function ReferralsPage() {
                 <tr key={b.id}>
                   <td className="p-3">{refName.get(b.referrer_id) ?? "—"}</td>
                   <td className="p-3"><Link to="/applicants" search={{ applicant: b.applicant_id }} className="text-sapphire underline">{appName.get(b.applicant_id) ?? "Applicant"}</Link></td>
-                  <td className="p-3">{STAGE_LABEL[b.payout_stage] ?? b.payout_stage}</td>
+                  <td className="p-3">{b.tier_name ?? (b.payout_stage === "30_day" ? "30-day" : "—")}</td>
                   <td className="p-3">{money(b.amount)}</td>
                   <td className="p-3">{b.due_date ? new Date(`${b.due_date}T12:00:00`).toLocaleDateString() : "—"}</td>
-                  <td className="p-3 capitalize">{b.status}{b.paid_at && b.status === "paid" ? ` ${new Date(b.paid_at).toLocaleDateString()}` : ""}</td>
+                  <td className="p-3">{bonusStatusLabel(b)}{b.paid_at && b.status === "paid" ? ` ${new Date(b.paid_at).toLocaleDateString()}` : ""}</td>
                   <td className="whitespace-nowrap p-3 text-right">
-                    {!isHr ? null : b.status === "pending" ? (
+                    {!isHr || b.status === "not_eligible" ? null : b.status === "pending" ? (
                       <>
                         <Button size="sm" variant="outline" onClick={() => setBonus(b.id, "paid")}>Mark paid</Button>{" "}
                         <Button size="sm" variant="ghost" onClick={() => setBonus(b.id, "void")}>Void</Button>
@@ -162,6 +174,14 @@ function ReferralsPage() {
         </div>
       </section>
 
+      {data.settings.drawing_enabled && (
+        <section className="space-y-3">
+          <h2 className="text-xl">Quarterly drawing</h2>
+          <DrawingList orgId={org.orgId} entries={data.entries} drawings={data.drawings} refName={refName} appName={appName}
+            canPick={isHr} pickerName={memberEmail} onPicked={refresh} />
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-xl">Report</h2>
         <p className="text-sm text-muted-foreground">All time. Test applicants are left out.</p>
@@ -169,6 +189,10 @@ function ReferralsPage() {
           <ReportTable title="Referrals vs other sources" first="Source" rows={report.vsOther} />
           <ReportTable title="By employee" first="Employee" rows={report.byEmployee} />
           <ReportTable title="By store" first="Store" rows={report.byStore} />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TotalsTable title="Bonus totals by tier" first="Tier" rows={totals.byTier} />
+          <TotalsTable title="Bonus totals by store" first="Store" rows={totals.byStore} />
         </div>
       </section>
 
@@ -182,6 +206,7 @@ function ReferralsPage() {
                 <select id="rs" className={selectCls} value={draft.store_id} onChange={(e) => setDraft({ ...draft, store_id: e.target.value })}>
                   <option value="">All stores</option>{data.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select></div>
+              <div className="space-y-1.5"><Label htmlFor="rr">Role / title (optional)</Label><Input id="rr" placeholder="e.g. Service Technician" value={draft.role_title} onChange={(e) => setDraft({ ...draft, role_title: e.target.value })} /></div>
               <div className="space-y-1.5"><Label htmlFor="rd">Department (optional)</Label><Input id="rd" value={draft.department} onChange={(e) => setDraft({ ...draft, department: e.target.value })} /></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5"><Label htmlFor="re">Email (optional)</Label><Input id="re" type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
@@ -217,29 +242,6 @@ function ReferralQr({ name, link }: { name: string; link: string }) {
         {qr && <Button size="sm" asChild><a href={qr} download={`${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-referral-qr.png`}><Download />Download PNG</a></Button>}
         <Button size="sm" variant="outline" onClick={() => copy(link, "QR link")}><Copy />Copy link</Button>
       </div>
-    </div>
-  );
-}
-
-function BonusAmounts({ orgId, initial, onSaved }: { orgId: string; initial: { bonus_30_amount: number | null; bonus_90_amount: number | null } | null; onSaved: () => void }) {
-  const [a30, setA30] = useState(initial?.bonus_30_amount?.toString() ?? "");
-  const [a90, setA90] = useState(initial?.bonus_90_amount?.toString() ?? "");
-  const num = (v: string) => (v.trim() === "" ? null : Math.max(0, Number(v)));
-  async function save() {
-    const n30 = num(a30), n90 = num(a90);
-    if ([n30, n90].some((n) => n !== null && Number.isNaN(n))) return toast.error("Amounts must be numbers.");
-    const { data, error } = await supabase.from("referral_settings")
-      .upsert({ org_id: orgId, bonus_30_amount: n30, bonus_90_amount: n90, updated_at: new Date().toISOString() }).select("org_id").maybeSingle();
-    if (error || !data) return toast.error("Couldn't save bonus amounts.");
-    toast.success("Bonus amounts saved");
-    onSaved();
-  }
-  return (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl border bg-background p-3">
-      <div className="space-y-1.5"><Label htmlFor="b30">30-day bonus ($, optional)</Label><Input id="b30" className="w-36" inputMode="decimal" value={a30} onChange={(e) => setA30(e.target.value)} /></div>
-      <div className="space-y-1.5"><Label htmlFor="b90">90-day bonus ($, optional)</Label><Input id="b90" className="w-36" inputMode="decimal" value={a90} onChange={(e) => setA90(e.target.value)} /></div>
-      <Button variant="outline" onClick={save}>Save amounts</Button>
-      <p className="w-full text-xs text-muted-foreground">Used for new bonuses when a referred applicant is hired. HR gets an alert in the bell when each one comes due. Nothing is texted or emailed.</p>
     </div>
   );
 }
