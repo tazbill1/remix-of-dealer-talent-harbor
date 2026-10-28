@@ -33,7 +33,7 @@ export function StatusRemindersSettings({ orgId, canEdit }: { orgId: string; can
 
   async function save(status: string, patch: Partial<ReminderRule>) {
     const existing = rules.find((r) => r.status === status);
-    const row = { org_id: orgId, status: status as AppStatus, remind_after_days: existing?.remind_after_days ?? 3, is_active: existing?.is_active ?? true, ...patch, updated_at: new Date().toISOString() };
+    const row = { org_id: orgId, remind_after_days: patch.remind_after_days ?? existing?.remind_after_days ?? 3, is_active: patch.is_active ?? existing?.is_active ?? true, status: status as AppStatus, updated_at: new Date().toISOString() };
     const { data, error } = await supabase.from("status_reminder_rules").upsert(row, { onConflict: "org_id,status" }).select("id").maybeSingle();
     if (error || !data) { toast.error(error?.message ?? "Couldn't save. Please try again."); return; }
     toast.success("Reminder saved");
