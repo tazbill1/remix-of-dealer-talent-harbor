@@ -109,7 +109,7 @@ function Integrations() {
           what="Two-way texts with candidates and hiring managers: welcome, screening, manager summaries, nudges, reminders and 30/60/90 check-ins."
           note="WerkandMe sets up and manages each store's texting number."
         >
-          <ul className="mt-4 space-y-1 border-t pt-4 text-sm" aria-label="Store texting">
+          <ul className="mt-4 max-h-60 space-y-1 overflow-y-auto border-t pt-4 text-sm" aria-label="Store texting">
             {texting === undefined && <li className="text-muted-foreground">Loading stores…</li>}
             {texting?.length === 0 && <li className="text-muted-foreground">No stores yet.</li>}
             {texting?.map((t) => (
