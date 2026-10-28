@@ -115,7 +115,6 @@ function Applicants() {
     if (search.applicant) void navigate({ search: (prev) => ({ ...prev, applicant: undefined, tab: undefined, interview: undefined }), replace: true });
   };
   const [dragId, setDragId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
   const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [emailing, setEmailing] = useState<string[] | null>(null);
