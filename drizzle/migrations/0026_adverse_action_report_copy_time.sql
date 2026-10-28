@@ -1,0 +1,2 @@
+ALTER TABLE public.adverse_actions ADD COLUMN IF NOT EXISTS report_copy_provided_at timestamptz;
+COMMENT ON COLUMN public.adverse_actions.report_copy_provided_at IS 'HR-recorded time the report copy was provided; historical confirmations may have no recorded time.';

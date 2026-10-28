@@ -25,6 +25,7 @@ export type Database = {
           pre_notice_sent_at: string | null
           reason: string | null
           report_copy_provided: boolean
+          report_copy_provided_at: string | null
           status: string
           store_id: string | null
           updated_at: string
@@ -40,6 +41,7 @@ export type Database = {
           pre_notice_sent_at?: string | null
           reason?: string | null
           report_copy_provided?: boolean
+          report_copy_provided_at?: string | null
           status?: string
           store_id?: string | null
           updated_at?: string
@@ -55,6 +57,7 @@ export type Database = {
           pre_notice_sent_at?: string | null
           reason?: string | null
           report_copy_provided?: boolean
+          report_copy_provided_at?: string | null
           status?: string
           store_id?: string | null
           updated_at?: string
