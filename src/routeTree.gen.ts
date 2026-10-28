@@ -19,6 +19,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedApplicantsRouteImport } from './routes/_authenticated/applicants'
 import { Route as AuthenticatedAutomationsRouteImport } from './routes/_authenticated/automations'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedConsentsRouteImport } from './routes/_authenticated/consents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
@@ -103,6 +104,11 @@ const AuthenticatedAutomationsRoute =
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConsentsRoute = AuthenticatedConsentsRouteImport.update({
+  id: '/consents',
+  path: '/consents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -301,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/applicants': typeof AuthenticatedApplicantsRoute
   '/automations': typeof AuthenticatedAutomationsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/consents': typeof AuthenticatedConsentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
@@ -346,6 +353,7 @@ export interface FileRoutesByTo {
   '/applicants': typeof AuthenticatedApplicantsRoute
   '/automations': typeof AuthenticatedAutomationsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/consents': typeof AuthenticatedConsentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/_authenticated/applicants': typeof AuthenticatedApplicantsRoute
   '/_authenticated/automations': typeof AuthenticatedAutomationsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/consents': typeof AuthenticatedConsentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
     | '/applicants'
     | '/automations'
     | '/calendar'
+    | '/consents'
     | '/dashboard'
     | '/integrations'
     | '/interview-kits'
@@ -487,6 +497,7 @@ export interface FileRouteTypes {
     | '/applicants'
     | '/automations'
     | '/calendar'
+    | '/consents'
     | '/dashboard'
     | '/integrations'
     | '/interview-kits'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/_authenticated/applicants'
     | '/_authenticated/automations'
     | '/_authenticated/calendar'
+    | '/_authenticated/consents'
     | '/_authenticated/dashboard'
     | '/_authenticated/integrations'
     | '/_authenticated/interview-kits'
@@ -671,6 +683,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/consents': {
+      id: '/_authenticated/consents'
+      path: '/consents'
+      fullPath: '/consents'
+      preLoaderRoute: typeof AuthenticatedConsentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -926,6 +945,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedApplicantsRoute: typeof AuthenticatedApplicantsRoute
   AuthenticatedAutomationsRoute: typeof AuthenticatedAutomationsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedConsentsRoute: typeof AuthenticatedConsentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
@@ -944,6 +964,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApplicantsRoute: AuthenticatedApplicantsRoute,
   AuthenticatedAutomationsRoute: AuthenticatedAutomationsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedConsentsRoute: AuthenticatedConsentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
