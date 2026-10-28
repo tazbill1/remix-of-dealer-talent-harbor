@@ -8,7 +8,7 @@ export const groupJourney: Step[] = [
   { title: "Quick mobile apply", text: "Candidates apply in under two minutes from Indeed, Google Jobs or your site. No account needed." },
   { title: "Instant AI welcome", text: "The store's HR assistant says hi right away, asks job-specific questions and shares a welcome video." },
   { title: "No ghosting", text: "Applicants get a live status page and friendly check-ins. Managers get nudged when reviews run late." },
-  { title: "Smarter interviews", text: "Tailored questions from the resume and chats. Interviews are recorded, transcribed and graded." },
+  { title: "Smarter interviews", text: "Tailored questions from the resume and chats. Interviews are recorded (with the candidate's OK), transcribed, and scored with AI suggestions your team confirms." },
   { title: "Offer or share", text: "Hire with a clean handoff, or flag great people as open to your other stores. Never outside your group." },
   { title: "30 / 60 / 90 days", text: "Automatic check-ins with new hires and managers spot turnover risk early." },
 ];

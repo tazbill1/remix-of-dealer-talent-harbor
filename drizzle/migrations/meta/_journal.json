@@ -169,6 +169,20 @@
       "when": 1793160523862,
       "tag": "0023_restrict_compliance_record_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793161117377,
+      "tag": "0024_interview_recording_setup",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793161272442,
+      "tag": "0025_lock_private_recording_writes",
+      "breakpoints": true
     }
   ]
 }

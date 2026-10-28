@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { IntegrationCard as Card } from "@/components/integration-card";
 import { TextingSettings } from "@/components/texting-settings";
 import { canEditIntegrationSettings } from "@/lib/integration-access";
+import { InterviewRecordingSettings } from "@/components/interview-recording-settings";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
   head: () => ({ meta: [
@@ -93,6 +94,7 @@ function Integrations() {
         </p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
+        <InterviewRecordingSettings orgId={org.orgId} canEdit={canEdit} />
         <Card
           icon={MessageSquare}
           title="Texting (Twilio)"

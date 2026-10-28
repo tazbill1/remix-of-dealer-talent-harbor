@@ -11,6 +11,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Post jobs across every store, push them to Indeed, and keep every applicant engaged with a friendly AI HR assistant." },
       { property: "og:title", content: "WerkandMe Hiring | Applicant tracking for dealer groups" },
       { property: "og:description", content: "One hub for every store's hiring, with a friendly AI HR assistant for each dealership." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
