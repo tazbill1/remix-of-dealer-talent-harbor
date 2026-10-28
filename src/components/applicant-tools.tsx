@@ -228,7 +228,7 @@ function ics(i: { id: string; starts_at: string; duration_min: number; location:
     `DTSTART:${f(s)}`, `DTEND:${f(e)}`, `SUMMARY:${title}`, `LOCATION:${i.location ?? ""}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
 }
 
-export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterviewId }: { appId: string; orgId: string; title: string; onChanged: () => void; focusInterviewId?: string }) {
+export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterviewId }: { appId: string; orgId: string; title: string; onChanged: () => void; focusInterviewId?: string | undefined }) {
   const qc = useQueryClient();
   const [when, setWhen] = useState("");
   const schedule = useServerFn(scheduleStaffInterview);

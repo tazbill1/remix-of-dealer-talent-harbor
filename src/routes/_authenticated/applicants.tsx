@@ -385,7 +385,7 @@ type PanelTab = (typeof PANEL_TABS)[number]["id"];
 // Remembered for the session so reopening the panel lands on the last tab used.
 let lastPanelTab: PanelTab = "overview";
 
-function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { initialTab?: PanelTab; interviewId?: string; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => Promise<boolean>; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [target, setTarget] = useState("");
