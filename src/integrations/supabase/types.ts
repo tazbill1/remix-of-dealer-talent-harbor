@@ -91,6 +91,7 @@ export type Database = {
       }
       applications: {
         Row: {
+          ai_paused_at: string | null
           ai_summary: string | null
           answers: Json
           candidate_id: string | null
@@ -104,6 +105,7 @@ export type Database = {
           id: string
           job_id: string
           knockout_failed: boolean
+          needs_attention: string | null
           notes: string | null
           open_to_other_stores: boolean
           org_id: string
@@ -118,6 +120,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
           candidate_id?: string | null
@@ -131,6 +134,7 @@ export type Database = {
           id?: string
           job_id: string
           knockout_failed?: boolean
+          needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
           org_id: string
@@ -145,6 +149,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_paused_at?: string | null
           ai_summary?: string | null
           answers?: Json
           candidate_id?: string | null
@@ -158,6 +163,7 @@ export type Database = {
           id?: string
           job_id?: string
           knockout_failed?: boolean
+          needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
           org_id?: string
