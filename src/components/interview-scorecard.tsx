@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/org";
 import {
@@ -21,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { writeTailoredQuestions } from "@/lib/tailored-questions.functions";
 
 const cardsKey = (appId: string) => ["scorecards", appId];
 
@@ -212,6 +214,7 @@ function ScorecardDialog({
               Score what you heard about the job only. Your scorecard is shared with others who can
               see this applicant.
             </p>
+            <TailoredQuestions appId={appId} />
             {/* Recording hidden for now */}
             {questions.map((q, i) => {
               const a = answers.find((x) => x.questionId === q.id);
@@ -295,5 +298,59 @@ function ScorecardDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** AI-written questions for this applicant (resume, application, texts). Not scored, not saved. */
+function TailoredQuestions({ appId }: { appId: string }) {
+  const write = useServerFn(writeTailoredQuestions);
+  const { data, isFetching, error, refetch } = useQuery({
+    queryKey: ["tailored-questions", appId],
+    queryFn: () => write({ data: { applicationId: appId } }),
+    enabled: false,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+    retry: false,
+  });
+  const name = data?.firstName ?? "this applicant";
+  return (
+    <div className="space-y-2 rounded-xl border border-dashed p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold">Questions for {name}</p>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isFetching}
+          onClick={() => refetch()}
+        >
+          <Sparkles />
+          {isFetching ? "Writing…" : data ? "Write new ones" : "Write questions"}
+        </Button>
+      </div>
+      {!data && !isFetching && !error && (
+        <p className="text-xs text-muted-foreground">
+          AI suggests a few follow-ups from their resume, application answers and texts, like why
+          they left a job after a short stay. Not scored; jot what they say in your overall notes.
+        </p>
+      )}
+      {error && <p className="text-xs text-destructive">{(error as Error).message}</p>}
+      {data && (
+        <>
+          <ol className="list-decimal space-y-2 pl-5 text-sm">
+            {data.questions.map((q, i) => (
+              <li key={i}>
+                {q.text}
+                {q.why && <span className="block text-xs text-muted-foreground">Why: {q.why}</span>}
+              </li>
+            ))}
+          </ol>
+          <p className="text-xs text-muted-foreground">
+            {data.hadResume && !data.resumeRead ? "The resume couldn't be read, so these come from the application and texts. " : ""}
+            AI suggestions: check them before asking. Skip anything about age, family, health,
+            religion or other personal topics.
+          </p>
+        </>
+      )}
+    </div>
   );
 }

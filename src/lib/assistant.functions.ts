@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { docxText } from "@/lib/docx-text";
 
 async function ai() {
   const m = await import("@/lib/assistant.server");
@@ -22,14 +23,6 @@ const resumeSchema = z.object({
   suggested_job_id: z.string().nullable(),
 });
 export type ParsedResume = z.infer<typeof resumeSchema>;
-
-async function docxText(b64: string) {
-  const { unzipSync, strFromU8 } = await import("fflate");
-  const files = unzipSync(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
-  const xml = files["word/document.xml"];
-  if (!xml) throw new Error("That Word file looks empty or damaged.");
-  return strFromU8(xml).replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
-}
 
 export const parseResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

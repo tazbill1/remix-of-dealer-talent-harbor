@@ -51,7 +51,8 @@
 - [x] Live email (notify.workwithwerk.com verified; sending address penny@notify.workwithwerk.com, mode live)
 - [ ] Live texts (blocked: Twilio)
 - [~] Per-store AI HR assistant: texting, check-ins and nudges done; group settings (tone, facts, screening, hand-off) and take-over done; weekly HR summary done
-- [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
+- [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading
+- [x] AI interview questions tailored to each applicant (resume, application answers, texts), shown in the scorecard; protected topics filtered out; written on demand, not saved
 - [x] Automated status moves from events (manager 1/2, candidate booking, offer sent, offer signed → Hired option) and HR-defined status rules (no reply, no change in stage, failed screening question)
 
 - [x] Simplify BoldSign connection and setup into one section; verified connection checks, template save/reopen, copied production address and mobile layout.
