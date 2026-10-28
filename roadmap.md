@@ -19,7 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] HR consent evidence review and confirmed withdrawals; preserve originals and existing permissions.
+- [x] HR consent evidence review and confirmed withdrawals; authenticated review and cancellation verified, preservation tests pass. No existing consent withdrawn during testing.
 - [x] Recording setup authorized and created; consent-first microphone recording, transcript, evidence suggestions and manual-only Submit verified; recording restored off. Daily private audio cleanup scheduled.
 - [ ] Recording follow-up verification: real Zoom/Teams/Meet tab capture and uploaded video decoding remain unverified; daily cleanup needs published callback verification.
 - [x] Interview row links, sticky scorecard progress and per-interview submitted summaries; authenticated click verified, two scores picked and closed without saving, existing access unchanged.
