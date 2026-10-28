@@ -43,3 +43,4 @@
 - Interview kits use can_post_jobs; scorecards are author-owned per interview, with pure rules in interview-kits.ts. Why: scores inform humans, never stages.
 - Interview recording is hidden from all screens (code, table and bucket kept; setting stays off) until the client re-enables it. Why: paused feature, data preserved.
 - LinkedIn profile links normalize through src/lib/linkedin.ts (pure, tested); the apply form and staff panel share it. Why: one validation rule and one canonical stored form.
+- Store setup rules (required fields, US phone, defaults, Missing info) live in src/lib/store-validation.ts (pure, tested) and the shared StoreFormFields; app-side only. Why: create and edit forms enforce the same rules while incomplete existing stores keep working.
