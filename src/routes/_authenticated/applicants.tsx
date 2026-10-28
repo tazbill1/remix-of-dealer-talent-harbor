@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck } from "lucide-react";
+import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,15 +28,30 @@ import { notifyApplicants } from "@/lib/email.functions";
 import { UserPlus } from "lucide-react";
 import { z } from "zod";
 import { isTestName, plural, sourceLabel } from "@/lib/display";
+import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applicant-filters";
+
+type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }] }),
   validateSearch: z.object({
-    filter: z.enum(["today"]).optional(),
+    q: z.string().optional(),
+    job: z.string().optional(),
+    source: z.string().optional(),
+    applied: z.string().optional(),
+    attention: z.string().optional(),
+    sort: z.string().optional(),
+    view: z.string().optional(),
     status: z.string().optional(),
+    filter: z.string().optional(),
+    region: z.string().optional(),
+    store: z.string().optional(),
+    tests: z.string().optional(),
   }),
   component: Applicants,
 });
+
+const selectCls = "h-9 rounded-md border bg-background px-2 text-sm";
 
 function Applicants() {
   const org = useOrg();
@@ -56,9 +71,20 @@ function Applicants() {
   });
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const [store, setStore] = useState("all");
-  const [region, setRegion] = useState("all");
-  const [showTests, setShowTests] = useState(false);
+  const set = (patch: Partial<Record<SearchKey, string | undefined>>) =>
+    navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
+
+  const q = search.q ?? "";
+  const jobFilter = search.job ?? "all";
+  const sourceFilter = search.source ?? "all";
+  const applied = search.applied ?? (search.filter === "today" ? "today" : "any");
+  const attentionOnly = search.attention === "1";
+  const sort = search.sort ?? "newest";
+  const view = search.view === "list" ? "list" : "board";
+  const region = search.region ?? "all";
+  const store = search.store ?? "all";
+  const showTests = search.tests === "1";
+
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -96,15 +122,20 @@ function Applicants() {
   const regionName = (storeId: string) => data?.regions.find((r) => r.id === regionOf(storeId))?.name ?? null;
   const inRegion = (storeId: string) => region === "all" || (region === "none" ? !regionOf(storeId) : regionOf(storeId) === region);
   const storeOptions = (data?.stores ?? []).filter((s) => inRegion(s.id));
-  const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
-  const todayStr = new Date().toDateString();
-  const apps = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
-    || (store === "shared" && a.open_to_other_stores))
-    && (showTests || !isTestName(a.full_name))
-    && (search.filter !== "today" || new Date(a.created_at).toDateString() === todayStr)
-    && (!statusFilter || a.status === statusFilter));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
+
+  const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
+  const base = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
+    || (store === "shared" && a.open_to_other_stores))
+    && (showTests || !isTestName(a.full_name))
+    && (!statusFilter || a.status === statusFilter));
+  const apps = filterApplicants(base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly }, job);
+  const sortedApps = sortApplicants(apps, sort, job, storeName);
+  const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
+  const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || region !== "all" || store !== "all";
+  const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, region: undefined, store: undefined });
+
   // Must come after job() and storeName(): they're used while rendering.
   const emailRecipients = (data?.apps ?? [])
     .filter((a) => emailing?.includes(a.id))
@@ -128,25 +159,94 @@ function Applicants() {
     qc.invalidateQueries({ queryKey: key });
   }
 
+  const headerBtn = "hover:text-foreground";
+  const listHeaders: { label: string; asc: string; desc?: string }[] = [
+    { label: "Name", asc: "name", desc: "name_desc" },
+    { label: "Job", asc: "job" },
+    { label: "Store", asc: "store" },
+    { label: "Stage", asc: "stage" },
+    { label: "Source", asc: "source" },
+    { label: "Applied", asc: "newest", desc: "oldest" },
+    { label: "Rating", asc: "rating", desc: "rating_asc" },
+  ];
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-3xl">Applicants</h1><p className="text-muted-foreground">Drag a card to move it along, or tick several to update them at once.</p></div>
-        <div className="flex flex-wrap gap-2"><Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex overflow-hidden rounded-md border text-sm" role="group" aria-label="View">
+            <button aria-pressed={view === "board"} onClick={() => set({ view: undefined })}
+              className={cn("flex items-center gap-1.5 px-3 py-1.5", view === "board" ? "bg-sapphire text-primary-foreground" : "hover:bg-secondary")}>
+              <LayoutGrid className="size-4" />Board</button>
+            <button aria-pressed={view === "list"} onClick={() => set({ view: "list" })}
+              className={cn("flex items-center gap-1.5 px-3 py-1.5", view === "list" ? "bg-sapphire text-primary-foreground" : "hover:bg-secondary")}>
+              <List className="size-4" />List</button>
+          </div>
+          <Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input aria-label="Search applicants" placeholder="Search applicants" value={q}
+            onChange={(e) => set({ q: e.target.value || undefined })} className="h-9 w-56 pl-8 pr-7" />
+          {q && <button aria-label="Clear search" onClick={() => set({ q: undefined })}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
+        </div>
         {(data?.regions.length ?? 0) > 0 && (
-          <select aria-label="Region" className="h-9 rounded-md border bg-background px-2 text-sm" value={region}
-            onChange={(e) => { setRegion(e.target.value); if (store !== "shared") setStore("all"); }}>
+          <select aria-label="Region" className={selectCls} value={region}
+            onChange={(e) => set({ region: e.target.value === "all" ? undefined : e.target.value, ...(store !== "shared" ? { store: undefined } : {}) })}>
             <option value="all">All regions</option>
             {data?.regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             <option value="none">No region</option>
           </select>
         )}
-        <select aria-label="Store" className="h-9 rounded-md border bg-background px-2 text-sm" value={store} onChange={(e) => setStore(e.target.value)}>
+        <select aria-label="Store" className={selectCls} value={store} onChange={(e) => set({ store: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All stores</option>
           <option value="shared">Open to other stores</option>
           {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select></div>
+        </select>
+        <select aria-label="Job" className={selectCls} value={jobFilter} onChange={(e) => set({ job: e.target.value === "all" ? undefined : e.target.value })}>
+          <option value="all">All jobs</option>
+          {(data?.jobs ?? []).map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
+        </select>
+        <select aria-label="Source" className={selectCls} value={sourceFilter} onChange={(e) => set({ source: e.target.value === "all" ? undefined : e.target.value })}>
+          <option value="all">All sources</option>
+          {sourceOptions.map((s) => <option key={s} value={s}>{sourceLabel(s)}</option>)}
+        </select>
+        <select aria-label="Applied" className={selectCls} value={applied} onChange={(e) => set({ applied: e.target.value === "any" ? undefined : e.target.value, filter: undefined })}>
+          <option value="any">Any time</option>
+          <option value="today">Today</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox checked={attentionOnly} onCheckedChange={(c) => set({ attention: c === true ? "1" : undefined })} />
+          Needs attention
+        </label>
+        <select aria-label="Sort" className={selectCls} value={sort} onChange={(e) => set({ sort: e.target.value === "newest" ? undefined : e.target.value })}>
+          {SORT_MENU.map((s) => <option key={s} value={s}>{SORTS[s]?.label ?? s}</option>)}
+          {!(SORT_MENU as readonly string[]).includes(sort) && <option value={sort}>{SORTS[sort]?.label ?? sort}</option>}
+        </select>
+        {filtersActive && <button className="text-sm text-sapphire underline" onClick={clearFilters}>Clear filters</button>}
       </div>
+
+      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+        <span>Showing {apps.length} of {plural(base.length, "applicant")}</span>
+        <label className="flex items-center gap-2">
+          <Checkbox checked={showTests} onCheckedChange={(c) => set({ tests: c === true ? "1" : undefined })} />
+          Show test applicants
+        </label>
+        {statusFilter && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
+            Showing: {STATUS_LABEL[statusFilter]}
+            <button aria-label="Clear filter" onClick={() => set({ status: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+      </div>
+
       <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
         jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, dealership_id: j.dealership_id, label: `${storeName(j.dealership_id)} · ${j.title}` }))} />
       {checked.length > 0 && (
@@ -161,57 +261,81 @@ function Applicants() {
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-4">
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Checkbox checked={showTests} onCheckedChange={(c) => setShowTests(c === true)} />
-          Show test applicants
-        </label>
-        {(search.filter === "today" || statusFilter) && (
-          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
-            Showing: {search.filter === "today" ? "Applied today" : STATUS_LABEL[statusFilter!]}
-            <button aria-label="Clear filter" onClick={() => navigate({ search: {} })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
-          </span>
-        )}
-      </div>
-      <div className="overflow-x-auto pb-4">
-      <div className="grid min-w-[900px] grid-cols-6 gap-2">
-        {STATUSES.map((st) => {
-          const col = apps.filter((a) => a.status === st);
-          return (
-            <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
-              <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
-                <span className={cn(st === "hired" && "text-lime")}>{STATUS_LABEL[st]}</span>
-                <span className="flex items-center gap-2 text-muted-foreground">{col.length}
-                  {col.length > 0 && <Checkbox aria-label={`Select all ${STATUS_LABEL[st]}`} checked={col.every((a) => checked.includes(a.id))}
-                    onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...col.map((a) => a.id)])] : prev.filter((id) => !col.some((a) => a.id === id)))} />}</span>
-              </div>
-              <div className="space-y-2">
-                {col.map((a) => (
-                  <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
-                    onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
-                    className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
-                    <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
-                      <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
-                    <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
-                    {a.knockout_failed && (
-                      <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
-                    )}
-                    <BackgroundCheckBadge status={a.background_check_status} />
-                    {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
-                      <span>{new Date(a.created_at).toLocaleDateString()}</span>
+
+      {view === "board" ? (
+        <div className="overflow-x-auto pb-4">
+        <div className="grid min-w-[900px] grid-cols-6 gap-2">
+          {STATUSES.map((st) => {
+            const col = sortedApps.filter((a) => a.status === st);
+            return (
+              <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
+                <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
+                  <span className={cn(st === "hired" && "text-lime")}>{STATUS_LABEL[st]}</span>
+                  <span className="flex items-center gap-2 text-muted-foreground">{col.length}
+                    {col.length > 0 && <Checkbox aria-label={`Select all ${STATUS_LABEL[st]}`} checked={col.every((a) => checked.includes(a.id))}
+                      onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...col.map((a) => a.id)])] : prev.filter((id) => !col.some((a) => a.id === id)))} />}</span>
+                </div>
+                <div className="space-y-2">
+                  {col.map((a) => (
+                    <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
+                      onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
+                      className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
+                      <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
+                        <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
+                      <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
+                      {a.knockout_failed && (
+                        <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
+                      )}
+                      <BackgroundCheckBadge status={a.background_check_status} />
+                      {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
+                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
+                        <span>{new Date(a.created_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-      </div>
+            );
+          })}
+        </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl bg-background shadow-sm">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                {listHeaders.map((h) => (
+                  <th key={h.label} className="px-3 py-2 font-medium">
+                    <button className={cn(headerBtn, sort === h.asc || sort === h.desc ? "text-foreground" : "")}
+                      onClick={() => set({ sort: h.desc && sort === h.asc ? h.desc : h.asc })}>
+                      {h.label}{(sort === h.asc || sort === h.desc) ? (sort === h.asc ? " ↓" : " ↑") : ""}
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedApps.map((a) => (
+                <tr key={a.id} onClick={() => setSelected(a.id)} className="cursor-pointer border-b last:border-0 hover:bg-secondary/60">
+                  <td className="px-3 py-2.5 font-medium">{a.full_name}</td>
+                  <td className="px-3 py-2.5">{job(a.job_id)}</td>
+                  <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
+                  <td className="px-3 py-2.5">{STATUS_LABEL[a.status]}</td>
+                  <td className="px-3 py-2.5">{sourceLabel(a.source)}</td>
+                  <td className="px-3 py-2.5">{new Date(a.created_at).toLocaleDateString()}</td>
+                  <td className="px-3 py-2.5">{a.rating ?? "—"}</td>
+                </tr>
+              ))}
+              {sortedApps.length === 0 && (
+                <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">No applicants match.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <EmailCompose open={!!emailing} onOpenChange={(o) => !o && setEmailing(null)} orgId={org.orgId}
         recipients={emailRecipients} onSent={() => setChecked([])} />
