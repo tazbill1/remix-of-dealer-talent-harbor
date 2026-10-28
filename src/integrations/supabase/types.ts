@@ -1467,6 +1467,264 @@ export type Database = {
           },
         ]
       }
+      onboarding_checklist_items: {
+        Row: {
+          checklist_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          file_path: string | null
+          id: string
+          item_type: string
+          notes: string | null
+          org_id: string
+          required: boolean
+          sort_order: number
+          store_id: string
+          title: string
+          updated_at: string
+          who_completes: string
+        }
+        Insert: {
+          checklist_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          file_path?: string | null
+          id?: string
+          item_type: string
+          notes?: string | null
+          org_id: string
+          required?: boolean
+          sort_order?: number
+          store_id: string
+          title: string
+          updated_at?: string
+          who_completes: string
+        }
+        Update: {
+          checklist_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          file_path?: string | null
+          id?: string
+          item_type?: string
+          notes?: string | null
+          org_id?: string
+          required?: boolean
+          sort_order?: number
+          store_id?: string
+          title?: string
+          updated_at?: string
+          who_completes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklist_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklist_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_checklists: {
+        Row: {
+          application_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          org_id: string
+          start_date: string | null
+          status: string
+          store_id: string
+          template_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          org_id: string
+          start_date?: string | null
+          status?: string
+          store_id: string
+          template_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          start_date?: string | null
+          status?: string
+          store_id?: string
+          template_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_checklists_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklists_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklists_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklists_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_template_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_business_days: number | null
+          id: string
+          item_type: string
+          org_id: string
+          required: boolean
+          sort_order: number
+          template_id: string
+          title: string
+          who_completes: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_business_days?: number | null
+          id?: string
+          item_type: string
+          org_id: string
+          required?: boolean
+          sort_order?: number
+          template_id: string
+          title: string
+          who_completes: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_business_days?: number | null
+          id?: string
+          item_type?: string
+          org_id?: string
+          required?: boolean
+          sort_order?: number
+          template_id?: string
+          title?: string
+          who_completes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_template_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          name: string
+          org_id: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          org_id: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          org_id?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_templates_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_invites: {
         Row: {
           accepted_at: string | null
@@ -2479,8 +2737,13 @@ export type Database = {
       }
     }
     Functions: {
+      add_business_days: { Args: { _d: string; _n: number }; Returns: string }
       can_access_application: {
         Args: { _app: string; _uid: string }
+        Returns: boolean
+      }
+      can_access_onboarding: {
+        Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
       can_access_store: {
@@ -2531,6 +2794,16 @@ export type Database = {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      onboarding_by_token: { Args: { _token: string }; Returns: Json }
+      onboarding_complete_item: {
+        Args: {
+          _file_path?: string
+          _item: string
+          _notes?: string
+          _token: string
+        }
+        Returns: boolean
+      }
       pick_referral_drawing_winner: {
         Args: { _org: string; _quarter: string }
         Returns: string
@@ -2564,6 +2837,7 @@ export type Database = {
       }
       run_status_reminders: { Args: { _org?: string }; Returns: number }
       run_status_reminders_now: { Args: { _org: string }; Returns: number }
+      seed_onboarding_template: { Args: { _org: string }; Returns: undefined }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
       seed_status_reminder_rules: { Args: { _org: string }; Returns: undefined }
       store_texting_status: {

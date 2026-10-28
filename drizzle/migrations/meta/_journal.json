@@ -288,6 +288,13 @@
       "when": 1793212073900,
       "tag": "0040_regional_talent_pool",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793212516684,
+      "tag": "0041_onboarding_checklists",
+      "breakpoints": true
     }
   ]
 }
