@@ -4,6 +4,7 @@
  * consent, STOP and texting hours always apply. Safe to run repeatedly: each step
  * checks what's already been sent.
  */
+import { WANTS_PERSON } from "@/lib/ai-notice";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { chunk, fetchAll } from "@/lib/fetch-all";
@@ -46,6 +47,11 @@ export async function sendText(
   },
 ) {
   const now = input.now ?? Date.now();
+  // The candidate asked for a person (replied HUMAN): no more automated texts to them.
+  if (input.party === "candidate") {
+    const { data: a } = await admin.from("applications").select("needs_attention").eq("id", input.applicationId).maybeSingle();
+    if (a?.needs_attention === WANTS_PERSON) return null;
+  }
   const row = await queueText(sb, { ...input, now });
   if (row?.status === "queued" && row.scheduled_for && Date.parse(row.scheduled_for) <= now)
     await deliverDue(admin, { ids: [row.id], now });

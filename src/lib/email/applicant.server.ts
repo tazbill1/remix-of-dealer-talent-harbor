@@ -3,6 +3,7 @@
  * event, queues it through queueEmail (footer, unsubscribe, opt-outs) and delivers it
  * right away. Never throws: an email problem must not break applying or moving stages.
  */
+import { WANTS_PERSON } from "@/lib/ai-notice";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { applicantEmail, applicantEmailPurpose, type ApplicantEmailKind } from "@/lib/email/applicant-copy";
@@ -24,10 +25,12 @@ export async function emailApplicant(sb: DB, applicationId: string, e: Applicant
     if (dup?.length) return null;
     const { data: app } = await sb
       .from("applications")
-      .select("id, full_name, job_id, dealership_id, status_token")
+      .select("id, full_name, job_id, dealership_id, status_token, needs_attention")
       .eq("id", applicationId)
       .maybeSingle();
     if (!app) return null;
+    // The candidate asked for a person (replied HUMAN): no more automated emails.
+    if (app.needs_attention === WANTS_PERSON) return null;
     const [{ data: job }, { data: store }] = await Promise.all([
       sb.from("jobs").select("title").eq("id", app.job_id).maybeSingle(),
       sb.from("dealerships").select("name, assistant_name, timezone").eq("id", app.dealership_id).maybeSingle(),
