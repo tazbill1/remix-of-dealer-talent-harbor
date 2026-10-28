@@ -45,6 +45,7 @@ const SAMPLE: Record<string, string | number> = {
   manager: "Mike",
   hours: 24,
   link: "workwithwerk.com/book/x7k2",
+  status: "workwithwerk.com/status/x7k2",
   when: "Thu, Nov 5, 10:00 AM",
   address: "100 Main St, Bentonville, AR",
   change: "booked an interview for",
