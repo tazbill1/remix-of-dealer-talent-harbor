@@ -10,6 +10,7 @@ import { cancelOffer, sendOffer } from "@/lib/offers.functions";
 import { isOpen, OFFER_LABEL, prettyDate, type OfferStatus } from "@/lib/offers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 const TONE: Record<OfferStatus, string> = {
