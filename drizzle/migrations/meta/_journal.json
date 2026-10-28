@@ -281,6 +281,13 @@
       "when": 1793211479994,
       "tag": "0039_status_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793212073900,
+      "tag": "0040_regional_talent_pool",
+      "breakpoints": true
     }
   ]
 }
