@@ -1,5 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Building2, Bot, Rss, Video, ShieldCheck, Mic } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { RouteSpinner } from "@/components/route-spinner";
 import { Button } from "@/components/ui/button";
 import { Logo, GradientText } from "@/components/brand";
 import { Journey, FaqList, groupJourney, groupFaqs } from "@/components/journey-faq";
@@ -28,6 +31,18 @@ const features = [
 ];
 
 function Index() {
+  const navigate = useNavigate();
+  // Signed-in users go straight to the dashboard; everyone else sees the marketing page.
+  const [redirecting, setRedirecting] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setRedirecting(true); // hide the marketing page right away, then move to the dashboard
+        navigate({ to: "/dashboard" });
+      }
+    });
+  }, [navigate]);
+  if (redirecting) return <RouteSpinner />;
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">

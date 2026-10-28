@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Briefcase, Users, Sparkles, Trophy, Timer } from "lucide-react";
+import { RouteSpinner } from "@/components/route-spinner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
@@ -36,12 +37,15 @@ const selectClass = "h-9 rounded-md border bg-background px-2 text-sm";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | WerkandMe Hiring" }] }),
   component: Dashboard,
+  // While the dashboard (and its sign-in check) is loading, show a spinner, not a blank page.
+  pendingComponent: RouteSpinner,
+  pendingMs: 0,
 });
 
 function Dashboard() {
   const org = useOrg();
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", org.orgId],
     queryFn: async () => {
       const [stores, jobs, apps, events, messages] = await Promise.all([
@@ -153,6 +157,9 @@ function Dashboard() {
       hired: apps.filter((a) => a.dealership_id === s.id && a.status === "hired").length,
     }))
     .sort((a, b) => b.total - a.total);
+
+  // Data is still loading — show a spinner instead of an empty dashboard.
+  if (isLoading) return <RouteSpinner />;
 
   const stats = [
     {
