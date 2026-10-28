@@ -1485,14 +1485,17 @@ export type Database = {
       platform_admins: {
         Row: {
           created_at: string
+          phone: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
+          phone?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
+          phone?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1673,6 +1676,51 @@ export type Database = {
           },
         ]
       }
+      store_texting: {
+        Row: {
+          live: boolean
+          messaging_service_sid: string | null
+          org_id: string
+          phone_number_sid: string | null
+          store_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          live?: boolean
+          messaging_service_sid?: string | null
+          org_id: string
+          phone_number_sid?: string | null
+          store_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          live?: boolean
+          messaging_service_sid?: string | null
+          org_id?: string
+          phone_number_sid?: string | null
+          store_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_texting_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_texting_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_summaries: {
         Row: {
           body: string | null
@@ -1763,6 +1811,15 @@ export type Database = {
       }
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
+      store_texting_status: {
+        Args: { _org: string }
+        Returns: {
+          live: boolean
+          sms_number: string
+          store_id: string
+          store_name: string
+        }[]
+      }
     }
     Enums: {
       application_status:
