@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAdverseActionsRouteImport } from './routes/_authenticated/adverse-actions'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedApplicantsRouteImport } from './routes/_authenticated/applicants'
 import { Route as AuthenticatedAutomationsRouteImport } from './routes/_authenticated/automations'
@@ -85,6 +86,12 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdverseActionsRoute =
+  AuthenticatedAdverseActionsRouteImport.update({
+    id: '/adverse-actions',
+    path: '/adverse-actions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -303,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/applicants': typeof AuthenticatedApplicantsRoute
   '/automations': typeof AuthenticatedAutomationsRoute
@@ -349,6 +357,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/applicants': typeof AuthenticatedApplicantsRoute
   '/automations': typeof AuthenticatedAutomationsRoute
@@ -398,6 +407,7 @@ export interface FileRoutesById {
   '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/applicants': typeof AuthenticatedApplicantsRoute
   '/_authenticated/automations': typeof AuthenticatedAutomationsRoute
@@ -447,6 +457,7 @@ export interface FileRouteTypes {
     | '/careers'
     | '/privacy'
     | '/terms'
+    | '/adverse-actions'
     | '/analytics'
     | '/applicants'
     | '/automations'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/terms'
+    | '/adverse-actions'
     | '/analytics'
     | '/applicants'
     | '/automations'
@@ -541,6 +553,7 @@ export interface FileRouteTypes {
     | '/careers'
     | '/privacy'
     | '/terms'
+    | '/_authenticated/adverse-actions'
     | '/_authenticated/analytics'
     | '/_authenticated/applicants'
     | '/_authenticated/automations'
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/adverse-actions': {
+      id: '/_authenticated/adverse-actions'
+      path: '/adverse-actions'
+      fullPath: '/adverse-actions'
+      preLoaderRoute: typeof AuthenticatedAdverseActionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/analytics': {
       id: '/_authenticated/analytics'
@@ -941,6 +961,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdverseActionsRoute: typeof AuthenticatedAdverseActionsRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedApplicantsRoute: typeof AuthenticatedApplicantsRoute
   AuthenticatedAutomationsRoute: typeof AuthenticatedAutomationsRoute
@@ -960,6 +981,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdverseActionsRoute: AuthenticatedAdverseActionsRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedApplicantsRoute: AuthenticatedApplicantsRoute,
   AuthenticatedAutomationsRoute: AuthenticatedAutomationsRoute,

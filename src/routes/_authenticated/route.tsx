@@ -28,6 +28,7 @@ const nav = [
   { to: "/jobs", label: "Jobs", icon: Briefcase },
   { to: "/interview-kits", label: "Interview kits", icon: ClipboardList },
   { to: "/consents", label: "Applicant consents", icon: Shield },
+  { to: "/adverse-actions", label: "Adverse-action notices", icon: FileText },
   { to: "/stores", label: "Stores", icon: Building2 },
   { to: "/templates", label: "Templates", icon: FileText },
   { to: "/automations", label: "Automatic texts", icon: MessageSquareText },
@@ -130,7 +131,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
       ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
       {org && <ModeBadge orgId={org.orgId} />}
       <nav className="space-y-1">
-        {org && nav.filter(n => n.to !== "/consents" || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter").map((n) => (
+        {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter").map((n) => (
           <Link key={n.to} to={n.to}
             className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
               loc.pathname.startsWith(n.to) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
