@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { parseResume, type ParsedResume } from "@/lib/assistant.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,11 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
   const [f, setF] = useState(empty);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Carried over from the old "Add applicant" form: read the resume and fill in blanks.
+  const parse = useServerFn(parseResume);
+  const [reading, setReading] = useState(false);
+  const [parsed, setParsed] = useState<ParsedResume | null>(null);
+  const [over, setOver] = useState(false);
   const set = (k: keyof typeof empty, v: string) => setF((x) => ({ ...x, [k]: v, ...(k === "store" ? { job: "" } : {}) }));
   const storeJobs = jobs.filter((j) => j.dealership_id === f.store);
 
@@ -29,6 +36,25 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
     if (!resumeExtension(fl.name)) return toast.error("Resume must be a PDF, DOC or DOCX file.");
     if (fl.size > RESUME_MAX_BYTES) return toast.error("That file is over 10 MB.");
     setFile(fl);
+    void autofill(fl);
+  }
+
+  async function autofill(fl: File) {
+    const lower = fl.name.toLowerCase();
+    if (!lower.endsWith(".pdf") && !lower.endsWith(".docx")) return; // the reader handles PDF and Word .docx
+    setReading(true);
+    try {
+      const b64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(fl); });
+      const out = await parse({ data: { file: b64, mime: fl.type || (lower.endsWith(".docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf"),
+        jobs: jobs.map((j) => ({ id: j.id, label: `${stores.find((s) => s.id === j.dealership_id)?.name ?? ""} · ${j.title}` })) } });
+      setParsed(out);
+      const [first = "", ...rest] = out.full_name.trim().split(/\s+/);
+      const suggested = jobs.find((j) => j.id === out.suggested_job_id);
+      setF((x) => ({ ...x,
+        first: x.first || first, last: x.last || rest.join(" "), email: x.email || out.email.trim(), phone: x.phone || out.phone.trim(),
+        ...(suggested && !x.job ? { store: suggested.dealership_id, job: suggested.id } : {}) }));
+    } catch { toast.error("Couldn't read that resume. You can still fill the form in yourself."); }
+    setReading(false);
   }
 
   async function save() {
@@ -49,11 +75,13 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
       linkedin_url: linkedin, notes: f.notes.trim() || null, source: "manual",
       source_channel: f.channel, source_detail: f.detail.trim() || null,
       created_manually: true, created_by: uid,
+      ...(parsed ? { ai_summary: parsed.summary || null, profile: { years_experience: parsed.years_experience, certifications: parsed.certifications,
+        current_title: parsed.current_title, past_employers: parsed.past_employers, skills: parsed.skills, city: parsed.city } } : {}),
     }).select("id").single();
     if (error || !app) { setBusy(false); return toast.error(error?.message ?? "Couldn't save."); }
     // The database fills a hand-added "Company website" as Manual entry; keep what the recruiter picked.
     if (f.channel === "Company website") await supabase.from("applications").update({ source_channel: f.channel }).eq("id", app.id);
-    await supabase.from("application_events").insert({ org_id: orgId, application_id: app.id, kind: "manual", message: "Added manually", actor_id: uid });
+    await supabase.from("application_events").insert({ org_id: orgId, application_id: app.id, kind: "manual", message: parsed ? "Added manually from an uploaded resume" : "Added manually", actor_id: uid });
     if (file) {
       const path = resumeStoragePath(orgId, app.id, file.name)!;
       const up = await supabase.storage.from("resumes").upload(path, file, file.type ? { contentType: file.type } : {});
@@ -64,7 +92,7 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
       }
     }
     toast.success(`${first} ${last} added.`);
-    setBusy(false); setF(empty); setFile(null); onOpenChange(false); onCreated();
+    setBusy(false); setF(empty); setFile(null); setParsed(null); onOpenChange(false); onCreated();
   }
 
   const field = (k: keyof typeof empty, label: string, type = "text") => (
@@ -73,7 +101,7 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
   );
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setF(empty); setFile(null); } onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setF(empty); setFile(null); setParsed(null); } onOpenChange(o); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Add candidate</DialogTitle></DialogHeader>
         <div className="space-y-3">
@@ -98,12 +126,24 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
               {SOURCE_CHANNELS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select></label>
           {field("detail", "Source detail (optional)")}
-          <label className="block text-sm"><span className="font-medium">Resume (optional)</span>
+          <label className={over ? "block rounded-md bg-accent text-sm" : "block text-sm"}
+            onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+            onDrop={(e) => { e.preventDefault(); setOver(false); pick(e.dataTransfer.files[0]); }}>
+            <span className="font-medium">Resume (optional)</span>
             <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => pick(e.target.files?.[0])} />
-            <span className="text-xs text-muted-foreground">PDF, DOC or DOCX, up to 10 MB.</span></label>
+            <span className="text-xs text-muted-foreground">PDF, DOC or DOCX, up to 10 MB. Drop one here and we'll fill in the blanks.</span></label>
+          {reading && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />Reading {file?.name}...</div>}
+          {parsed && !reading && (
+            <div className="space-y-1 rounded-xl bg-accent p-3 text-sm">
+              <div className="flex items-center gap-2"><Sparkles className="size-4 text-sapphire" />Filled in from {file?.name}. Check it over, then save.</div>
+              {(parsed.current_title || parsed.years_experience != null || parsed.certifications.length > 0) && (
+                <div className="text-xs text-muted-foreground">{[parsed.current_title, parsed.years_experience != null ? `${parsed.years_experience} yrs experience` : "", parsed.certifications.join(", ")].filter(Boolean).join(" · ")}</div>)}
+              {parsed.summary && <p className="text-xs">{parsed.summary}</p>}
+            </div>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={save} disabled={busy}>{busy && <Loader2 className="animate-spin" />}Save candidate</Button>
+            <Button onClick={save} disabled={busy || reading}>{busy && <Loader2 className="animate-spin" />}Save candidate</Button>
           </div>
         </div>
       </DialogContent>
