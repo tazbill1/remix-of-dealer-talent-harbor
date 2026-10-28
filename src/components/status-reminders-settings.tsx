@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { BellRing } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { STATUSES, STATUS_LABEL } from "@/lib/jobs";
+import { STATUSES, STATUS_LABEL, type AppStatus } from "@/lib/jobs";
 import { NEVER_REMINDED, type ReminderRule } from "@/lib/status-reminders";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function StatusRemindersSettings({ orgId, canEdit }: { orgId: string; can
 
   async function save(status: string, patch: Partial<ReminderRule>) {
     const existing = rules.find((r) => r.status === status);
-    const row = { org_id: orgId, status: status as never, remind_after_days: existing?.remind_after_days ?? 3, is_active: existing?.is_active ?? true, ...patch, updated_at: new Date().toISOString() };
+    const row = { org_id: orgId, status: status as AppStatus, remind_after_days: existing?.remind_after_days ?? 3, is_active: existing?.is_active ?? true, ...patch, updated_at: new Date().toISOString() };
     const { data, error } = await supabase.from("status_reminder_rules").upsert(row, { onConflict: "org_id,status" }).select("id").maybeSingle();
     if (error || !data) { toast.error(error?.message ?? "Couldn't save. Please try again."); return; }
     toast.success("Reminder saved");
