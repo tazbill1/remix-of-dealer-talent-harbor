@@ -4,14 +4,18 @@ import { z } from "zod";
 import {
   applicantPath,
   askSystemPrompt,
+  pipelineReport,
   rankCandidates,
   safeApplicant,
+  type Report,
   type ApplicantRow,
   type ScorecardRow,
 } from "@/lib/gm-assistant";
 
 const APP_FIELDS =
   "id, full_name, status, rating, created_at, knockout_failed, ai_summary, dealership_id, jobs!inner(title, department), dealerships(name)";
+
+const NONE = "00000000-0000-0000-0000-000000000000";
 
 // PostgREST filter values can't carry commas, parens or wildcards from the AI.
 const clean = (s: string) => s.replace(/[,()%*\\]/g, " ").trim().slice(0, 60);
@@ -20,7 +24,7 @@ const askInput = z.object({
   orgId: z.string().uuid(),
   timeZone: z.string().max(64),
   messages: z
-    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }))
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(6000) }))
     .min(1)
     .max(30),
 });
@@ -71,7 +75,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
         q = q.or(`title.ilike.%${r}%,department.ilike.%${r}%`, { referencedTable: "jobs" });
       }
       const stores = await storeIds(f.store);
-      if (stores) q = q.in("dealership_id", stores.length ? stores : ["00000000-0000-0000-0000-000000000000"]);
+      if (stores) q = q.in("dealership_id", stores.length ? stores : [NONE]);
       if (f.stage) q = q.eq("status", f.stage as any);
       if (f.openOnly) q = q.not("status", "in", "(hired,rejected)");
       if (f.name) q = q.ilike("full_name", `%${clean(f.name)}%`);
@@ -82,6 +86,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
       return (rows ?? []) as unknown as ApplicantRow[];
     }
 
+    const reports: Report[] = [];
     const stage = z.enum(["new", "screening", "interview", "offer", "hired", "rejected"]);
     const tools = {
       search_applicants: tool({
@@ -127,7 +132,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
             .gte("starts_at", f.from)
             .lt("starts_at", f.to);
           const stores = await storeIds(f.store);
-          if (stores) q = q.in("applications.dealership_id", stores.length ? stores : ["00000000-0000-0000-0000-000000000000"]);
+          if (stores) q = q.in("applications.dealership_id", stores.length ? stores : [NONE]);
           const { data: rows, error } = await q.order("starts_at").limit(100);
           if (error) throw new Error(error.message);
           const list = (rows ?? []) as unknown as {
@@ -149,6 +154,80 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
               applicant: safeApplicant(r.applications, cards),
             })),
           };
+        },
+      }),
+      pipeline_report: tool({
+        description:
+          "Shows the user a table of applicant counts per stage (New, Screening, Interview, Offer, and Hired / Not selected when include_closed), one row per store, region or role. Filters optional; dates filter by when people applied.",
+        inputSchema: z.object({
+          title: z.string().describe("Short report title, e.g. 'Technician pipeline by store'"),
+          group_by: z.enum(["store", "region", "role"]),
+          role: z.string().nullable().describe("Job title or department words, e.g. 'tech'"),
+          store: z.string().nullable(),
+          region: z.string().nullable(),
+          applied_after: z.string().nullable().describe("ISO date"),
+          applied_before: z.string().nullable().describe("ISO date"),
+          include_closed: z.boolean().describe("Also count Hired and Not selected"),
+          chart: z.boolean().describe("Add a bar chart"),
+        }),
+        execute: async (f) => {
+          let q = sb
+            .from("applications")
+            .select("full_name, status, dealership_id, jobs!inner(title, department), dealerships(name, regions(name))")
+            .eq("org_id", orgId);
+          if (f.role) {
+            const r = clean(f.role);
+            q = q.or(`title.ilike.%${r}%,department.ilike.%${r}%`, { referencedTable: "jobs" });
+          }
+          const stores = await storeIds(f.store);
+          if (stores) q = q.in("dealership_id", stores.length ? stores : [NONE]);
+          if (f.region) {
+            const { data: regs } = await sb.from("regions").select("id").eq("org_id", orgId).ilike("name", `%${clean(f.region)}%`);
+            const { data: inRegion } = await sb
+              .from("dealerships")
+              .select("id")
+              .eq("org_id", orgId)
+              .in("region_id", (regs ?? []).map((r) => r.id).concat(NONE));
+            q = q.in("dealership_id", (inRegion ?? []).map((d) => d.id).concat(NONE));
+          }
+          if (f.applied_after) q = q.gte("created_at", f.applied_after);
+          if (f.applied_before) q = q.lt("created_at", f.applied_before);
+          const { data: rows, error } = await q.limit(5000);
+          if (error) throw new Error(error.message);
+          const { isTestName } = await import("@/lib/display");
+          const list = ((rows ?? []) as unknown as {
+            full_name: string;
+            status: string;
+            dealership_id: string | null;
+            jobs: { title: string } | null;
+            dealerships: { name: string; regions: { name: string } | null } | null;
+          }[]).filter((r) => !isTestName(r.full_name));
+          const filters = [
+            f.role && `role: ${f.role}`,
+            f.store && `store: ${f.store}`,
+            f.region && `region: ${f.region}`,
+            f.applied_after && `applied from ${f.applied_after.slice(0, 10)}`,
+            f.applied_before && `applied before ${f.applied_before.slice(0, 10)}`,
+            f.include_closed ? "includes hired and not selected" : "open applicants only",
+          ].filter(Boolean);
+          const report = pipelineReport(
+            list.map((r) => ({
+              status: r.status,
+              storeId: r.dealership_id,
+              store: r.dealerships?.name ?? null,
+              region: r.dealerships?.regions?.name ?? null,
+              role: r.jobs?.title ?? null,
+            })),
+            {
+              title: f.title,
+              subtitle: filters.join(" · "),
+              groupBy: f.group_by,
+              includeClosed: f.include_closed,
+              chart: f.chart,
+            },
+          );
+          reports.push(report);
+          return { shown_to_user: true, total: report.total, columns: report.columns, rows: report.rows.map((r) => [r.label, ...r.cells]) };
         },
       }),
       get_applicant: tool({
@@ -192,7 +271,8 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
         stopWhen: stepCountIs(6),
         providerOptions: LOVABLE_OPTS,
       });
-      return { reply: result.text.trim() || "I couldn't find an answer to that. Try asking another way." };
+      const reply = result.text.trim() || (reports.length ? "" : "I couldn't find an answer to that. Try asking another way.");
+      return { reply, reports };
     } catch (e) {
       throw new Error(friendlyAiError(e));
     }

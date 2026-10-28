@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLinks, rankCandidates, safeApplicant, type ApplicantRow } from "@/lib/gm-assistant";
+import { parseLinks, pipelineReport, rankCandidates, reportNote, safeApplicant, type ApplicantRow } from "@/lib/gm-assistant";
 
 const NOW = Date.parse("2026-10-28T12:00:00Z");
 const app = (id: string, over: Partial<ApplicantRow> = {}): ApplicantRow => ({
@@ -58,4 +58,33 @@ it("parseLinks turns in-app markdown links into links and leaves other text", ()
     { text: "Sam", href: "/applicants?applicant=1" },
     { text: " or [x](https://evil.com)." },
   ]);
+});
+
+describe("pipelineReport", () => {
+  const row = (status: string, store: string, region: string | null, role = "Technician") => ({
+    status, storeId: `id-${store}`, store, region, role,
+  });
+  const rows = [
+    row("new", "Lansing", "Mid"), row("new", "Lansing", "Mid"), row("interview", "Lansing", "Mid"),
+    row("screening", "Flint", null), row("hired", "Flint", null), row("rejected", "Lansing", "Mid"),
+  ];
+  const opts = { title: "Tech pipeline", subtitle: "role: tech", chart: false };
+
+  it("counts open applicants per store and stage, biggest first, with totals and links", () => {
+    const r = pipelineReport(rows, { ...opts, groupBy: "store", includeClosed: false });
+    expect(r.columns).toEqual(["New", "Screening", "Interview", "Offer"]);
+    expect(r.rows).toEqual([
+      { label: "Lansing", href: "/applicants?store=id-Lansing&view=list", cells: [2, 0, 1, 0], total: 3 },
+      { label: "Flint", href: "/applicants?store=id-Flint&view=list", cells: [0, 1, 0, 0], total: 1 },
+    ]);
+    expect(r.totals).toEqual([2, 1, 1, 0]);
+    expect(r.total).toBe(4);
+    expect(reportNote(r)).toContain("4 applicants across 2 stores");
+  });
+
+  it("can include closed stages and group by region", () => {
+    const r = pipelineReport(rows, { ...opts, groupBy: "region", includeClosed: true });
+    expect(r.columns).toContain("Hired");
+    expect(r.rows.map((x) => [x.label, x.total, x.href])).toEqual([["Mid", 4, null], ["No region", 2, null]]);
+  });
 });
