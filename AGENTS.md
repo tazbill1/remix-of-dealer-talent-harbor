@@ -14,7 +14,7 @@
 - Adverse-action tracking uses authenticated HR-authorized RLS actions, database business-day calculation and optimistic saves; no messaging or applicant stage changes. Why: human notice records stay separate from hiring decisions.
 - HR consent review uses authenticated RLS reads and can_post_jobs authorization; withdrawals update only revoked_at/revoked_source and verify the returned row. Why: preserve immutable evidence and prevent silent losses.
 - Notes explicitly save per applicant and verify a returned row. Why: prevent silent losses.
-- Onboarding: checklist auto-created on Hired (trigger), can_access_onboarding RLS, new hires only via token RPCs (no file reads). Why: sensitive docs.
+- Onboarding: checklist auto-created on Hired (trigger), can_access_onboarding RLS; staff list at /new-hires (/onboarding is group setup); new hires use /onboard/$token via onboarding.functions.ts token RPCs + signed upload URLs (no file reads). Why: sensitive docs.
 - Calendar links open the applicant Interview tab; summaries use per-interview RLS reads. Why: reuse rules.
 - Reports use separate authenticated RLS reads, RPC-verified roles and explicit manager assignments; math is in reports.ts and PDF capture uses semantic blocks. Why: preserve Analytics, deny unassigned managers, avoid chart splits.
 - Multi-tenant: every tenant table has `org_id`; RLS uses `is_org_member` / `has_org_role` / `is_platform_admin`. Why: tenant isolation.
