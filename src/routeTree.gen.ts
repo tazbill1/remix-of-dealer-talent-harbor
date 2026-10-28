@@ -55,6 +55,8 @@ import { Route as ApiPublicInterviewsProcessRecordingRouteImport } from './route
 import { Route as ApiPublicOfferTokenRouteImport } from './routes/api/public/offer/$token'
 import { Route as ApiPublicUnsubscribeTokenRouteImport } from './routes/api/public/unsubscribe/$token'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -297,6 +299,16 @@ const COrgSlugJobsJobIdRoute = COrgSlugJobsJobIdRouteImport.update({
   path: '/c/$orgSlug/jobs/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -350,6 +362,8 @@ export interface FileRoutesByFullPath {
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
@@ -397,6 +411,8 @@ export interface FileRoutesByTo {
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
@@ -447,6 +463,8 @@ export interface FileRoutesById {
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
@@ -497,6 +515,8 @@ export interface FileRouteTypes {
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -544,6 +564,8 @@ export interface FileRouteTypes {
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   id:
     | '__root__'
@@ -593,6 +615,8 @@ export interface FileRouteTypes {
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
@@ -623,6 +647,8 @@ export interface RootRouteChildren {
   ApiPublicOfferTokenRoute: typeof ApiPublicOfferTokenRoute
   ApiPublicUnsubscribeTokenRoute: typeof ApiPublicUnsubscribeTokenRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -950,6 +976,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof COrgSlugJobsJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -1046,6 +1086,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicOfferTokenRoute: ApiPublicOfferTokenRoute,
   ApiPublicUnsubscribeTokenRoute: ApiPublicUnsubscribeTokenRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
