@@ -133,7 +133,9 @@ export function AskChat({ compact = false, onNavigate }: { compact?: boolean; on
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [msgs.length, busy]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [msgs.length, busy]);
 
   async function send(q: string) {
     const body = q.trim();
