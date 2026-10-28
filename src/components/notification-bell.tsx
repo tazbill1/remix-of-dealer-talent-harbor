@@ -59,7 +59,8 @@ export function NotificationBell({ userId, orgId }: { userId: string; orgId: str
               onClick={() => {
                 void markRead(n.read_at ? [] : [n.id]);
                 setOpen(false);
-                if (n.application_id) void navigate({ to: "/applicants", search: { applicant: n.application_id, tab: n.type === "status_reminder" ? "overview" : "messages" } });
+                if (n.type === "talent_pool") void navigate({ to: "/talent-pool" });
+                else if (n.application_id) void navigate({ to: "/applicants", search: { applicant: n.application_id, tab: n.type === "status_reminder" ? "overview" : "messages" } });
               }}>
               <div>{n.message}</div>
               <div className="text-xs font-normal text-muted-foreground">{new Date(n.created_at).toLocaleString()}</div>

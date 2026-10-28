@@ -33,6 +33,7 @@ import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
+import { Route as AuthenticatedTalentPoolRouteImport } from './routes/_authenticated/talent-pool'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as BookTokenRouteImport } from './routes/book.$token'
@@ -187,6 +188,11 @@ const AuthenticatedStatusRulesRoute =
 const AuthenticatedStoresRoute = AuthenticatedStoresRouteImport.update({
   id: '/stores',
   path: '/stores',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTalentPoolRoute = AuthenticatedTalentPoolRouteImport.update({
+  id: '/talent-pool',
+  path: '/talent-pool',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
@@ -376,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/talent-pool': typeof AuthenticatedTalentPoolRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
@@ -431,6 +438,7 @@ export interface FileRoutesByTo {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
+  '/talent-pool': typeof AuthenticatedTalentPoolRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
@@ -489,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
+  '/_authenticated/talent-pool': typeof AuthenticatedTalentPoolRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/status-rules'
     | '/stores'
+    | '/talent-pool'
     | '/team'
     | '/templates'
     | '/book/$token'
@@ -602,6 +612,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/status-rules'
     | '/stores'
+    | '/talent-pool'
     | '/team'
     | '/templates'
     | '/book/$token'
@@ -659,6 +670,7 @@ export interface FileRouteTypes {
     | '/_authenticated/referrals'
     | '/_authenticated/status-rules'
     | '/_authenticated/stores'
+    | '/_authenticated/talent-pool'
     | '/_authenticated/team'
     | '/_authenticated/templates'
     | '/book/$token'
@@ -895,6 +907,13 @@ declare module '@tanstack/react-router' {
       path: '/stores'
       fullPath: '/stores'
       preLoaderRoute: typeof AuthenticatedStoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/talent-pool': {
+      id: '/_authenticated/talent-pool'
+      path: '/talent-pool'
+      fullPath: '/talent-pool'
+      preLoaderRoute: typeof AuthenticatedTalentPoolRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/team': {
@@ -1135,6 +1154,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
+  AuthenticatedTalentPoolRoute: typeof AuthenticatedTalentPoolRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
@@ -1158,6 +1178,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
+  AuthenticatedTalentPoolRoute: AuthenticatedTalentPoolRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
