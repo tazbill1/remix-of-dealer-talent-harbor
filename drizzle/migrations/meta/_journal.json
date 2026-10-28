@@ -113,6 +113,13 @@
       "when": 1793145475857,
       "tag": "0015_store_calendars_member_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793146160411,
+      "tag": "0016_org_invites_calendar_url",
+      "breakpoints": true
     }
   ]
 }

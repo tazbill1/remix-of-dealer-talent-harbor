@@ -1,0 +1,1 @@
+alter table public.org_invites add column if not exists calendar_url text;

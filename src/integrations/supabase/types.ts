@@ -891,6 +891,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by: string | null
+          calendar_url: string | null
           created_at: string
           email: string
           expires_at: string
@@ -905,6 +906,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by?: string | null
+          calendar_url?: string | null
           created_at?: string
           email: string
           expires_at?: string
@@ -919,6 +921,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by?: string | null
+          calendar_url?: string | null
           created_at?: string
           email?: string
           expires_at?: string
