@@ -44,7 +44,7 @@ function Stores() {
     const errs = validateStore(f);
     setErrors(errs);
     if (Object.keys(errs).length) return;
-    const { error } = await supabase.from("dealerships").insert({ ...storeValues(f), region_id: regionId || null, org_id: org.orgId });
+    const { error } = await supabase.from("dealerships").insert({ ...storeValues(f), interview_hours: { days: [1, 2, 3, 4, 5], start: "09:00", end: "17:00" }, interview_minutes: 30, region_id: regionId || null, org_id: org.orgId });
     if (error) return toast.error(error.message);
     toast.success(`${f.name.trim()} added!`);
     setF(storeToForm()); setRegionId(""); setErrors({});
