@@ -307,8 +307,8 @@ function Applicants() {
               <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
-                <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
-                  <StatusPill status={st} className="text-sm" />
+                <div className="mb-3 flex items-center justify-between gap-2 px-1 text-sm font-semibold">
+                  <StatusPill status={st} className="min-w-0 text-sm leading-tight" />
                   <span className="flex items-center gap-2 text-muted-foreground">{col.length}
                     {col.length > 0 && <Checkbox aria-label={`Select all ${STATUS_LABEL[st]}`} checked={col.every((a) => checked.includes(a.id))}
                       onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...col.map((a) => a.id)])] : prev.filter((id) => !col.some((a) => a.id === id)))} />}</span>
