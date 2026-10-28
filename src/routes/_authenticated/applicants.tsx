@@ -416,7 +416,8 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   }
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
+      {/* mb-6 cancels the -mt-6 pull on following content, so nothing slides under the header. */}
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
         <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
           <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
         <div className="flex flex-wrap items-center gap-2">
@@ -436,9 +437,9 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
             ))}
           </div>
         </div>
-        {/* Tabs are sized so all five fit one row inside the panel; on very narrow
-            widths they wrap to a second line instead of scrolling sideways. */}
-        <div className="flex flex-wrap gap-x-1 gap-y-0.5 text-[13px]">
+        {/* Tabs always stay on one row; on narrow widths the row scrolls
+            sideways instead of wrapping, so the sticky header never overlaps content. */}
+        <div className="flex flex-nowrap gap-x-1 overflow-x-auto text-[13px]">
           {PANEL_TABS.map((t) => (
             <button key={t.id} onClick={() => pickTab(t.id)}
               className={cn("whitespace-nowrap border-b-2 px-1.5 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
