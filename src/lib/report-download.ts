@@ -2,7 +2,7 @@ export async function prepareReportPdf(element: HTMLElement): Promise<Blob> {
   const [{default: html2canvas}, {jsPDF}] = await Promise.all([import("html2canvas-pro"),import("jspdf")]);
   await document.fonts.ready;
   await Promise.all([...element.querySelectorAll("img")].map(img=>img.decode().catch(()=>undefined)));
-  const pdf = new jsPDF({unit:"mm",format:"a4"});
+  const pdf = new jsPDF({unit:"mm",format:"a4",compress:true});
   const width = 186, pageHeight = 273;
   let y = 12;
   // Capture semantic blocks individually so chart/table rows never cross a page break.
@@ -11,7 +11,7 @@ export async function prepareReportPdf(element: HTMLElement): Promise<Blob> {
     const height = canvas.height * width/canvas.width;
     const fittedHeight = Math.min(height,pageHeight);
     if (y+fittedHeight > 285) {pdf.addPage(); y=12;}
-    pdf.addImage(canvas.toDataURL("image/png"),"PNG",12,y,width,fittedHeight);
+    pdf.addImage(canvas.toDataURL("image/png"),"PNG",12,y,width,fittedHeight,undefined,"FAST");
     y += fittedHeight+3;
   }
   return pdf.output("blob");
