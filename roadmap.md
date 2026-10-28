@@ -41,6 +41,7 @@
 - [x] Data model update applied (regions, candidates, consent, retention dates, check-ins, event actor)
 - [x] Track 2 retention: 30/60/90 by location, region and enterprise, with CSV export
 - [x] Region filters on Applicants and Analytics; transfers stay in-region by default
+- [x] Home page: time to hire (apply to hired), time to fill and first contact, with brand, region and role filters; to-do and stalled alerts stay unfiltered. Time to hire also on Analytics
 - [x] "Also applied for" on the profile (one candidate, many applications)
 - [x] 30/60/90 check-ins recorded on each hire's profile
 - [x] Store/region access rules + Team page (docs/access-rules-update.md)
