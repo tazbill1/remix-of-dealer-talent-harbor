@@ -106,8 +106,7 @@ export const bookInterview = createServerFn({ method: "POST" })
     if (!b.slots.includes(start)) throw new Error("Sorry, that time was just taken. Please pick another.");
 
     const moved = b.upcoming;
-    if (moved) await db.from("interviews").update({ status: "cancelled" }).eq("id", moved.id);
-    const { error } = await db.from("interviews").insert({
+    const { data: interview, error } = await db.from("interviews").insert({
       org_id: b.app.org_id,
       application_id: b.app.id,
       starts_at: new Date(start).toISOString(),
@@ -115,8 +114,9 @@ export const bookInterview = createServerFn({ method: "POST" })
       location: b.address,
       source: "self_scheduled",
       status: "scheduled",
-    });
-    if (error) throw new Error("Couldn't book that time. Please try again.");
+    }).select("id").single();
+    if (error || !interview) throw new Error("Couldn't book that time. Please try again.");
+    if (moved) await db.from("interviews").update({ status: "cancelled" }).eq("id", moved.id);
 
     const when = slotLabel(start, b.timeZone);
     const events: { org_id: string; application_id: string; kind: string; message: string }[] = [

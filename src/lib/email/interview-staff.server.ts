@@ -43,8 +43,10 @@ export async function emailInterviewStaff(db: DB, interviewId: string, moved = f
     if (await isEmailOptedOut(db, iv.org_id, recipient.email)) status = "blocked";
     else if (settings.email_mode === "live") {
       try {
+        if (!settings.email_from_address) throw new Error("No sending address configured");
         const result = await sendTemplateEmail("staff-interview", recipient.email, {
           idempotencyKey: key,
+          fromAddress: settings.email_from_address,
           replyTo: settings.email_reply_to ?? undefined,
           templateData: { applicant: app.full_name, job: job?.title, store: store?.name, when, minutes: iv.duration_min, location, calendarUrl, appUrl: base, moved },
         });

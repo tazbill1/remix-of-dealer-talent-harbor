@@ -47,6 +47,7 @@ import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/c
 import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
 import { Route as ApiPublicDocsTokenRouteImport } from './routes/api/public/docs/$token'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
+import { Route as ApiPublicInterviewInviteTokenRouteImport } from './routes/api/public/interview-invite/$token'
 import { Route as ApiPublicOfferTokenRouteImport } from './routes/api/public/offer/$token'
 import { Route as ApiPublicUnsubscribeTokenRouteImport } from './routes/api/public/unsubscribe/$token'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
@@ -247,6 +248,12 @@ const ApiPublicFeedOrgSlugRoute = ApiPublicFeedOrgSlugRouteImport.update({
   path: '/api/public/feed/$orgSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicInterviewInviteTokenRoute =
+  ApiPublicInterviewInviteTokenRouteImport.update({
+    id: '/api/public/interview-invite/$token',
+    path: '/api/public/interview-invite/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOfferTokenRoute = ApiPublicOfferTokenRouteImport.update({
   id: '/api/public/offer/$token',
   path: '/api/public/offer/$token',
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -350,6 +358,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -395,6 +404,7 @@ export interface FileRoutesById {
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
+  '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -440,6 +450,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/interview-invite/$token'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/interview-invite/$token'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -526,6 +538,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
+    | '/api/public/interview-invite/$token'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -553,6 +566,7 @@ export interface RootRouteChildren {
   ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
   ApiPublicDocsTokenRoute: typeof ApiPublicDocsTokenRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
+  ApiPublicInterviewInviteTokenRoute: typeof ApiPublicInterviewInviteTokenRoute
   ApiPublicOfferTokenRoute: typeof ApiPublicOfferTokenRoute
   ApiPublicUnsubscribeTokenRoute: typeof ApiPublicUnsubscribeTokenRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
@@ -827,6 +841,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFeedOrgSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/interview-invite/$token': {
+      id: '/api/public/interview-invite/$token'
+      path: '/api/public/interview-invite/$token'
+      fullPath: '/api/public/interview-invite/$token'
+      preLoaderRoute: typeof ApiPublicInterviewInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/offer/$token': {
       id: '/api/public/offer/$token'
       path: '/api/public/offer/$token'
@@ -933,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,
   ApiPublicDocsTokenRoute: ApiPublicDocsTokenRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
+  ApiPublicInterviewInviteTokenRoute: ApiPublicInterviewInviteTokenRoute,
   ApiPublicOfferTokenRoute: ApiPublicOfferTokenRoute,
   ApiPublicUnsubscribeTokenRoute: ApiPublicUnsubscribeTokenRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
