@@ -312,6 +312,10 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
       kind: "texting",
       message: `Candidate replied HUMAN and wants a person. ${manager.name} should follow up.`,
     });
+    if (app.needs_attention !== WANTS_PERSON) {
+      const { notifyWantsPerson } = await import("@/lib/notifications.server");
+      await notifyWantsPerson(admin, app);
+    }
     return { reply: "", keyword: null, changed: [] as string[], status: null, interviewAt: null, delivery: "paused" };
   }
 
