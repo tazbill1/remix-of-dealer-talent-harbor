@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseAutomations } from "@/lib/automations";
 import {
+  memberTimeZone,
   storeLines,
   storesFor,
   storeWeek,
@@ -26,8 +27,16 @@ const stores: SStore[] = [
 
 describe("weekly summary timing", () => {
   it("is off until the group turns it on, Monday 8am by default", () => {
-    expect(weeklySummarySettings(parseAutomations({}))).toEqual({ enabled: false, day: 1, hour: 8 });
-    expect(weeklySummarySettings(parseAutomations({ weeklySummary: { enabled: true, day: 5, hour: 7 } }))).toEqual({
+    expect(weeklySummarySettings(parseAutomations({}))).toEqual({
+      enabled: false,
+      day: 1,
+      hour: 8,
+    });
+    expect(
+      weeklySummarySettings(
+        parseAutomations({ weeklySummary: { enabled: true, day: 5, hour: 7 } }),
+      ),
+    ).toEqual({
       enabled: true,
       day: 5,
       hour: 7,
@@ -52,18 +61,34 @@ describe("who covers which stores", () => {
     const m = { id: "m1", role: "recruiter", email: "a@b.co" };
     expect(storesFor(m, [], stores).map((s) => s.id)).toEqual(["s1", "s2", "s3"]);
     expect(
-      storesFor(m, [{ member_id: "m1", dealership_id: "s3", region_id: null }], stores).map((s) => s.id),
+      storesFor(m, [{ member_id: "m1", dealership_id: "s3", region_id: null }], stores).map(
+        (s) => s.id,
+      ),
     ).toEqual(["s3"]);
     expect(
-      storesFor(m, [{ member_id: "m1", dealership_id: null, region_id: "r1" }], stores).map((s) => s.id),
+      storesFor(m, [{ member_id: "m1", dealership_id: null, region_id: "r1" }], stores).map(
+        (s) => s.id,
+      ),
     ).toEqual(["s1", "s2"]);
     // Someone else's coverage doesn't limit this member.
-    expect(storesFor(m, [{ member_id: "m2", dealership_id: "s3", region_id: null }], stores)).toHaveLength(3);
+    expect(
+      storesFor(m, [{ member_id: "m2", dealership_id: "s3", region_id: null }], stores),
+    ).toHaveLength(3);
+  });
+  it("sends on the first store's clock, Central if it has none", () => {
+    expect(memberTimeZone([{ ...stores[0]!, timezone: "America/New_York" }, stores[1]!])).toBe(
+      "America/New_York",
+    );
+    expect(memberTimeZone([{ ...stores[0]!, timezone: null }])).toBe("America/Chicago");
+    expect(memberTimeZone([])).toBe("America/Chicago");
   });
 });
 
 describe("store numbers", () => {
-  const app = (id: string, over: Partial<Parameters<typeof storeWeek>[1]["apps"][number]> = {}) => ({
+  const app = (
+    id: string,
+    over: Partial<Parameters<typeof storeWeek>[1]["apps"][number]> = {},
+  ) => ({
     id,
     dealership_id: "s1",
     status: "new",
@@ -94,8 +119,20 @@ describe("store numbers", () => {
       { application_id: "a4", created_at: ago(5), completed_at: ago(2), is_offer_letter: false },
     ],
     checkins: [
-      { application_id: "a5", due_on: "2026-10-20", sent_at: ago(8), responded_at: null, still_employed: null },
-      { application_id: "a5", due_on: "2026-11-20", sent_at: null, responded_at: null, still_employed: null },
+      {
+        application_id: "a5",
+        due_on: "2026-10-20",
+        sent_at: ago(8),
+        responded_at: null,
+        still_employed: null,
+      },
+      {
+        application_id: "a5",
+        due_on: "2026-11-20",
+        sent_at: null,
+        responded_at: null,
+        still_employed: null,
+      },
     ],
   };
   it("counts the last 7 days for one store only", () => {
@@ -118,7 +155,10 @@ describe("store numbers", () => {
   it("leaves out zeros and says when a week was quiet", () => {
     const quiet = storeWeek(stores[2]!, rows, NOW);
     expect(storeLines(quiet)).toEqual(["Quiet week: nothing new."]);
-    expect(storeLines({ ...quiet, newApplicants: 1, hires: 2 })).toEqual(["1 new applicant", "2 new hires"]);
+    expect(storeLines({ ...quiet, newApplicants: 1, hires: 2 })).toEqual([
+      "1 new applicant",
+      "2 new hires",
+    ]);
   });
 });
 
@@ -134,10 +174,16 @@ describe("summary email", () => {
         { ...base, storeName: "ABC Toyota", hires: 1 },
       ],
     });
-    expect(email.subject).toBe("Your hiring week: 3 new applicants · 0 interviews coming up · 1 hire");
+    expect(email.subject).toBe(
+      "Your hiring week: 3 new applicants · 0 interviews coming up · 1 hire",
+    );
     expect(email.body).toContain("week of Oct 26");
-    expect(email.body).toContain("ABC Ford\n• 3 new applicants\n• 1 candidate waiting on a hiring manager decision");
+    expect(email.body).toContain(
+      "ABC Ford\n• 3 new applicants\n• 1 candidate waiting on a hiring manager decision",
+    );
     expect(email.body).toContain("ABC Toyota\n• 1 new hire");
-    expect(email.body).toContain("1 candidate is waiting on someone. Open hireme to take a look: https://workwithwerk.com/applicants");
+    expect(email.body).toContain(
+      "1 candidate is waiting on someone. Open hireme to take a look: https://workwithwerk.com/applicants",
+    );
   });
 });

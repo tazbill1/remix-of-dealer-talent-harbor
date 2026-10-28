@@ -40,7 +40,7 @@
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
 - [x] Live email (notify.workwithwerk.com verified; sending address penny@notify.workwithwerk.com, mode live)
 - [ ] Live texts (blocked: Twilio)
-- [~] Per-store AI HR assistant: texting, check-ins and nudges done; group settings (tone, facts, screening, hand-off) and take-over done; missing: weekly HR summary
+- [~] Per-store AI HR assistant: texting, check-ins and nudges done; group settings (tone, facts, screening, hand-off) and take-over done; weekly HR summary done
 - [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
 - [~] Automated status moves from events (done: manager 1/2, candidate booking, offer sent, offer signed → Hired option; missing: HR-defined rules)
 
@@ -55,6 +55,6 @@
 
 ## Still to do
 - [ ] Background checks (partner TBD) — tracking on the profile first
-- [ ] Weekly HR summary per store
+- [x] Weekly HR summary per store: one email per person for the stores they cover, chosen day/time, preview button (off until turned on)
 - [ ] Interview intelligence: question kits, recording/transcripts, AI scorecards (needs consent handling)
 - [ ] Separate Twilio brand per client before go-live; bulk email via Resend/SES
