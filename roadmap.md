@@ -19,6 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
+- [ ] HR adverse-action tracking: pre-notice, waiting period, final notice and report-copy confirmation; no messaging.
 - [x] HR consent evidence review and confirmed withdrawals; authenticated review and cancellation verified, preservation tests pass. No existing consent withdrawn during testing.
 - [x] Recording setup authorized and created; consent-first microphone recording, transcript, evidence suggestions and manual-only Submit verified; recording restored off. Daily private audio cleanup scheduled.
 - [ ] Recording follow-up verification: real Zoom/Teams/Meet tab capture and uploaded video decoding remain unverified; daily cleanup needs published callback verification.
