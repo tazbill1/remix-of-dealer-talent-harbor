@@ -52,7 +52,7 @@ export function DashboardLoading() {
 function Dashboard() {
   const org = useOrg();
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", org.orgId],
     queryFn: async () => {
       const [stores, jobs, apps, events, messages] = await Promise.all([
