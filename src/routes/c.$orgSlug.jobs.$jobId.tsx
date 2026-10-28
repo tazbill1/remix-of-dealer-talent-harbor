@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { rememberScan, recallScan } from "@/lib/scan";
+import { applicationScan, rememberScan, recallScan } from "@/lib/scan";
 import { rememberReferral, recallReferral } from "@/lib/referral-capture";
 import { toast } from "sonner";
 import { ArrowLeft, MapPin } from "lucide-react";
@@ -28,10 +28,10 @@ export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
     return d;
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Job unavailable" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData) return { meta: [{ title: "Job unavailable | hireme" }, { name: "description", content: "This hiring opportunity is unavailable." }, { property: "og:title", content: "Job unavailable | hireme" }, { property: "og:description", content: "This hiring opportunity is unavailable." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] };
     const t = `${loaderData.job.title} at ${loaderData.store?.name ?? loaderData.org?.name}`;
     const desc = loaderData.job.description.slice(0, 155) || t;
-    return { meta: [{ title: t }, { name: "description", content: desc }, { property: "og:title", content: t }, { property: "og:description", content: desc }] };
+    return { meta: [{ title: t }, { name: "description", content: desc }, { property: "og:title", content: t }, { property: "og:description", content: desc }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] };
   },
   component: JobPage,
 });
@@ -73,7 +73,7 @@ function JobPage() {
     if (f.linkedinUrl.trim() && !normalizeLinkedInUrl(f.linkedinUrl)) return toast.error(LINKEDIN_ERROR);
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, ...(source_detail ? { sourceDetail: source_detail } : {}), scan: recallScan(org!.slug) ?? undefined, ref: referral?.code, refVia: referral?.via, referredBy: referral ? undefined : referredBy, resumeFileName: file?.name, smsConsent, answers } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source, ...(source_detail ? { sourceDetail: source_detail } : {}), scan: applicationScan(source, scan, recallScan(org?.slug ?? "")), ref: referral?.code, refVia: referral?.via, referredBy: referral ? undefined : referredBy, resumeFileName: file?.name, smsConsent, answers } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }

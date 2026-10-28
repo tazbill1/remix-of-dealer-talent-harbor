@@ -20,6 +20,11 @@ export function scanDestination(r: ResolvedScan):
 }
 
 const key = (slug: string) => `wm_scan:${slug}`;
+/** Current QR links retain attribution; an explicit source suppresses only browser history. */
+export function applicationScan(source: string | undefined, currentScan: string | undefined, rememberedScan: string | null): string | undefined {
+  return cleanScanCode(currentScan) ?? (source === undefined ? cleanScanCode(rememberedScan) ?? undefined : undefined);
+}
+
 export function rememberScan(slug: string, scan?: string) {
   const code = cleanScanCode(scan);
   if (!code) return;
