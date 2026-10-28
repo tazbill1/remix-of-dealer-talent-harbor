@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { toast } from "sonner";
 import { Copy, Download, Pencil, Plus, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { QrCard } from "@/components/qr-card";
 
 const TITLE = "Referrals | WerkandMe Hiring";
 const DESC = "Employee referral links, QR codes, bonuses and referral results.";
@@ -230,20 +230,8 @@ function ReferralsPage() {
 }
 
 function ReferralQr({ name, link }: { name: string; link: string }) {
-  const [qr, setQr] = useState<string | null>(null);
-  useEffect(() => {
-    QRCode.toDataURL(link, { width: 600, margin: 2, color: { dark: "#1d224b", light: "#ffffff" } }).then(setQr).catch(() => setQr(null));
-  }, [link]);
-  return (
-    <div className="flex flex-col items-center gap-3">
-      {qr ? <img src={qr} alt={`Referral QR code for ${name}`} className="size-56 rounded-lg border" /> : <div className="size-56 rounded-lg bg-muted" />}
-      <p className="text-center text-xs text-muted-foreground">Scans open the careers site, tagged as referred by {name} (QR).</p>
-      <div className="flex gap-2">
-        {qr && <Button size="sm" asChild><a href={qr} download={`${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-referral-qr.png`}><Download />Download PNG</a></Button>}
-        <Button size="sm" variant="outline" onClick={() => copy(link, "QR link")}><Copy />Copy link</Button>
-      </div>
-    </div>
-  );
+  return <QrCard name={name} link={link} caption={`Scans open the careers site, tagged as referred by ${name} (QR).`}
+    fileName={`${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-referral-qr.png`} />;
 }
 
 function ReportTable({ title, first, rows }: { title: string; first: string; rows: ReportRow[] }) {
