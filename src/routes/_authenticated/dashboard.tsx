@@ -113,7 +113,7 @@ function Dashboard() {
           Good to see you! <GradientText>Here's the group.</GradientText>
         </h1>
         <p className="text-muted-foreground">
-          {org.orgName} · {stores.length} stores
+          {org.orgName} · {plural(stores.length, "store")}
         </p>
       </div>
       {stores.length === 0 && (
@@ -167,11 +167,12 @@ function Dashboard() {
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl bg-background p-5 shadow-sm">
+          <Link key={s.label} to={s.to} search={s.search}
+            className="rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-sapphire">
             <s.icon className="size-5 text-sapphire" />
             <div className="mt-3 text-3xl font-extrabold">{s.value}</div>
             <div className="text-sm text-muted-foreground">{s.label}</div>
-          </div>
+          </Link>
         ))}
       </div>
       <div className="rounded-2xl bg-background p-5 shadow-sm">
@@ -189,7 +190,7 @@ function Dashboard() {
                 {s.name}
               </span>
               <span className="text-muted-foreground">
-                {s.total} applicants ·{" "}
+                {plural(s.total, "applicant")} ·{" "}
                 <span className="font-semibold text-foreground">{s.hired} hired</span>
               </span>
             </Link>
