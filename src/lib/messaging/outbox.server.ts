@@ -173,6 +173,7 @@ export async function deliverDue(
   const settingsByOrg = new Map<string, MessagingSettings>();
   const emailSettingsByOrg = new Map<string, EmailSettings>();
   const result = { sent: 0, simulated: 0, failed: 0, blocked: 0 };
+  const liveByApp = new Map<string, boolean>();
 
   for (const m of due ?? []) {
     // Claim the message so two runs never send it twice.
@@ -212,7 +213,7 @@ export async function deliverDue(
     const settings = settingsByOrg.get(m.org_id)!;
     const sentAt = new Date().toISOString();
 
-    if (settings.mode !== "live") {
+    if (!(await storeIsLive(sb, m.application_id, liveByApp))) {
       await sb
         .from("messages")
         .update({ status: "simulated", provider: "practice", sent_at: sentAt })
@@ -301,3 +302,15 @@ export async function applyKeyword(
 }
 
 export { keywordReply };
+
+/** Live texting is switched per store by WerkandMe platform admins (store_texting.live). */
+async function storeIsLive(sb: DB, applicationId: string, cache: Map<string, boolean>) {
+  if (cache.has(applicationId)) return cache.get(applicationId)!;
+  const { data: app } = await sb.from("applications").select("dealership_id").eq("id", applicationId).maybeSingle();
+  const { data: t } = app
+    ? await sb.from("store_texting").select("live").eq("store_id", app.dealership_id).maybeSingle()
+    : { data: null };
+  const live = !!t?.live;
+  cache.set(applicationId, live);
+  return live;
+}
