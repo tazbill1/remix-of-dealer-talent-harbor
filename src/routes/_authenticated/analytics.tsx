@@ -24,11 +24,24 @@ import { fetchAll } from "@/lib/fetch-all";
 import { isTestName, sourceLabel } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AnalyticsReports } from "@/components/analytics-reports";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
-  head: () => ({ meta: [{ title: "Analytics | WerkandMe Hiring" }] }),
-  component: AnalyticsPage,
+  head: () => ({ meta: [
+    { title: "Analytics & Reports | hireme by WerkandMe" },
+    { name: "description", content: "Hiring analytics and printable reports for your dealer group." },
+    { property: "og:title", content: "Analytics & Reports | hireme by WerkandMe" },
+    { property: "og:description", content: "Hiring analytics and printable reports for your dealer group." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
+  component: AnalyticsViews,
 });
+
+function AnalyticsViews() {
+  return <Tabs defaultValue="analytics"><TabsList className="analytics-view-tabs mb-5"><TabsTrigger value="analytics">Analytics</TabsTrigger><TabsTrigger value="reports">Reports</TabsTrigger></TabsList><TabsContent value="analytics"><AnalyticsPage /></TabsContent><TabsContent value="reports"><AnalyticsReports /></TabsContent></Tabs>;
+}
 
 const PERIODS = [
   { value: "7", label: "Last 7 days" },
