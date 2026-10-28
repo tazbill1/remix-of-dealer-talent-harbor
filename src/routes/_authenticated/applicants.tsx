@@ -2,7 +2,8 @@ import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { PossibleDuplicateTag, useOpenDuplicate } from "@/components/possible-duplicate-tag";
 import { TagOverflow } from "@/components/tag-overflow";
 import { orderCardFlags, type CardFlag } from "@/lib/card-tags";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { OnboardingPanel } from "@/components/onboarding-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { STATUSES, STATUS_LABEL, STATUS_COLOR, canPostJobs, isRejection, type AppStatus } from "@/lib/jobs";
+import { BOARD_SHORT_LABEL, STATUSES, STATUS_LABEL, STATUS_COLOR, canPostJobs, isRejection, type AppStatus } from "@/lib/jobs";
 import { StatusPill, statusSelectStyle } from "@/components/status-pill";
 import { doNotHireRepeats } from "@/lib/do-not-hire";
 
@@ -182,6 +183,7 @@ function Applicants() {
   const sortedApps = sortApplicants(apps, sort, job, storeName);
   const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
   const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || overdueOnly || region !== "all" || store !== "all";
+  const activeFilterCount = [region !== "all", jobFilter !== "all", sourceFilter !== "all", applied !== "any", attentionOnly, overdueOnly].filter(Boolean).length;
   const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, overdue: undefined, region: undefined, store: undefined });
 
   // Must come after job() and storeName(): they're used while rendering.
@@ -241,10 +243,12 @@ function Applicants() {
     return <span className="inline-flex flex-wrap items-center gap-1">{top && nodes[top]}<TagOverflow tags={rest.map((k) => nodes[k])} /></span>;
   };
 
+  const boardStatuses = showEmpty ? STATUSES : STATUSES.filter((st) => sortedApps.some((a) => a.status === st));
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-3xl">Applicants</h1><p className="text-muted-foreground">Drag a card to move it along, or tick several to update them at once.</p></div>
+        <div><h1 className="text-3xl">Applicants</h1>{view === "board" && <p className="text-muted-foreground">Drag a card to move it along, or tick several to update them at once.</p>}</div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex overflow-hidden rounded-md border text-sm" role="group" aria-label="View">
             <button aria-pressed={view === "board"} onClick={() => set({ view: undefined })}
@@ -268,6 +272,16 @@ function Applicants() {
           {q && <button aria-label="Clear search" onClick={() => set({ q: undefined })}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
         </div>
+        <select aria-label="Store" className={selectCls} value={store} onChange={(e) => set({ store: e.target.value === "all" ? undefined : e.target.value })}>
+          <option value="all">All stores</option>
+          <option value="shared">Open to other stores</option>
+          {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9"><SlidersHorizontal />Filters{activeFilterCount > 0 && <span className="rounded-full bg-sapphire px-1.5 text-xs text-primary-foreground">{activeFilterCount}</span>}</Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="flex w-64 flex-col gap-3">
         {(data?.regions.length ?? 0) > 0 && (
           <select aria-label="Region" className={selectCls} value={region}
             onChange={(e) => set({ region: e.target.value === "all" ? undefined : e.target.value, ...(store !== "shared" ? { store: undefined } : {}) })}>
@@ -276,11 +290,6 @@ function Applicants() {
             <option value="none">No region</option>
           </select>
         )}
-        <select aria-label="Store" className={selectCls} value={store} onChange={(e) => set({ store: e.target.value === "all" ? undefined : e.target.value })}>
-          <option value="all">All stores</option>
-          <option value="shared">Open to other stores</option>
-          {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
         <select aria-label="Job" className={selectCls} value={jobFilter} onChange={(e) => set({ job: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All jobs</option>
           {(data?.jobs ?? []).map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
@@ -303,6 +312,8 @@ function Applicants() {
           <Checkbox checked={overdueOnly} onCheckedChange={(c) => set({ overdue: c === true ? "1" : undefined })} />
           Overdue only
         </label>
+          </PopoverContent>
+        </Popover>
         <select aria-label="Sort" className={selectCls} value={sort} onChange={(e) => set({ sort: e.target.value === "newest" ? undefined : e.target.value })}>
           {SORT_MENU.map((s) => <option key={s} value={s}>{SORTS[s]?.label ?? s}</option>)}
           {!(SORT_MENU as readonly string[]).includes(sort) && <option value={sort}>{SORTS[sort]?.label ?? sort}</option>}
@@ -362,15 +373,19 @@ function Applicants() {
 
       {view === "board" ? (
         <div className="overflow-x-auto pb-4">
-        <div className="grid min-w-[1980px] grid-cols-9 gap-2">
-          {STATUSES.map((st) => {
+        <label className="mb-2 flex w-fit items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox checked={showEmpty} onCheckedChange={(c) => setShowEmpty(c === true)} />
+          Show empty stages
+        </label>
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${boardStatuses.length}, minmax(200px, 1fr))` }}>
+          {boardStatuses.map((st) => {
             const col = sortedApps.filter((a) => a.status === st);
             return (
               <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
                 <div className="mb-3 flex items-center justify-between gap-2 px-1 text-sm font-semibold">
-                  <StatusPill status={st} className="min-w-0 text-sm leading-tight" />
+                  <span title={STATUS_LABEL[st]} className="min-w-0"><StatusPill status={st} label={BOARD_SHORT_LABEL[st]} className="text-sm leading-tight" /></span>
                   <span className="flex items-center gap-2 text-muted-foreground">{col.length}
                     {col.length > 0 && <Checkbox aria-label={`Select all ${STATUS_LABEL[st]}`} checked={col.every((a) => checked.includes(a.id))}
                       onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...col.map((a) => a.id)])] : prev.filter((id) => !col.some((a) => a.id === id)))} />}</span>
@@ -552,20 +567,20 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
         </div>
         {/* Compact spacing keeps every full label visible on desktop;
             narrow mobile widths can still scroll without wrapping. */}
-        <div className="flex flex-nowrap overflow-x-auto text-xs sm:overflow-x-visible" aria-label="Applicant tabs">
+        <div className="flex flex-nowrap gap-1 overflow-x-auto text-sm" aria-label="Applicant tabs">
           {PANEL_TABS.filter((t) => t.id !== "onboarding" || app.status === "hired").map((t) => (
             <Button variant="ghost" key={t.id} onClick={() => pickTab(t.id)}
-              className={cn("h-auto rounded-none whitespace-nowrap border-b-2 px-0.5 py-1.5 text-xs font-medium hover:bg-transparent", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
+              className={cn("h-auto rounded-none whitespace-nowrap border-b-2 px-2.5 py-2.5 text-sm font-medium hover:bg-transparent", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
               {t.label}</Button>
           ))}
         </div>
       </div>
 
-      <div className="space-y-6 pt-4">
+      <div className={cn("pt-4", tab === "overview" ? "space-y-4" : "space-y-6")}>
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
-            <div className="rounded-xl border">
+            <div className="rounded-xl border bg-background">
               <button type="button" onClick={toggleDetails} aria-expanded={detailsOpen}
                 className="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold">
                 Details<ChevronDown className={cn("size-4 transition-transform", !detailsOpen && "-rotate-90")} />
@@ -596,7 +611,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             </div>
               )}
             </div>
-            <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
+            <div className="flex items-center justify-between gap-2 rounded-xl border bg-background p-3 text-sm">
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">LinkedIn profile</div>
                 {editingLinkedin ? (
@@ -615,11 +630,11 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
                 <Button size="sm" variant="outline" onClick={() => { setLinkedinDraft(app.linkedin_url ?? ""); setEditingLinkedin(true); }}><Pencil />Edit</Button>
               )}
             </div>
-            {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
+            {app.ai_summary && <p className="rounded-xl border bg-background p-3 text-sm">{app.ai_summary}</p>}
             <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
             <ProfileFacts profile={app.profile as Record<string, unknown>} />
             {otherApps.length > 0 && (
-              <div className="rounded-xl border p-3">
+              <div className="rounded-xl border bg-background p-3">
                 <div className="mb-2 text-sm font-semibold">Also applied for</div>
                 <div className="space-y-1">
                   {otherApps.map((o) => (
@@ -633,11 +648,11 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
                 <p className="mt-2 text-xs text-muted-foreground">Each application keeps its own stage, so you can pass on one without closing the others.</p>
               </div>
             )}
-            <label className="flex items-center justify-between rounded-xl bg-secondary p-3 text-sm">
+            <label className="flex items-center justify-between rounded-xl border bg-background p-3 text-sm">
               <span><b>Open to other stores</b><br /><span className="text-muted-foreground">Other stores in your group can reach out. Never shared outside your group.</span></span>
               <Switch checked={app.open_to_other_stores} onCheckedChange={(c) => onUpdate({ open_to_other_stores: c })} />
             </label>
-            <div className="rounded-xl border p-3">
+            <div className="rounded-xl border bg-background p-3">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><ArrowRightLeft className="size-4" />Transfer to another store</div>
               <p className="mb-2 text-xs text-muted-foreground">Better fit somewhere else in your group? Move them to that store's opening. Notes, rating and history come along.</p>
               <div className="flex gap-2">
@@ -655,7 +670,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
               )}
             </div>
             {(app.status === "hired" || app.hired_at) && (
-              <div className="space-y-3 rounded-xl border p-3">
+              <div className="space-y-3 rounded-xl border bg-background p-3">
                 <div className="flex items-center gap-2 text-sm font-semibold"><UserCheck className="size-4 text-lime" />Hiring & retention</div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div><div className="text-xs text-muted-foreground">Hired on</div>
@@ -735,7 +750,7 @@ function ProfileFacts({ profile }: { profile: Record<string, unknown> }) {
   const rows = Object.entries(profile ?? {}).filter(([k, v]) => FACT_LABELS[k] && v !== null && v !== "" && !(Array.isArray(v) && !v.length));
   if (!rows.length) return null;
   return (
-    <dl className="grid grid-cols-2 gap-2 rounded-xl border p-3 text-sm">
+    <dl className="grid grid-cols-2 gap-2 rounded-xl border bg-background p-3 text-sm">
       {rows.map(([k, v]) => (
         <div key={k}><dt className="text-xs text-muted-foreground">{FACT_LABELS[k]}</dt>
           <dd>{Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}</dd></div>

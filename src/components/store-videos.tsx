@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Video, Upload } from "lucide-react";
+import { Video, Upload, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
@@ -10,8 +10,10 @@ import { VIDEO_KINDS, VIDEO_KIND_LABEL, resolveStoreVideo, videoPath, type Video
 const BUCKET = "store-videos";
 
 /** Welcome + Thank-you videos for one store (storeId) or the whole group (storeId = null). Everything starts off. */
-export function StoreVideosCard({ orgId, storeId, canEdit }: { orgId: string; storeId: string | null; canEdit: boolean }) {
+export function StoreVideosCard({ orgId, storeId, canEdit, collapsibleTitle }: { orgId: string; storeId: string | null; canEdit: boolean; collapsibleTitle?: string }) {
   const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
   const key = ["store-videos", orgId, storeId];
   const { data: rows = [] } = useQuery({
     queryKey: key,
@@ -27,9 +29,30 @@ export function StoreVideosCard({ orgId, storeId, canEdit }: { orgId: string; st
     },
   });
   const refresh = () => qc.invalidateQueries({ queryKey: key });
+  const ownCount = VIDEO_KINDS.filter((k) => rows.some((r) => r.kind === k && r.store_id === storeId)).length;
+  useEffect(() => {
+    if (!autoOpened && ownCount > 0) { setOpen(true); setAutoOpened(true); }
+  }, [ownCount, autoOpened]);
+
+  if (collapsibleTitle && !open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} aria-expanded={false}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl bg-background p-4 text-left shadow-sm hover:bg-secondary/40">
+        <span className="flex items-center gap-2"><ChevronDown className="size-4 -rotate-90 text-muted-foreground" /><span className="text-lg">{collapsibleTitle}</span></span>
+        <span className="text-sm text-muted-foreground">{ownCount === 0 ? "No videos yet" : `${ownCount} of ${VIDEO_KINDS.length} videos added`}</span>
+      </button>
+    );
+  }
 
   return (
     <div className="space-y-4 rounded-2xl bg-background p-5 shadow-sm">
+      {collapsibleTitle && (
+        <button type="button" onClick={() => setOpen(false)} aria-expanded
+          className="flex w-full items-center justify-between gap-3 text-left">
+          <span className="flex items-center gap-2"><ChevronDown className="size-4 text-muted-foreground" /><span className="text-lg">{collapsibleTitle}</span></span>
+          <span className="text-sm text-muted-foreground">{ownCount === 0 ? "No videos yet" : `${ownCount} of ${VIDEO_KINDS.length} videos added`}</span>
+        </button>
+      )}
       <div className="flex items-center gap-2">
         <Video className="size-5 text-sapphire" />
         <h2 className="text-lg">{storeId ? "Videos" : "Group videos"}</h2>

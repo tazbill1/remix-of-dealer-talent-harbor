@@ -115,3 +115,9 @@ export const STARTER_TEMPLATES = [
   { title: "F&I Manager", department: "Finance", division: "variable", employment_type: "FULL_TIME", pay_period: "YEAR", pay_min: 120000, pay_max: 250000,
     description: "Structure deals, work lenders and present protection products with full compliance.\n\nWhat you'll need:\n- 2+ years F&I experience\n- Menu selling and compliance know-how\n- Strong lender relationships" },
 ] as const;
+
+/** Short labels for board column headers only; full names stay everywhere else. */
+export const BOARD_SHORT_LABEL: Partial<Record<AppStatus, string>> = {
+  unqualified: "Doesn't Qualify",
+  other_location: "Other Location/Role",
+};

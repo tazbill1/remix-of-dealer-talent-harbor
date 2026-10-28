@@ -60,10 +60,7 @@ function VideosTab() {
     <div className="space-y-6">
       {(isHr || org.role === "regional_leader") && <StoreVideosCard orgId={org.orgId} storeId={null} canEdit={isHr} />}
       {stores.map((s) => (
-        <div key={s.id} className="space-y-2">
-          <h2 className="text-lg">{s.name}</h2>
-          <StoreVideosCard orgId={org.orgId} storeId={s.id} canEdit={isHr || storeRole} />
-        </div>
+        <StoreVideosCard key={s.id} orgId={org.orgId} storeId={s.id} canEdit={isHr || storeRole} collapsibleTitle={s.name} />
       ))}
     </div>
   );
