@@ -211,6 +211,7 @@ function Applicants() {
           );
         })}
       </div>
+      </div>
 
       <EmailCompose open={!!emailing} onOpenChange={(o) => !o && setEmailing(null)} orgId={org.orgId}
         recipients={emailRecipients} onSent={() => setChecked([])} />
