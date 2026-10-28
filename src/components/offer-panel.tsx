@@ -79,8 +79,8 @@ export function OfferPanel({
     onChanged();
   };
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit() {
+    setConfirming(false);
     setBusy(true);
     try {
       const r = await send({ data: { orgId, applicationId: appId, jobTitle: title, pay, startDate: start, note, textLink } });
@@ -122,7 +122,7 @@ export function OfferPanel({
       )}
 
       {open && (
-        <form onSubmit={submit} className="space-y-2">
+        <form onSubmit={(e) => { e.preventDefault(); setConfirming(true); }} className="space-y-2">
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="space-y-1 text-xs">
               Job title
@@ -153,6 +153,18 @@ export function OfferPanel({
               Cancel
             </Button>
           </div>
+          <AlertDialog open={confirming} onOpenChange={setConfirming}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Send the offer letter to {applicantName ?? "this applicant"}?</AlertDialogTitle>
+                <AlertDialogDescription>They'll get it by email to sign.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => void submit()}>Send</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <p className="text-xs text-muted-foreground">
             BoldSign emails the letter too, and reminds them every 2 days until they sign.
           </p>
