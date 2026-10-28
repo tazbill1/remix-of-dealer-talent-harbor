@@ -22,7 +22,7 @@
 - [x] HR adverse-action page: pre-notice, five-business-day wait, final notice and dated report-copy confirmation; authenticated form/read verified and rule tests pass. No actual notices marked delivered in testing.
 - [x] HR consent evidence review and confirmed withdrawals; authenticated review and cancellation verified, preservation tests pass. No existing consent withdrawn during testing.
 - [x] Recording setup authorized and created; consent-first microphone recording, transcript, evidence suggestions and manual-only Submit verified; recording restored off. Daily private audio cleanup scheduled.
-- [ ] Recording follow-up verification: real Zoom/Teams/Meet tab capture and uploaded video decoding remain unverified; daily cleanup needs published callback verification.
+- [x] Recording paused: hidden from scorecard, Integrations and homepage at Tom's request (data kept).
 - [x] Interview row links, sticky scorecard progress and per-interview submitted summaries; authenticated click verified, two scores picked and closed without saving, existing access unchanged.
 - [x] Interview invite emails wired into manual, self-service and assistant bookings; one assigned store interviewer, signed .ics download link, ambiguous coverage flagged. Tests and real interview download verified; no live test email sent to other staff.
 - [ ] Choose a connected Google calendar when staff set an interview time and create its calendar event (requires Google app-user connection setup).
