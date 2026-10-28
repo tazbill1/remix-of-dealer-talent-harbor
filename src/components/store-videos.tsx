@@ -21,9 +21,9 @@ export function StoreVideosCard({ orgId, storeId, canEdit }: { orgId: string; st
       const { data, error } = await q;
       if (error) throw error;
       const urls = await Promise.all(
-        (data ?? []).map(async (r) => (await supabase.storage.from(BUCKET).createSignedUrl(r.storage_path, 3600)).data?.signedUrl ?? null),
+        (data ?? []).map(async (r) => (await supabase.storage.from(BUCKET).createSignedUrl(r.storage_path, 3600)).data?.signedUrl ?? null) as string | null,
       );
-      return (data ?? []).map((r, i) => ({ ...r, url: urls[i] }));
+      return (data ?? []).map((r, i) => ({ ...r, url: urls[i] ?? null }));
     },
   });
   const refresh = () => qc.invalidateQueries({ queryKey: key });
@@ -75,8 +75,8 @@ function VideoSlot({ kind, orgId, storeId, own, canEdit, onChange, fallbackNote,
       if (up.error) throw up.error;
       const { data: user } = await supabase.auth.getUser();
       const res = own
-        ? await supabase.from("store_videos").update({ storage_path: path, file_name: file.name, uploaded_by: user.user?.id, updated_at: new Date().toISOString() }).eq("id", own.id).select("id").single()
-        : await supabase.from("store_videos").insert({ org_id: orgId, store_id: storeId, kind, storage_path: path, file_name: file.name, uploaded_by: user.user?.id }).select("id").single();
+        ? await supabase.from("store_videos").update({ storage_path: path, file_name: file.name, uploaded_by: user.user?.id ?? null, updated_at: new Date().toISOString() }).eq("id", own.id).select("id").single()
+        : await supabase.from("store_videos").insert({ org_id: orgId, store_id: storeId, kind, storage_path: path, file_name: file.name, uploaded_by: user.user?.id ?? null }).select("id").single();
       if (res.error || !res.data) throw res.error ?? new Error("Couldn't save the video.");
       if (own) await supabase.storage.from(BUCKET).remove([own.storage_path]);
       toast.success(`${VIDEO_KIND_LABEL[kind]} uploaded${own?.enabled ? "" : ". Switch it on when you're ready"}.`);
