@@ -257,15 +257,19 @@ export type Database = {
           full_name: string
           hired_at: string | null
           id: string
+          in_talent_pool: boolean
           job_id: string
           knockout_failed: boolean
           last_reminded_at: string | null
           linkedin_url: string | null
+          moved_to_pool_at: string | null
           needs_attention: string | null
           notes: string | null
           open_to_other_stores: boolean
           org_id: string
+          original_store_id: string | null
           phone: string | null
+          pool_reason: string | null
           profile: Json
           rating: number | null
           recruiting_event_id: string | null
@@ -283,6 +287,7 @@ export type Database = {
           status: Database["public"]["Enums"]["application_status"]
           status_changed_at: string
           status_token: string
+          talent_pool_region_id: string | null
           updated_at: string
         }
         Insert: {
@@ -303,15 +308,19 @@ export type Database = {
           full_name: string
           hired_at?: string | null
           id?: string
+          in_talent_pool?: boolean
           job_id: string
           knockout_failed?: boolean
           last_reminded_at?: string | null
           linkedin_url?: string | null
+          moved_to_pool_at?: string | null
           needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
           org_id: string
+          original_store_id?: string | null
           phone?: string | null
+          pool_reason?: string | null
           profile?: Json
           rating?: number | null
           recruiting_event_id?: string | null
@@ -329,6 +338,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["application_status"]
           status_changed_at?: string
           status_token?: string
+          talent_pool_region_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -349,15 +359,19 @@ export type Database = {
           full_name?: string
           hired_at?: string | null
           id?: string
+          in_talent_pool?: boolean
           job_id?: string
           knockout_failed?: boolean
           last_reminded_at?: string | null
           linkedin_url?: string | null
+          moved_to_pool_at?: string | null
           needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
           org_id?: string
+          original_store_id?: string | null
           phone?: string | null
+          pool_reason?: string | null
           profile?: Json
           rating?: number | null
           recruiting_event_id?: string | null
@@ -375,6 +389,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["application_status"]
           status_changed_at?: string
           status_token?: string
+          talent_pool_region_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -407,6 +422,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "applications_original_store_id_fkey"
+            columns: ["original_store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "applications_recruiting_event_id_fkey"
             columns: ["recruiting_event_id"]
             isOneToOne: false
@@ -418,6 +440,13 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_talent_pool_region_id_fkey"
+            columns: ["talent_pool_region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -1242,6 +1271,8 @@ export type Database = {
           send_days: number[]
           send_end: string
           send_start: string
+          talent_pool_after_reminders: number
+          talent_pool_enabled: boolean
           updated_at: string | null
         }
         Insert: {
@@ -1263,6 +1294,8 @@ export type Database = {
           send_days?: number[]
           send_end?: string
           send_start?: string
+          talent_pool_after_reminders?: number
+          talent_pool_enabled?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -1284,6 +1317,8 @@ export type Database = {
           send_days?: number[]
           send_end?: string
           send_start?: string
+          talent_pool_after_reminders?: number
+          talent_pool_enabled?: boolean
           updated_at?: string | null
         }
         Relationships: [
@@ -2469,6 +2504,14 @@ export type Database = {
         Args: { _app: string; _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      can_see_pool_region: {
+        Args: { _org: string; _region: string; _uid: string }
+        Returns: boolean
+      }
+      claim_pool_candidate: {
+        Args: { _app: string; _job?: string; _store: string }
+        Returns: string
+      }
       create_organization: {
         Args: { _name: string; _slug: string }
         Returns: string
@@ -2514,6 +2557,10 @@ export type Database = {
           store_id: string
           store_name: string
         }[]
+      }
+      return_to_talent_pool: {
+        Args: { _app: string; _reason?: string }
+        Returns: string
       }
       run_status_reminders: { Args: { _org?: string }; Returns: number }
       run_status_reminders_now: { Args: { _org: string }; Returns: number }
