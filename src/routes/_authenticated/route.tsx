@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText, Workflow, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -49,14 +49,11 @@ const sections: { id: string; label: string; items: NavItem[] }[] = [
     { to: "/stores", label: "Stores", icon: Building2 },
     { to: "/team", label: "Team", icon: UserCog },
     { to: "/integrations", label: "Integrations", icon: Plug },
-    { to: "/status-rules", label: "Status rules", icon: Workflow },
-    { to: "/templates", label: "Templates", icon: FileText },
-    { to: "/automations", label: "Automatic texts", icon: MessageSquareText },
-    { to: "/onboarding-templates", label: "Onboarding templates", icon: ClipboardCheck },
+    { to: "/settings", label: "Settings", icon: Settings },
   ] },
 ];
 /** Pages reached from another menu item still highlight it. */
-const ALIASES: Record<string, string> = { "/talent-pool": "/applicants", "/duplicates": "/applicants" };
+const ALIASES: Record<string, string> = { "/status-rules": "/settings", "/templates": "/settings", "/automations": "/settings", "/onboarding-templates": "/settings", "/talent-pool": "/applicants", "/duplicates": "/applicants" };
 const SECTIONS_KEY = "wm_nav_sections";
 
 /** GMs and hiring managers only work in their assigned stores. */

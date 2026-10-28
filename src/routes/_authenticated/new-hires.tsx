@@ -41,7 +41,7 @@ function Onboarding() {
           <h1 className="flex items-center gap-2 text-3xl"><ClipboardCheck className="size-7 text-sapphire" />Onboarding</h1>
           <p className="text-muted-foreground">Every new hire gets a checklist when they're moved to Hired. Nothing is sent automatically.</p>
         </div>
-        {isHr && <Button variant="outline" asChild><Link to="/onboarding-templates">Onboarding templates</Link></Button>}
+        {isHr && <Button variant="outline" asChild><Link to="/settings" search={{ tab: "onboarding" }}>Onboarding templates</Link></Button>}
       </div>
       <div className="overflow-x-auto rounded-2xl bg-background shadow-sm">
         <table className="w-full text-sm">

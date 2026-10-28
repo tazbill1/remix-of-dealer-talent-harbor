@@ -28,3 +28,14 @@ describe("role-based menu", () => {
     expect(canSeeNav("/referrals", rl)).toBe(true);
   });
 });
+
+import { settingsTabsFor } from "@/lib/nav";
+describe("settings tabs", () => {
+  it("HR sees every settings tab", () => {
+    expect(settingsTabsFor(hr).map((t) => t.id)).toEqual(["rules", "templates", "texts", "onboarding", "videos"]);
+  });
+  it("GMs and regional leaders only see Videos", () => {
+    expect(settingsTabsFor(gm).map((t) => t.id)).toEqual(["videos"]);
+    expect(settingsTabsFor(rl).map((t) => t.id)).toEqual(["videos"]);
+  });
+});

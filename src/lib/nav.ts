@@ -16,3 +16,18 @@ export function canSeeNav(path: string, r: NavRole): boolean {
   if (path === "/new-hires") return r.role !== "regional_leader";
   return true;
 }
+
+/** Settings page tabs, in order, with the role check for each. */
+export const SETTINGS_TABS = [
+  { id: "rules", label: "Status rules", path: "/status-rules" },
+  { id: "templates", label: "Templates", path: "/templates" },
+  { id: "texts", label: "Automatic texts", path: "/automations" },
+  { id: "onboarding", label: "Onboarding templates", path: "/onboarding-templates" },
+  { id: "videos", label: "Videos", path: "/settings/videos" },
+] as const;
+export type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
+
+export function settingsTabsFor(r: NavRole) {
+  // Videos: HR edit all, GMs/hiring managers their stores, regional leaders view.
+  return SETTINGS_TABS.filter((t) => t.id === "videos" ? true : canSeeNav(t.path, r));
+}
