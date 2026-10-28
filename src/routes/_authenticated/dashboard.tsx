@@ -15,6 +15,7 @@ import {
 } from "@/lib/escalation";
 import { GradientText } from "@/components/brand";
 import { Button } from "@/components/ui/button";
+import { isTestName, plural } from "@/lib/display";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | WerkandMe Hiring" }] }),
@@ -66,7 +67,7 @@ function Dashboard() {
     },
   });
   const stores = data?.stores ?? [];
-  const apps = data?.apps ?? [];
+  const apps = (data?.apps ?? []).filter((a) => !isTestName(a.full_name));
   const openJobs = (data?.jobs ?? []).filter((j) => j.status === "open").length;
   const today = new Date().toDateString();
   const newToday = apps.filter((a) => new Date(a.created_at).toDateString() === today).length;
@@ -99,10 +100,10 @@ function Dashboard() {
     .sort((a, b) => b.total - a.total);
 
   const stats = [
-    { label: "Open jobs", value: openJobs, icon: Briefcase },
-    { label: "New today", value: newToday, icon: Sparkles },
-    { label: "Total applicants", value: apps.length, icon: Users },
-    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy },
+    { label: "Open jobs", value: openJobs, icon: Briefcase, to: "/jobs" as const, search: undefined },
+    { label: "New today", value: newToday, icon: Sparkles, to: "/applicants" as const, search: { filter: "today" as const } },
+    { label: "Total applicants", value: apps.length, icon: Users, to: "/applicants" as const, search: {} },
+    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy, to: "/applicants" as const, search: { status: "hired" } },
   ];
 
   return (
