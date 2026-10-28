@@ -4,12 +4,16 @@ import { Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Small tag in the applicant panel when an open possible-duplicate match involves this applicant. */
-export function PossibleDuplicateTag({ appId }: { appId: string }) {
-  const { data } = useQuery({
+export function useOpenDuplicate(appId: string) {
+  return useQuery({
     queryKey: ["possible-dup", appId],
     queryFn: async () => (await supabase.from("possible_duplicates").select("id").eq("status", "open")
       .or(`and(record_a_type.eq.application,record_a_id.eq.${appId}),and(record_b_type.eq.application,record_b_id.eq.${appId})`).limit(1)).data?.[0] ?? null,
   });
+}
+
+export function PossibleDuplicateTag({ appId }: { appId: string }) {
+  const { data } = useOpenDuplicate(appId);
   if (!data) return null;
   return (
     <Link to="/duplicates" search={{ match: data.id }}

@@ -23,8 +23,7 @@ vi.mock("@tanstack/react-start", async (orig) => ({
 
 describe("Automatic texts page", () => {
   it("shows every automatic text with on/off, wording and a live preview", async () => {
-    const { Route } = await import("@/routes/_authenticated/automations");
-    const Page = Route.options.component!;
+    const { AutomaticTextsSettings: Page } = await import("@/components/settings/automations");
     const el = document.createElement("div");
     document.body.appendChild(el);
     const qc = new QueryClient();

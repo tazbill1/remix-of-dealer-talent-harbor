@@ -1,9 +1,12 @@
 import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
-import { PossibleDuplicateTag } from "@/components/possible-duplicate-tag";
+import { PossibleDuplicateTag, useOpenDuplicate } from "@/components/possible-duplicate-tag";
+import { TagOverflow } from "@/components/tag-overflow";
+import { orderCardFlags, type CardFlag } from "@/lib/card-tags";
+import { ChevronDown } from "lucide-react";
 import { OnboardingPanel } from "@/components/onboarding-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List, Linkedin, Pencil } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -91,6 +94,16 @@ function Applicants() {
     },
   });
   const { data: referrerRows = [] } = useReferrerNames(org.orgId);
+  // Open possible-duplicate matches (RLS scopes to what this person may see), for card tags.
+  const { data: dupAppIds = new Set<string>() } = useQuery({
+    queryKey: ["open-dup-apps", org.orgId],
+    queryFn: async () => {
+      const { data: d } = await supabase.from("possible_duplicates").select("record_a_type, record_a_id, record_b_type, record_b_id").eq("org_id", org.orgId).eq("status", "open");
+      const ids = new Set<string>();
+      for (const r of d ?? []) { if (r.record_a_type === "application") ids.add(r.record_a_id); if (r.record_b_type === "application") ids.add(r.record_b_id); }
+      return ids;
+    },
+  });
   const referrerNames = new Map(referrerRows.map((r) => [r.id, r.employee_name]));
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -207,6 +220,26 @@ function Applicants() {
     { label: "Applied", asc: "newest", desc: "oldest" },
     { label: "Rating", asc: "rating", desc: "rating_asc" },
   ];
+
+  type CardApp = NonNullable<typeof data>["apps"][number];
+  /** Most important flag first; everything else folds into "+N". */
+  const cardTags = (a: CardApp, withSource: boolean) => {
+    const od = overdueOf(a);
+    const kq = parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions);
+    const nodes: Partial<Record<CardFlag, React.ReactNode>> = {
+      dnh: dnhRepeats.has(a.id) ? <DoNotHireBadge key="dnh" /> : null,
+      overdue: od ? <OverdueTag key="od" overdue={od} /> : null,
+      attention: a.needs_attention ? <span key="att" className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span> : null,
+      duplicate: dupAppIds.has(a.id) ? <span key="dup" className="mt-1 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning-foreground">Possible duplicate</span> : null,
+      pool: a.in_talent_pool ? <span key="pool" className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-medium" title={a.pool_reason ?? undefined}>In talent pool</span> : null,
+      referral: (a.referrer_id || a.referred_by_text) ? <ReferralBadge key="ref" app={a} names={referrerNames} /> : null,
+      source: withSource && a.source ? <span key="src" className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs">{sourceLabel(a.source)}</span> : null,
+      knockout: a.knockout_failed ? <KnockoutBadge key="ko" questions={kq} answers={(a.answers ?? {}) as Answers} /> : null,
+      background: a.background_check_status ? <BackgroundCheckBadge key="bg" status={a.background_check_status} /> : null,
+    };
+    const { top, rest } = orderCardFlags(Object.fromEntries(Object.entries(nodes).map(([k, v]) => [k, !!v])));
+    return <span className="inline-flex flex-wrap items-center gap-1">{top && nodes[top]}<TagOverflow tags={rest.map((k) => nodes[k])} /></span>;
+  };
 
   return (
     <div className="space-y-5">
@@ -350,16 +383,8 @@ function Applicants() {
                       <div className="flex items-start justify-between gap-1"><div className="flex min-w-0 items-center gap-1 truncate text-sm font-semibold"><span className="truncate">{a.full_name}</span>{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</div>
                         <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
                       <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
-                      {a.knockout_failed && (
-                        <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
-                      )}
-                      <BackgroundCheckBadge status={a.background_check_status} />
-                      <ReferralBadge app={a} names={referrerNames} />
-                      {dnhRepeats.has(a.id) && <DoNotHireBadge />}
-                      <OverdueTag overdue={overdueOf(a)} />
-                      {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
+                      {cardTags(a, true)}
+                      <div className="mt-2 flex items-center justify-end text-xs text-muted-foreground">
                         <span>{new Date(a.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -391,7 +416,7 @@ function Applicants() {
                   <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
-                  <td className="px-3 py-2.5"><StatusPill status={a.status} />{dnhRepeats.has(a.id) && <> <DoNotHireBadge /></>}<OverdueTag overdue={overdueOf(a)} /></td>
+                  <td className="px-3 py-2.5"><span className="inline-flex flex-wrap items-center gap-1"><StatusPill status={a.status} />{cardTags(a, false)}</span></td>
                   <td className="px-3 py-2.5">{sourceLabel(a.source)}</td>
                   <td className="px-3 py-2.5">{new Date(a.created_at).toLocaleDateString()}</td>
                   <td className="px-3 py-2.5">{a.rating ?? "—"}</td>
@@ -478,13 +503,25 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
     if (error || !data) return toast.error("Resume isn't available yet.");
     window.open(data.signedUrl, "_blank");
   }
+  const { data: dup } = useOpenDuplicate(app.id);
+  const overdueNow = overdueInfo(app, reminderRules);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  useEffect(() => { setDetailsOpen(localStorage.getItem("wm_panel_details") === "1"); }, []);
+  const toggleDetails = () => setDetailsOpen((o) => { localStorage.setItem("wm_panel_details", o ? "0" : "1"); return !o; });
+  // Top shows just the single most important flag; Details lists all of them.
+  const topFlag = doNotHireRepeat ? <DoNotHireBadge />
+    : overdueNow ? <OverdueTag overdue={overdueNow} />
+    : app.needs_attention ? <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={app.needs_attention}>Needs you</span>
+    : dup ? <PossibleDuplicateTag appId={app.id} />
+    : app.in_talent_pool ? <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium" title={app.pool_reason ?? undefined}>In talent pool – {regionName ?? "region"}</span>
+    : null;
   return (
     <div>
       {/* mb-6 cancels the -mt-6 pull on following content, so nothing slides under the header. */}
       <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
         <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
           <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p>
-          {app.created_manually && <p className="text-xs text-muted-foreground">Added by {addedBy ?? "a team member"}</p>}</SheetHeader>
+</SheetHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
           {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
@@ -494,10 +531,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             onChange={(e) => onUpdate({ status: e.target.value as AppStatus })}>
             {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
-          {doNotHireRepeat && <DoNotHireBadge />}
-          <PossibleDuplicateTag appId={app.id} />
-          <OverdueTag overdue={overdueInfo(app, reminderRules)} />
-          {app.in_talent_pool && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium" title={app.pool_reason ?? undefined}>In talent pool – {regionName ?? "region"}</span>}
+          {topFlag}
           {isHr && !app.in_talent_pool && regionName && app.status !== "hired" && app.status !== "do_not_hire" && (
             <Button size="sm" variant="outline" onClick={async () => {
               const reason = window.prompt("Move to talent pool. Reason (optional):", "");
@@ -531,6 +565,13 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            <div className="rounded-xl border">
+              <button type="button" onClick={toggleDetails} aria-expanded={detailsOpen}
+                className="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold">
+                Details<ChevronDown className={cn("size-4 transition-transform", !detailsOpen && "-rotate-90")} />
+              </button>
+              {detailsOpen && (
+            <div className="space-y-3 border-t p-3">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="text-muted-foreground">Source</span>
               {canEditSource ? (
@@ -541,7 +582,20 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
               ) : <span className="rounded-full bg-accent px-2 py-0.5">{app.source}</span>}
               {app.source_detail && <span className="text-muted-foreground">{app.source_detail}</span>}
             </div>
+            {app.created_manually && <p className="text-xs text-muted-foreground">Added by {addedBy ?? "a team member"}</p>}
             <ReferralPanelRow app={app} orgId={orgId} isHr={isHr} onLink={(id) => onUpdate({ referrer_id: id })} />
+            {(doNotHireRepeat || dup || overdueNow || app.needs_attention || app.in_talent_pool) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {doNotHireRepeat && <DoNotHireBadge />}
+                <OverdueTag overdue={overdueNow} />
+                {app.needs_attention && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={app.needs_attention}>Needs you</span>}
+                <PossibleDuplicateTag appId={app.id} />
+              </div>
+            )}
+            {app.in_talent_pool && <p className="text-xs"><span className="rounded-full bg-accent px-2 py-0.5 font-medium">In talent pool – {regionName ?? "region"}</span>{app.pool_reason ? <span className="ml-2 text-muted-foreground">{app.pool_reason}</span> : null}</p>}
+            </div>
+              )}
+            </div>
             <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">LinkedIn profile</div>
