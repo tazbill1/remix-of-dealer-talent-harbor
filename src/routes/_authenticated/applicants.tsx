@@ -20,6 +20,8 @@ import { ApplicantNotes } from "@/components/applicant-notes";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { AddCandidateDialog } from "@/components/add-candidate-dialog";
+import { canAddCandidate } from "@/lib/manual-candidate";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
@@ -105,6 +107,7 @@ function Applicants() {
   };
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [emailing, setEmailing] = useState<string[] | null>(null);
   const [bulkStatus, setBulkStatus] = useState<AppStatus>("screening");
@@ -206,6 +209,7 @@ function Applicants() {
               <List className="size-4" />List</button>
           </div>
           <Button onClick={() => setAdding(true)}><UserPlus />Add applicant</Button>
+          {canAddCandidate(org.role, org.isPlatformAdmin) && <Button onClick={() => setAddingManual(true)}><UserPlus />Add candidate</Button>}
         </div>
       </div>
 
@@ -285,6 +289,9 @@ function Applicants() {
 
       <AddApplicantDialog open={adding} onOpenChange={setAdding} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
         jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, dealership_id: j.dealership_id, label: `${storeName(j.dealership_id)} · ${j.title}` }))} />
+      <AddCandidateDialog open={addingManual} onOpenChange={setAddingManual} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}
+        stores={(data?.stores ?? []).map((s) => ({ id: s.id, name: s.name }))}
+        jobs={(data?.jobs ?? []).filter((j) => j.status === "open").map((j) => ({ id: j.id, title: j.title, dealership_id: j.dealership_id }))} />
       {checked.length > 0 && (
         <div className="sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-2xl bg-navy p-3 text-navy-foreground shadow-lg">
           <span className="text-sm font-semibold">{checked.length} selected</span>
@@ -400,7 +407,7 @@ type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: 
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null;
-  referrer_id: string | null; referred_by_text: string | null };
+  referrer_id: string | null; referred_by_text: string | null; created_manually?: boolean; created_by?: string | null };
 
 const PANEL_TABS = [
   { id: "overview", label: "Overview" },
@@ -435,6 +442,11 @@ function Profile({ doNotHireRepeat, app, questions, jobTitle, storeName, onUpdat
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
   });
+  const { data: addedBy } = useQuery({
+    queryKey: ["added-by", orgId, app.created_by],
+    enabled: !!app.created_manually && !!app.created_by,
+    queryFn: async () => (await supabase.from("org_members").select("email").eq("org_id", orgId).eq("user_id", app.created_by!).maybeSingle()).data?.email ?? null,
+  });
   async function openResume() {
     if (!app.resume_path) return;
     const { data, error } = await supabase.storage.from("resumes").createSignedUrl(app.resume_path, 300);
@@ -446,7 +458,8 @@ function Profile({ doNotHireRepeat, app, questions, jobTitle, storeName, onUpdat
       {/* mb-6 cancels the -mt-6 pull on following content, so nothing slides under the header. */}
       <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
         <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
-          <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
+          <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p>
+          {app.created_manually && <p className="text-xs text-muted-foreground">Added by {addedBy ?? "a team member"}</p>}</SheetHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
           {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
