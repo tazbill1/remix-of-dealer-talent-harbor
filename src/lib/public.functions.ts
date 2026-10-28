@@ -60,6 +60,7 @@ const applySchema = z.object({
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   linkedinUrl: z.string().trim().max(300).optional().or(z.literal("")),
   source: z.string().trim().max(40).optional(),
+  sourceDetail: z.string().trim().max(120).optional(),
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),
   answers: z.record(z.string().max(40), z.union([z.string().max(500), z.number(), z.boolean()])).optional(),
@@ -149,6 +150,7 @@ export const submitApplication = createServerFn({ method: "POST" })
       full_name: data.fullName, email, phone,
       linkedin_url: linkedinUrl,
       source: (data.source || "careers").toLowerCase(),
+      source_detail: data.sourceDetail || null, // source_channel is derived from source by a database trigger
       candidate_id: candidateId,
       answers,
       knockout_failed: knockoutFailed,

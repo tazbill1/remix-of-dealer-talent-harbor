@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
+import { SOURCE_CHANNELS } from "@/lib/sources";
 import { RESUME_MAX_BYTES, resumeExtension, resumeStoragePath } from "@/lib/manual-candidate";
 
 // Manual entry: no welcome text or confirmation email is sent (inserted directly, not via the apply flow).
@@ -16,7 +17,7 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
   jobs: { id: string; title: string; dealership_id: string }[];
   onCreated: () => void;
 }) {
-  const empty = { first: "", last: "", email: "", phone: "", store: "", job: "", linkedin: "", notes: "" };
+  const empty = { first: "", last: "", email: "", phone: "", store: "", job: "", linkedin: "", notes: "", channel: "Manual entry", detail: "" };
   const [f, setF] = useState(empty);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -46,9 +47,12 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
       org_id: orgId, job_id: f.job, dealership_id: f.store,
       full_name: `${first} ${last}`, email, phone: f.phone.trim() || null,
       linkedin_url: linkedin, notes: f.notes.trim() || null, source: "manual",
+      source_channel: f.channel, source_detail: f.detail.trim() || null,
       created_manually: true, created_by: uid,
     }).select("id").single();
     if (error || !app) { setBusy(false); return toast.error(error?.message ?? "Couldn't save."); }
+    // The database fills a hand-added "Company website" as Manual entry; keep what the recruiter picked.
+    if (f.channel === "Company website") await supabase.from("applications").update({ source_channel: f.channel }).eq("id", app.id);
     await supabase.from("application_events").insert({ org_id: orgId, application_id: app.id, kind: "manual", message: "Added manually", actor_id: uid });
     if (file) {
       const path = resumeStoragePath(orgId, app.id, file.name)!;
@@ -89,6 +93,11 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
           {field("linkedin", "LinkedIn URL (optional)", "url")}
           <label className="block text-sm"><span className="font-medium">Notes (optional)</span>
             <Textarea value={f.notes} onChange={(e) => set("notes", e.target.value)} /></label>
+          <label className="block text-sm"><span className="font-medium">Source (optional)</span>
+            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.channel} onChange={(e) => set("channel", e.target.value)}>
+              {SOURCE_CHANNELS.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select></label>
+          {field("detail", "Source detail (optional)")}
           <label className="block text-sm"><span className="font-medium">Resume (optional)</span>
             <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => pick(e.target.files?.[0])} />
             <span className="text-xs text-muted-foreground">PDF, DOC or DOCX, up to 10 MB.</span></label>

@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { AddCandidateDialog } from "@/components/add-candidate-dialog";
 import { canAddCandidate } from "@/lib/manual-candidate";
+import { SOURCE_CHANNELS } from "@/lib/sources";
 import { AddApplicantDialog, AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
@@ -78,7 +79,8 @@ function Applicants() {
         supabase.from("dealerships").select("id, name, assistant_name, region_id, timezone").eq("org_id", org.orgId).order("name"),
         supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
       ]);
-      return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
+      // Filters, sort and tags use the standardized source; the raw tag stays in raw_source.
+      return { apps: (apps.data ?? []).map((a) => ({ ...a, raw_source: a.source, source: a.source_channel })), jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
     },
   });
   const { data: referrerRows = [] } = useReferrerNames(org.orgId);
@@ -388,7 +390,7 @@ function Applicants() {
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {current && <Profile key={current.id} app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             initialTab={search.tab} interviewId={search.interview}
-            isHr={canPostJobs(org.role, org.isPlatformAdmin)}
+            isHr={canPostJobs(org.role, org.isPlatformAdmin)} canEditSource={canAddCandidate(org.role, org.isPlatformAdmin)}
             otherApps={otherApps} onOpenApp={setSelected} doNotHireRepeat={dnhRepeats.has(current.id)}
             regionName={regionName(current.dealership_id)}
             transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}`,
@@ -407,7 +409,7 @@ type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: 
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null;
-  referrer_id: string | null; referred_by_text: string | null; created_manually?: boolean; created_by?: string | null };
+  referrer_id: string | null; referred_by_text: string | null; created_manually?: boolean; created_by?: string | null; source_detail?: string | null };
 
 const PANEL_TABS = [
   { id: "overview", label: "Overview" },
@@ -420,7 +422,7 @@ type PanelTab = (typeof PANEL_TABS)[number]["id"];
 // Remembered for the session so reopening the panel lands on the last tab used.
 let lastPanelTab: PanelTab = "overview";
 
-function Profile({ doNotHireRepeat, app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { doNotHireRepeat: boolean; initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { canEditSource: boolean; doNotHireRepeat: boolean; initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => Promise<boolean>; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [target, setTarget] = useState("");
@@ -493,6 +495,16 @@ function Profile({ doNotHireRepeat, app, questions, jobTitle, storeName, onUpdat
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Source</span>
+              {canEditSource ? (
+                <select aria-label="Source" className="h-7 rounded-full border bg-accent px-2 text-xs" value={app.source}
+                  onChange={(e) => onUpdate({ source_channel: e.target.value })}>
+                  {SOURCE_CHANNELS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              ) : <span className="rounded-full bg-accent px-2 py-0.5">{app.source}</span>}
+              {app.source_detail && <span className="text-muted-foreground">{app.source_detail}</span>}
+            </div>
             <ReferralPanelRow app={app} orgId={orgId} isHr={isHr} onLink={(id) => onUpdate({ referrer_id: id })} />
             <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
               <div className="min-w-0">
