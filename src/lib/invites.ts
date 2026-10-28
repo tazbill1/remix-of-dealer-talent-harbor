@@ -7,7 +7,7 @@ import { z } from "zod";
 
 export const ROLES = [
   { v: "group_admin", l: "Group admin", scoped: false },
-  { v: "recruiter", l: "Recruiter / HR", scoped: false },
+  { v: "recruiter", l: "HR / Recruiter", scoped: false },
   { v: "regional_leader", l: "Regional leader", scoped: true },
   { v: "dealer_manager", l: "Dealer manager (GM)", scoped: true },
   { v: "hiring_manager", l: "Hiring manager", scoped: true },

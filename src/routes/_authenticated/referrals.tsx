@@ -38,10 +38,11 @@ function ReferralsPage() {
   const org = useOrg();
   const qc = useQueryClient();
   const isHr = org.isPlatformAdmin || canPostJobs(org.role);
+  const canView = isHr || org.role === "regional_leader";
   const key = ["referrals", org.orgId];
   const { data } = useQuery({
     queryKey: key,
-    enabled: isHr,
+    enabled: canView,
     queryFn: async () => {
       const [refs, stores, apps, bonuses, settings] = await Promise.all([
         supabase.from("referrers").select("id, employee_name, store_id, department, email, phone, referral_code, active").eq("org_id", org.orgId).order("employee_name"),
@@ -57,7 +58,7 @@ function ReferralsPage() {
   const [qrFor, setQrFor] = useState<Referrer | null>(null);
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
-  if (!isHr) return <div className="p-2 text-muted-foreground">Referrals are managed by HR, recruiters and group admins.</div>;
+  if (!canView) return <div className="p-2 text-muted-foreground">Referrals are managed by HR, recruiters and group admins.</div>;
   if (!data) return <div className="text-muted-foreground">Loading...</div>;
 
   const storeName = (id: string | null) => data.stores.find((s) => s.id === id)?.name ?? "All stores";
@@ -98,7 +99,7 @@ function ReferralsPage() {
           <h1 className="text-3xl">Referrals</h1>
           <p className="text-sm text-muted-foreground">Give each employee a personal link and QR code. Referred applicants are tagged automatically.</p>
         </div>
-        <Button onClick={() => setDraft({ ...EMPTY })}><Plus />Add employee</Button>
+        {isHr && <Button onClick={() => setDraft({ ...EMPTY })}><Plus />Add employee</Button>}
       </div>
 
       <section className="space-y-3">
@@ -117,10 +118,10 @@ function ReferralsPage() {
                 <div className="flex flex-wrap gap-1">
                   <Button size="sm" variant="outline" onClick={() => copy(link, "Referral link")}><Copy />Copy link</Button>
                   <Button size="sm" variant="outline" onClick={() => setQrFor(r)}><QrCode />QR code</Button>
-                  <Button size="sm" variant="ghost" aria-label={`Edit ${r.employee_name}`} onClick={() => setDraft({
+                  {isHr && <Button size="sm" variant="ghost" aria-label={`Edit ${r.employee_name}`} onClick={() => setDraft({
                     id: r.id, employee_name: r.employee_name, store_id: r.store_id ?? "", department: r.department ?? "",
                     email: r.email ?? "", phone: r.phone ?? "", active: r.active,
-                  })}><Pencil />Edit</Button>
+                  })}><Pencil />Edit</Button>}
                 </div>
               </div>
             );
@@ -130,7 +131,7 @@ function ReferralsPage() {
 
       <section className="space-y-3">
         <h2 className="text-xl">Bonuses</h2>
-        <BonusAmounts orgId={org.orgId} initial={data.settings} onSaved={refresh} />
+        {isHr && <BonusAmounts orgId={org.orgId} initial={data.settings} onSaved={refresh} />}
         <div className="overflow-x-auto rounded-2xl border bg-background">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground"><tr>
@@ -147,7 +148,7 @@ function ReferralsPage() {
                   <td className="p-3">{b.due_date ? new Date(`${b.due_date}T12:00:00`).toLocaleDateString() : "—"}</td>
                   <td className="p-3 capitalize">{b.status}{b.paid_at && b.status === "paid" ? ` ${new Date(b.paid_at).toLocaleDateString()}` : ""}</td>
                   <td className="whitespace-nowrap p-3 text-right">
-                    {b.status === "pending" ? (
+                    {!isHr ? null : b.status === "pending" ? (
                       <>
                         <Button size="sm" variant="outline" onClick={() => setBonus(b.id, "paid")}>Mark paid</Button>{" "}
                         <Button size="sm" variant="ghost" onClick={() => setBonus(b.id, "void")}>Void</Button>
