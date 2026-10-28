@@ -274,6 +274,8 @@ export type Database = {
           resume_path: string | null
           resume_url: string | null
           source: string
+          source_channel: string
+          source_detail: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["application_status"]
           status_token: string
@@ -314,6 +316,8 @@ export type Database = {
           resume_path?: string | null
           resume_url?: string | null
           source?: string
+          source_channel?: string
+          source_detail?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           status_token?: string
@@ -354,6 +358,8 @@ export type Database = {
           resume_path?: string | null
           resume_url?: string | null
           source?: string
+          source_channel?: string
+          source_detail?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           status_token?: string
@@ -2274,7 +2280,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      applicant_source_counts: {
+        Row: {
+          applicants: number | null
+          hires: number | null
+          org_id: string | null
+          org_total: boolean | null
+          source: string | null
+          store_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_dealership_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_application: {

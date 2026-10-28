@@ -260,6 +260,13 @@
       "when": 1793210395405,
       "tag": "0036_manual_candidates_resumes",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793210791420,
+      "tag": "0037_applicant_source_channel",
+      "breakpoints": true
     }
   ]
 }
