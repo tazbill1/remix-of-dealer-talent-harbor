@@ -225,6 +225,13 @@
       "when": 1793204156536,
       "tag": "0031_employee_referrals",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793204237553,
+      "tag": "0032_referral_program_and_bonus_trigger",
+      "breakpoints": true
     }
   ]
 }

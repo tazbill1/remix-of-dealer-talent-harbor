@@ -1580,6 +1580,7 @@ export type Database = {
           applicant_id: string
           created_at: string
           due_date: string | null
+          due_notified_at: string | null
           id: string
           notes: string | null
           org_id: string
@@ -1593,6 +1594,7 @@ export type Database = {
           applicant_id: string
           created_at?: string
           due_date?: string | null
+          due_notified_at?: string | null
           id?: string
           notes?: string | null
           org_id: string
@@ -1606,6 +1608,7 @@ export type Database = {
           applicant_id?: string
           created_at?: string
           due_date?: string | null
+          due_notified_at?: string | null
           id?: string
           notes?: string | null
           org_id?: string
@@ -1634,6 +1637,38 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_settings: {
+        Row: {
+          bonus_30_amount: number | null
+          bonus_90_amount: number | null
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bonus_30_amount?: number | null
+          bonus_90_amount?: number | null
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bonus_30_amount?: number | null
+          bonus_90_amount?: number | null
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

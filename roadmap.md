@@ -19,6 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
+- [x] Employee referrals: Referrals page (links, QR, bonus amounts, Paid/Void, report), ?ref= apply tagging, typed-name field, Referred-by badge with HR linking, auto 30/90-day bonuses on Hired, bell alerts when due. No texts/emails.
 - [x] Add “New dealer group” on WerkandMe Admin, linking to the existing group setup page.
 - [x] HR adverse-action page: pre-notice, five-business-day wait, final notice and dated report-copy confirmation; authenticated form/read verified and rule tests pass. No actual notices marked delivered in testing.
 - [x] HR consent evidence review and confirmed withdrawals; authenticated review and cancellation verified, preservation tests pass. No existing consent withdrawn during testing.
