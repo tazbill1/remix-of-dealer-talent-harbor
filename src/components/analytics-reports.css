@@ -1,0 +1,34 @@
+.report-select { height: 2.25rem; border: 1px solid var(--border); border-radius: 6px; background: var(--background); padding: 0 .5rem; font-size: .875rem; max-width: 100%; }
+.hiring-report { width: 100%; max-width: 1100px; margin-inline: auto; padding: 2rem; border-top: 4px solid var(--primary); }
+.report-heading { padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.report-monogram { display: grid; place-items: center; width: 3rem; height: 3rem; background: var(--primary); color: var(--primary-foreground); font-weight: 800; font-size: .875rem; border-radius: 6px; }
+.report-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 1rem; padding-block: 1.5rem; }
+.report-chart { padding-block: 1.5rem; border-top: 1px solid var(--border); break-inside: avoid; }
+.report-bar-row { display: grid; grid-template-columns: minmax(90px,1.2fr) minmax(80px,2fr) minmax(75px,1fr); gap: 1rem; align-items: center; margin-block: .75rem; }
+.report-bar-track { background: var(--muted); height: 22px; }
+.report-bar-svg { width: 100%; height: 22px; }
+.report-table-section { padding-block: 1.5rem; border-top: 1px solid var(--border); }
+.report-table { width: 100%; font-size: .75rem; table-layout: fixed; }
+.report-table th, .report-table td { padding: .75rem .35rem; text-align: right; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; vertical-align: middle; }
+.report-table th { color: var(--muted-foreground); font-weight: 500; }
+.report-table th:first-child, .report-table td:first-child { text-align: left; width: 23%; }
+.report-table tr { break-inside: avoid; }
+.report-dot { display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; vertical-align: middle; }
+.report-dot-green { background: var(--status-connected-foreground); }
+.report-dot-amber { background: var(--status-demo-foreground); }
+.report-dot-red { background: var(--destructive); }
+.report-method { border-top: 1px solid var(--border); padding-top: 1rem; line-height: 1.6; }
+.report-footer { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: .75rem; }
+@media (max-width: 640px) { .hiring-report { padding: 1rem; } .report-bar-row { gap: .5rem; } .report-table { min-width: 540px; } }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body:has(.hiring-report) { background: var(--background); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body:has(.hiring-report) * { visibility: hidden; }
+  body:has(.hiring-report) .hiring-report, body:has(.hiring-report) .hiring-report * { visibility: visible; }
+  body:has(.hiring-report) .hiring-report { position: absolute; inset: 0; width: 100%; max-width: none; padding: 0; }
+  body:has(.hiring-report) .report-controls, body:has(.hiring-report) .analytics-view-tabs { display: none; }
+  .report-chart, .report-metrics, .report-heading, .report-footer, .report-method { break-inside: avoid; }
+  .report-table { min-width: 0; }
+  .report-table-section > div { overflow: visible; }
+  .report-table thead { display: table-header-group; }
+}

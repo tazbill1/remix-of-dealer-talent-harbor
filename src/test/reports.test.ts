@@ -1,0 +1,22 @@
+import { describe, expect, it } from "vitest";
+import { assignedStores, comparison, computeReports, enoughAverage, reportRange, type ReportData } from "@/lib/reports";
+const stores=[{id:"dallas",name:"Dallas",region_id:"south"},{id:"katy",name:"Katy",region_id:"west"}];
+const data:ReportData={stores,regions:[],jobs:[],events:[],messages:[],interviews:[],offers:[],groupWide:true,apps:[{id:"a",job_id:"j",dealership_id:"dallas",status:"hired",source:"referral",full_name:"Jane",created_at:"2026-10-20T12:00:00Z",updated_at:"2026-10-25T12:00:00Z",hired_at:"2026-10-25T12:00:00Z",needs_attention:null},{id:"test",job_id:"j",dealership_id:"katy",status:"new",source:"indeed",full_name:"Test Applicant",created_at:"2026-10-20T12:00:00Z",updated_at:"2026-10-20T12:00:00Z",needs_attention:null}]};
+const range={from:Date.parse("2026-10-19"),to:Date.parse("2026-10-26")-1};
+const filters={storeId:"all",regionId:"all",showTests:false};
+describe("Hiring reports",()=>{
+  it("gives admins every store",()=>expect(assignedStores(stores,true,[]).map(s=>s.id)).toEqual(["dallas","katy"]));
+  it("gives managers only assigned stores",()=>expect(assignedStores(stores,false,[{dealership_id:"dallas",region_id:null}]).map(s=>s.id)).toEqual(["dallas"]));
+  it("gives unassigned managers no stores",()=>expect(assignedStores(stores,false,[])).toEqual([]));
+  it("resolves region assignments",()=>expect(assignedStores(stores,false,[{dealership_id:null,region_id:"west"}]).map(s=>s.id)).toEqual(["katy"]));
+  it("excludes test applicants by default",()=>expect(computeReports(data,range,filters).total.applicants).toBe(1));
+  it("includes tests only when checked",()=>expect(computeReports(data,range,{...filters,showTests:true}).total.applicants).toBe(2));
+  it("requires three measurements for averages",()=>{expect(enoughAverage([.1,.2])).toBeNull();expect(enoughAverage([2,4,6])).toBe(4);});
+  it("measures applied to hired, not job creation",()=>{const a=data.apps[0];if(!a)throw Error();const result=computeReports({...data,apps:[a,{...a,id:"b"},{...a,id:"c"}]},range,filters);expect(result.total.fill).toBe(5);});
+  it("does not assume past scheduled interviews were held",()=>expect(computeReports({...data,interviews:[{application_id:"a",starts_at:"2026-10-22T12:00:00Z",status:"scheduled"},{application_id:"a",starts_at:"2026-10-23T12:00:00Z",status:"completed"}]},range,filters).total.interviews).toBe(1));
+  it("counts only confirmed offer letters",()=>expect(computeReports({...data,offers:[{application_id:"a",created_at:"2026-10-23T12:00:00Z",status:"sent",is_offer_letter:true,provider_document_id:"doc"},{application_id:"a",created_at:"2026-10-23T12:00:00Z",status:"failed",is_offer_letter:true,provider_document_id:null},{application_id:"a",created_at:"2026-10-23T12:00:00Z",status:"sent",is_offer_letter:false,provider_document_id:"doc2"}]},range,filters).total.offers).toBe(1));
+  it("filters stores and regions",()=>expect(computeReports(data,range,{...filters,regionId:"west"}).total.applicants).toBe(0));
+  it("hire rate uses applied cohort",()=>{const result=computeReports(data,range,filters);expect(result.sources.find(s=>s.label==="Referral")).toMatchObject({applicants:1,hires:1,rate:null});});
+  it("uses green for faster and red for slower times",()=>{expect(comparison(4,5,true)).toBe("green");expect(comparison(6,5,true)).toBe("red");expect(comparison(5,5,true)).toBe("amber");});
+  it("last week is Monday through Sunday",()=>{const r=reportRange("last_week",new Date(2026,9,28,12));expect(new Date(r.from).getDay()).toBe(1);expect(new Date(r.to).getDay()).toBe(0);expect(new Date(r.from).getDate()).toBe(19);expect(new Date(r.to).getDate()).toBe(25);});
+});
