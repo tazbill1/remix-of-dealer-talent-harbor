@@ -1,8 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Download, Loader2, Send } from "lucide-react";
+import { Download, Loader2, Send, Sparkles, X } from "lucide-react";
 import { useOrg } from "@/lib/org";
 import { askHiringAssistant } from "@/lib/gm-assistant.functions";
 import { parseLinks, reportNote, type Report } from "@/lib/gm-assistant";
@@ -125,7 +125,8 @@ function ReportCard({ report }: { report: Report }) {
 }
 
 /** The Ask conversation. Used on the Ask page and in the chat panel. */
-export function AskChat({ msgs, setMsgs, compact = false }: { msgs: AskMsg[]; setMsgs: (m: AskMsg[]) => void; compact?: boolean }) {
+export function AskChat({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
+  const { msgs, setMsgs } = useAskConversation();
   const org = useOrg();
   const ask = useServerFn(askHiringAssistant);
   const [text, setText] = useState("");
@@ -160,7 +161,10 @@ export function AskChat({ msgs, setMsgs, compact = false }: { msgs: AskMsg[]; se
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+      <div
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto"
+        onClick={(e) => { if (onNavigate && (e.target as HTMLElement).closest("a")) onNavigate(); }}
+      >
         {msgs.length === 0 && (
           <div className="flex flex-wrap gap-2">
             {EXAMPLES.map((e) => (
@@ -199,5 +203,58 @@ export function AskChat({ msgs, setMsgs, compact = false }: { msgs: AskMsg[]; se
         <Button type="submit" disabled={busy || !text.trim()} aria-label="Send"><Send /></Button>
       </form>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// One conversation per signed-in session, shared by the Ask page and the chat panel.
+// ---------------------------------------------------------------------------
+
+const AskContext = createContext<{ msgs: AskMsg[]; setMsgs: (m: AskMsg[]) => void } | null>(null);
+
+export function AskProvider({ children }: { children: React.ReactNode }) {
+  const [msgs, setMsgs] = useState<AskMsg[]>([]);
+  return <AskContext.Provider value={{ msgs, setMsgs }}>{children}</AskContext.Provider>;
+}
+
+function useAskConversation() {
+  const ctx = useContext(AskContext);
+  const [local, setLocal] = useState<AskMsg[]>([]);
+  return ctx ?? { msgs: local, setMsgs: setLocal };
+}
+
+/** Corner button that opens Ask: full screen on a phone, a side panel on a computer
+ * (the page stays usable next to it). Hidden on the Ask page itself. */
+export function AskBubble() {
+  const loc = useLocation();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  if (loc.pathname.startsWith("/ask")) return null;
+  // On a phone the panel covers the page, so following a link closes it.
+  const closeOnPhone = () => { if (window.matchMedia("(max-width: 639px)").matches) setOpen(false); };
+  return open ? (
+    <section
+      aria-label="Ask"
+      className="fixed inset-0 z-50 flex flex-col gap-3 bg-background p-4 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[28rem] sm:border-l sm:shadow-2xl"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-semibold"><Sparkles className="size-4" /> Ask</h2>
+        <Button variant="ghost" size="icon" aria-label="Close Ask" onClick={() => setOpen(false)}><X /></Button>
+      </div>
+      <AskChat compact onNavigate={closeOnPhone} />
+    </section>
+  ) : (
+    <Button
+      onClick={() => setOpen(true)}
+      className="fixed bottom-4 right-4 z-40 h-12 rounded-full px-5 shadow-lg"
+      aria-label="Open Ask"
+    >
+      <Sparkles /> Ask
+    </Button>
   );
 }

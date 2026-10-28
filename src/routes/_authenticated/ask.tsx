@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import { AskChat, type AskMsg } from "@/components/ask-chat";
+import { AskChat } from "@/components/ask-chat";
 
 export const Route = createFileRoute("/_authenticated/ask")({
   head: () => ({
@@ -14,7 +13,6 @@ export const Route = createFileRoute("/_authenticated/ask")({
 });
 
 function AskPage() {
-  const [msgs, setMsgs] = useState<AskMsg[]>([]);
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
       <div>
@@ -23,7 +21,7 @@ function AskPage() {
           Ask about applicants and interviews at your stores, or for a report like "tech pipeline at each store". It only looks things up; it never texts or changes anyone.
         </p>
       </div>
-      <AskChat msgs={msgs} setMsgs={setMsgs} />
+      <AskChat />
     </div>
   );
 }

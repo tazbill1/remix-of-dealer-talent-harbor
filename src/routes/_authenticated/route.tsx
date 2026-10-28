@@ -10,6 +10,7 @@ import { meQuery, OrgContext, type OrgCtx } from "@/lib/org";
 import { useMessagingMode } from "@/lib/texting-mode";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AskBubble, AskProvider } from "@/components/ask-chat";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -75,7 +76,11 @@ function Layout() {
   }
   return (
     <OrgContext.Provider value={ctx}>
-      <Shell me={me} org={ctx} onPick={setOrgId}>{body}</Shell>
+      {/* A fresh Ask conversation per dealer group. */}
+      <AskProvider key={ctx?.orgId ?? "none"}>
+        <Shell me={me} org={ctx} onPick={setOrgId}>{body}</Shell>
+        {ctx && <AskBubble />}
+      </AskProvider>
     </OrgContext.Provider>
   );
 }
