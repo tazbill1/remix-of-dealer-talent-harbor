@@ -37,7 +37,7 @@ function JobPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const { source } = Route.useSearch();
   const navigate = useNavigate();
-  const [f, setF] = useState({ fullName: "", email: "", phone: "" });
+  const [f, setF] = useState({ fullName: "", email: "", phone: "", linkedinUrl: "" });
   const [smsConsent, setSmsConsent] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
