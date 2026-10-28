@@ -37,7 +37,7 @@ export function StatusRemindersSettings({ orgId, canEdit }: { orgId: string; can
   const [poolAfter, setPoolAfter] = useState("3");
   useEffect(() => { if (pool) setPoolAfter(String(pool.talent_pool_after_reminders)); }, [pool]);
   async function savePool(patch: { talent_pool_enabled?: boolean; talent_pool_after_reminders?: number }) {
-    const { data, error } = await supabase.from("messaging_settings").update(patch).eq("org_id", orgId).select("org_id").maybeSingle();
+    const { data, error } = await supabase.from("messaging_settings").upsert({ org_id: orgId, ...patch }, { onConflict: "org_id" }).select("org_id").maybeSingle();
     if (error || !data) { toast.error(error?.message ?? "Couldn't save. Please try again."); return; }
     toast.success("Talent pool setting saved");
     await qc.invalidateQueries({ queryKey: ["talent-pool-setting", orgId] });
