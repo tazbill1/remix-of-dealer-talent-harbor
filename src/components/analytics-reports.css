@@ -19,6 +19,8 @@
 .report-dot-red { background: var(--destructive); }
 .report-method { border-top: 1px solid var(--border); padding-top: 1rem; line-height: 1.6; }
 .report-footer { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: .75rem; }
+.hiring-report.report-export-copy { position: fixed; left: -20000px; top: 0; width: 1000px; max-width: none; padding: 2rem; }
+.report-export-copy .report-table { min-width: 0; }
 @media (max-width: 640px) { .hiring-report { padding: 1rem; } .report-bar-row { gap: .5rem; } .report-table { min-width: 540px; } }
 @media print {
   @page { size: A4; margin: 12mm; }
