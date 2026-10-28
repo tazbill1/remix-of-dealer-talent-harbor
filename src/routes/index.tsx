@@ -32,11 +32,16 @@ const features = [
 function Index() {
   const navigate = useNavigate();
   // Signed-in users go straight to the dashboard; everyone else sees the marketing page.
+  const [redirecting, setRedirecting] = useState(false);
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard" });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setRedirecting(true); // hide the marketing page right away, then move to the dashboard
+        navigate({ to: "/dashboard" });
+      }
     });
   }, [navigate]);
+  if (redirecting) return <RouteSpinner />;
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
