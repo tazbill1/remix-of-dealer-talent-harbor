@@ -52,7 +52,7 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
     await supabase.from("application_events").insert({ org_id: orgId, application_id: app.id, kind: "manual", message: "Added manually", actor_id: uid });
     if (file) {
       const path = resumeStoragePath(orgId, app.id, file.name)!;
-      const up = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || undefined, upsert: true });
+      const up = await supabase.storage.from("resumes").upload(path, file, file.type ? { contentType: file.type } : {});
       if (up.error) toast.error("Candidate saved, but the resume didn't upload.");
       else {
         const { error: e2 } = await supabase.from("applications").update({ resume_path: path, resume_file_name: file.name }).eq("id", app.id);
