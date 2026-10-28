@@ -19,6 +19,7 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
+- [ ] Recording, transcription and human-confirmed AI scores — blocked: interview_recordings table, recording settings and private audio bucket are absent; user prohibits database changes.
 - [x] Interview row links, sticky scorecard progress and per-interview submitted summaries; authenticated click verified, two scores picked and closed without saving, existing access unchanged.
 - [x] Interview invite emails wired into manual, self-service and assistant bookings; one assigned store interviewer, signed .ics download link, ambiguous coverage flagged. Tests and real interview download verified; no live test email sent to other staff.
 - [ ] Choose a connected Google calendar when staff set an interview time and create its calendar event (requires Google app-user connection setup).
