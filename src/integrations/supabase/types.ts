@@ -437,6 +437,121 @@ export type Database = {
           },
         ]
       }
+      interview_kits: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          questions?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          questions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_kits_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_scorecards: {
+        Row: {
+          answers: Json
+          application_id: string
+          author_id: string
+          author_name: string | null
+          created_at: string
+          id: string
+          interview_id: string
+          kit_id: string | null
+          notes: string | null
+          org_id: string
+          recommendation: string | null
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          application_id: string
+          author_id?: string
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          interview_id: string
+          kit_id?: string | null
+          notes?: string | null
+          org_id: string
+          recommendation?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          application_id?: string
+          author_id?: string
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          interview_id?: string
+          kit_id?: string | null
+          notes?: string | null
+          org_id?: string
+          recommendation?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_scorecards_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_scorecards_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_scorecards_kit_id_fkey"
+            columns: ["kit_id"]
+            isOneToOne: false
+            referencedRelation: "interview_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_scorecards_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interviews: {
         Row: {
           application_id: string
@@ -557,6 +672,7 @@ export type Database = {
           hiring_manager: string | null
           hiring_manager_phone: string | null
           id: string
+          interview_kit_id: string | null
           org_id: string
           pay_max: number | null
           pay_min: number | null
@@ -580,6 +696,7 @@ export type Database = {
           hiring_manager?: string | null
           hiring_manager_phone?: string | null
           id?: string
+          interview_kit_id?: string | null
           org_id: string
           pay_max?: number | null
           pay_min?: number | null
@@ -603,6 +720,7 @@ export type Database = {
           hiring_manager?: string | null
           hiring_manager_phone?: string | null
           id?: string
+          interview_kit_id?: string | null
           org_id?: string
           pay_max?: number | null
           pay_min?: number | null
@@ -620,6 +738,13 @@ export type Database = {
             columns: ["dealership_id"]
             isOneToOne: false
             referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_interview_kit_id_fkey"
+            columns: ["interview_kit_id"]
+            isOneToOne: false
+            referencedRelation: "interview_kits"
             referencedColumns: ["id"]
           },
           {
