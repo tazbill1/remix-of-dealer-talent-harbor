@@ -11,7 +11,7 @@ import { STATUSES, STATUS_LABEL, canPostJobs, type AppStatus } from "@/lib/jobs"
 import { statusEventRows } from "@/lib/status-log";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { ApplicantNotes } from "@/components/applicant-notes";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -150,13 +150,14 @@ function Applicants() {
   const notify = useServerFn(notifyApplicants);
   async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
     const before = data?.apps.find((a) => a.id === id)?.status;
-    const { error } = await supabase.from("applications").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    const { data: saved, error } = await supabase.from("applications").update(patch).eq("org_id", org.orgId).eq("id", id).select("id").maybeSingle();
+    if (error || !saved) { toast.error(error?.message ?? "This applicant couldn’t be updated. Check your store access and try again."); return false; }
     if (patch.status && patch.status !== before) {
       await supabase.from("application_events").insert(statusEventRows(org.orgId, [id], patch.status));
       void notify({ data: { orgId: org.orgId, applicationIds: [id], event: { kind: "status", status: patch.status } } }).catch(() => {});
     }
     qc.invalidateQueries({ queryKey: key });
+    return true;
   }
 
   const headerBtn = "hover:text-foreground";
@@ -343,7 +344,7 @@ function Applicants() {
         recipients={emailRecipients} onSent={() => setChecked([])} />
       <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          {current && <Profile app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
+          {current && <Profile key={current.id} app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             isHr={canPostJobs(org.role, org.isPlatformAdmin)}
             otherApps={otherApps} onOpenApp={setSelected}
             regionName={regionName(current.dealership_id)}
@@ -377,8 +378,7 @@ let lastPanelTab: PanelTab = "overview";
 
 function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
-  onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
-  const [notes, setNotes] = useState(app.notes ?? "");
+  onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => Promise<boolean>; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [target, setTarget] = useState("");
   const [allRegions, setAllRegions] = useState(false);
   // Transfers stay in the candidate's region by default: someone in Grand Rapids won't move to Detroit.
@@ -528,10 +528,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
 
         {tab === "notes" && (
           <>
-            <div>
-              <div className="mb-2 text-sm font-semibold">Notes</div>
-              <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => notes !== (app.notes ?? "") && onUpdate({ notes })} />
-            </div>
+            <ApplicantNotes key={app.id} initialNotes={app.notes} onSave={notes => onUpdate({ notes })} />
             <div>
               <div className="mb-2 text-sm font-semibold">Timeline</div>
               <ol className="space-y-2 border-l pl-4 text-sm">
