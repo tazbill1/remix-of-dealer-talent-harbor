@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      adverse_actions: {
+        Row: {
+          applicant_id: string
+          created_at: string
+          created_by: string
+          final_notice_sent_at: string | null
+          id: string
+          org_id: string
+          pre_notice_sent_at: string | null
+          reason: string | null
+          report_copy_provided: boolean
+          status: string
+          store_id: string | null
+          updated_at: string
+          waiting_period_ends_at: string | null
+        }
+        Insert: {
+          applicant_id: string
+          created_at?: string
+          created_by: string
+          final_notice_sent_at?: string | null
+          id?: string
+          org_id: string
+          pre_notice_sent_at?: string | null
+          reason?: string | null
+          report_copy_provided?: boolean
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+          waiting_period_ends_at?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          created_at?: string
+          created_by?: string
+          final_notice_sent_at?: string | null
+          id?: string
+          org_id?: string
+          pre_notice_sent_at?: string | null
+          reason?: string | null
+          report_copy_provided?: boolean
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+          waiting_period_ends_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adverse_actions_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adverse_actions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adverse_actions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_user_connections: {
         Row: {
           connection_key_ciphertext: string
@@ -43,6 +113,82 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      applicant_consents: {
+        Row: {
+          applicant_id: string
+          consent_text: string
+          consent_type: string
+          consent_version: string
+          created_by: string | null
+          granted: boolean
+          granted_at: string
+          id: string
+          ip_address: string | null
+          org_id: string
+          revoked_at: string | null
+          revoked_source: string | null
+          source: string
+          store_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          applicant_id: string
+          consent_text: string
+          consent_type: string
+          consent_version?: string
+          created_by?: string | null
+          granted: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: string | null
+          org_id: string
+          revoked_at?: string | null
+          revoked_source?: string | null
+          source?: string
+          store_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          consent_text?: string
+          consent_type?: string
+          consent_version?: string
+          created_by?: string | null
+          granted?: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: string | null
+          org_id?: string
+          revoked_at?: string | null
+          revoked_source?: string | null
+          source?: string
+          store_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_consents_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_consents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_consents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       application_events: {
         Row: {
@@ -1466,10 +1612,15 @@ export type Database = {
         Returns: boolean
       }
       can_post_jobs: { Args: { _org: string; _uid: string }; Returns: boolean }
+      can_read_compliance_record: {
+        Args: { _app: string; _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
       create_organization: {
         Args: { _name: string; _slug: string }
         Returns: string
       }
+      five_business_days_after: { Args: { _start: string }; Returns: string }
       has_org_role: {
         Args: {
           _org: string
