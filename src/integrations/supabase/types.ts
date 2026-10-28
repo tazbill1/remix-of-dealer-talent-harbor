@@ -750,6 +750,7 @@ export type Database = {
       messaging_settings: {
         Row: {
           ai_provider: string
+          automations: Json
           email_from_address: string | null
           email_from_name: string | null
           email_mode: string
@@ -767,6 +768,7 @@ export type Database = {
         }
         Insert: {
           ai_provider?: string
+          automations?: Json
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
@@ -784,6 +786,7 @@ export type Database = {
         }
         Update: {
           ai_provider?: string
+          automations?: Json
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
