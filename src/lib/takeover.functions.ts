@@ -63,7 +63,17 @@ export const sendStaffText = createServerFn({ method: "POST" })
     if (row.status === "queued" && row.scheduled_for && Date.parse(row.scheduled_for) <= Date.now())
       await deliverDue(db, { ids: [row.id] });
     await db.from("applications").update({ needs_attention: null }).eq("id", data.applicationId);
-    return { status: row.status, note: row.status === "blocked" ? (row.error ?? "Not sent") : null };
+    let status = row.status as string;
+    if (row.status !== "blocked") {
+      const { data: after } = await db.from("messages").select("status, org_id").eq("id", row.id).maybeSingle();
+      status = after?.status ?? status;
+      const preview = data.body.length > 80 ? `${data.body.slice(0, 80)}…` : data.body;
+      if (after?.org_id) await db.from("application_events").insert({
+        org_id: after.org_id, application_id: data.applicationId, kind: "texting",
+        message: `${status === "simulated" ? "Text sent (demo)" : "Text sent"}: "${preview}"`,
+      });
+    }
+    return { status, note: row.status === "blocked" ? (row.error ?? "Not sent") : null };
   });
 
 /** Can this applicant be texted? Opt-outs are server-only, so staff read them here. */

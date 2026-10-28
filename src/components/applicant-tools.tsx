@@ -234,3 +234,35 @@ export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterview
     </div>
   );
 }
+
+/** "Text" button dialog: sends through the app's texting (queueText), never the device's messaging app. */
+export function TextCompose({ open, onOpenChange, appId, name, onSent }: { open: boolean; onOpenChange: (o: boolean) => void; appId: string; name: string; onSent: () => void }) {
+  const qc = useQueryClient();
+  const staffSend = useServerFn(sendStaffText);
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  async function send() {
+    const text = body.trim(); if (!text) return;
+    setBusy(true); setNote(null);
+    try {
+      const r = await staffSend({ data: { applicationId: appId, body: text } });
+      if (r.status === "blocked") { setNote(r.note ? `Not sent: ${r.note}` : "Not sent"); }
+      else { setBody(""); setNote(r.status === "simulated" ? "Sent (demo)" : r.status === "queued" ? "Queued to send" : "Sent"); }
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["messages", appId] }); onSent();
+  }
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) setNote(null); onOpenChange(o); }}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Text {name}</DialogTitle></DialogHeader>
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+          <Input value={body} maxLength={600} onChange={(e) => setBody(e.target.value)} placeholder="Reply to the candidate as the team..." autoFocus />
+          <Button size="icon" disabled={busy || !body.trim()} aria-label="Send to candidate">{busy ? <Loader2 className="animate-spin" /> : <Send />}</Button>
+        </form>
+        {note && <p className={cn("text-xs text-muted-foreground", note.startsWith("Not sent") && "text-destructive")}>{note}</p>}
+      </DialogContent>
+    </Dialog>
+  );
+}
