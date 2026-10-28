@@ -28,6 +28,7 @@ import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
+import { Route as AuthenticatedNewHiresRouteImport } from './routes/_authenticated/new-hires'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedOnboardingTemplatesRouteImport } from './routes/_authenticated/onboarding-templates'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
@@ -164,6 +165,11 @@ const AuthenticatedInterviewKitsRoute =
 const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNewHiresRoute = AuthenticatedNewHiresRouteImport.update({
+  id: '/new-hires',
+  path: '/new-hires',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
+  '/new-hires': typeof AuthenticatedNewHiresRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
+  '/new-hires': typeof AuthenticatedNewHiresRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
@@ -509,6 +517,7 @@ export interface FileRoutesById {
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
+  '/_authenticated/new-hires': typeof AuthenticatedNewHiresRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
+    | '/new-hires'
     | '/onboarding'
     | '/onboarding-templates'
     | '/platform'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
+    | '/new-hires'
     | '/onboarding'
     | '/onboarding-templates'
     | '/platform'
@@ -688,6 +699,7 @@ export interface FileRouteTypes {
     | '/_authenticated/integrations'
     | '/_authenticated/interview-kits'
     | '/_authenticated/jobs'
+    | '/_authenticated/new-hires'
     | '/_authenticated/onboarding'
     | '/_authenticated/onboarding-templates'
     | '/_authenticated/platform'
@@ -898,6 +910,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof AuthenticatedJobsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/new-hires': {
+      id: '/_authenticated/new-hires'
+      path: '/new-hires'
+      fullPath: '/new-hires'
+      preLoaderRoute: typeof AuthenticatedNewHiresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -1189,6 +1208,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
+  AuthenticatedNewHiresRoute: typeof AuthenticatedNewHiresRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedOnboardingTemplatesRoute: typeof AuthenticatedOnboardingTemplatesRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
@@ -1214,6 +1234,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
+  AuthenticatedNewHiresRoute: AuthenticatedNewHiresRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedOnboardingTemplatesRoute: AuthenticatedOnboardingTemplatesRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
