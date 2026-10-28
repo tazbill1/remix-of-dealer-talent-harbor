@@ -205,7 +205,7 @@ function Applicants() {
 
 type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
-  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null };
+  hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null };
 
 function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
