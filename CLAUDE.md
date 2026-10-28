@@ -74,6 +74,7 @@ Review its diffs before relying on them; keep what's better, fix bugs, don't fig
 | Public site / apply | `src/routes/c.$orgSlug.*`, `src/routes/careers*`, `src/lib/public.functions.ts` |
 | Status rules (HR's "when X, move to Y") | `src/lib/status-rules.ts` (matching), `status-rules.server.ts` (cron), `status-rules.functions.ts`, page `src/routes/_authenticated/status-rules.tsx` (stored in `messaging_settings.automations.statusRules`) |
 | Background checks (manual tracking) | `src/lib/background-check.ts`, `src/components/background-check-panel.tsx` (columns `applications.background_check_*`) |
+| Interview kits + scorecards | `src/lib/interview-kits.ts` (pure, tested), page `src/routes/_authenticated/interview-kits.tsx`, scorecard on each interview `src/components/interview-scorecard.tsx` (tables `interview_kits`, `interview_scorecards`, `jobs.interview_kit_id`) |
 | Signed links (offers, docs, booking) | `src/lib/offers-token.server.ts` (`kind|id`-scoped HMAC tokens) |
 
 ## Open items (see roadmap.md)

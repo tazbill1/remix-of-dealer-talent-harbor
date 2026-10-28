@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/jobs")({
 const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager: "",
   hiring_manager_phone: "", escalation_name: "", escalation_phone: "",
   employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "",
-  questions: [] as Question[] };
+  questions: [] as Question[], interview_kit_id: "" };
 type Form = typeof empty;
 
 const fromAi = (j: AiJobDraft["job"]) => (prev: Form): Form => ({
@@ -50,7 +50,9 @@ function JobPreview({ f, store }: { f: Form; store?: string }) {
   );
 }
 
-function JobFields({ f, setF }: { f: Form; setF: (f: Form) => void }) {
+type KitOption = { id: string; name: string };
+
+function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: KitOption[] }) {
   return (
     <>
       <div className="space-y-1.5"><Label>Job title</Label><Input required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
@@ -92,6 +94,12 @@ function JobFields({ f, setF }: { f: Form; setF: (f: Form) => void }) {
       </div>
       <div className="space-y-1.5"><Label>Description</Label><Textarea rows={8} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <JobQuestions value={f.questions} onChange={(questions) => setF({ ...f, questions })} />
+      <div className="space-y-1.5 border-t pt-3"><Label>Interview questions</Label>
+        <select aria-label="Interview question kit" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.interview_kit_id} onChange={(e) => setF({ ...f, interview_kit_id: e.target.value })}>
+          <option value="">None</option>{kits.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
+        </select>
+        <p className="text-xs text-muted-foreground">The interviewer sees these questions on the scorecard. Recruiting/HR manages them under Interview kits.</p>
+      </div>
     </>
   );
 }
@@ -103,6 +111,7 @@ const payload = (f: Form) => ({
   description: f.description, pay_min: f.pay_min ? Number(f.pay_min) : null, pay_max: f.pay_max ? Number(f.pay_max) : null,
   // Drop half-finished questions rather than failing the save.
   questions: f.questions.filter((q) => questionSchema.safeParse(q).success),
+  interview_kit_id: f.interview_kit_id || null,
 });
 
 function Jobs() {
@@ -111,13 +120,14 @@ function Jobs() {
   const { data } = useQuery({
     queryKey: ["jobs", org.orgId],
     queryFn: async () => {
-      const [jobs, stores, apps, templates] = await Promise.all([
+      const [jobs, stores, apps, templates, kits] = await Promise.all([
         supabase.from("jobs").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
         supabase.from("applications").select("job_id").eq("org_id", org.orgId),
         supabase.from("job_templates").select("*").eq("org_id", org.orgId).order("title"),
+        supabase.from("interview_kits").select("id, name").eq("org_id", org.orgId).order("name"),
       ]);
-      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [] };
+      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [], kits: kits.data ?? [] };
     },
   });
   const [open, setOpen] = useState(false);
@@ -171,7 +181,7 @@ function Jobs() {
       target_start_date: j.target_start_date ?? "", hiring_manager: j.hiring_manager ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
       hiring_manager_phone: j.hiring_manager_phone ?? "", escalation_name: j.escalation_name ?? "", escalation_phone: j.escalation_phone ?? "",
       description: j.description ?? "", pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
-      questions: parseQuestions(j.questions),
+      questions: parseQuestions(j.questions), interview_kit_id: j.interview_kit_id ?? "",
     });
     setEditing(false); setViewId(j.id);
   }
@@ -220,7 +230,7 @@ function Jobs() {
               {!savedTemplates.length && <p className="text-xs text-muted-foreground">Starter roles shown. {hr ? "Save your own to build your group's job bank." : ""}</p>}
             </div>
             <form onSubmit={save} className="space-y-3">
-              <JobFields f={f} setF={setF} />
+              <JobFields f={f} setF={setF} kits={data?.kits ?? []} />
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Stores</Label>
                   <button type="button" className="text-xs text-sapphire" onClick={() => setPicked(picked.length === stores.length ? [] : stores.map((s) => s.id))}>
@@ -249,7 +259,7 @@ function Jobs() {
                   <VoiceJobWriter onDraft={(j) => setEf(fromAi(j))} />
                   <JobPreview f={ef} store={storeName(viewing.dealership_id)} />
                   <form onSubmit={saveEdit} className="space-y-3">
-                    <JobFields f={ef} setF={setEf} />
+                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} />
                     <div className="flex gap-2">
                       <Button type="submit" className="flex-1">Save changes</Button>
                       <Button type="button" variant="outline" onClick={() => openJob(viewing)}>Cancel</Button>

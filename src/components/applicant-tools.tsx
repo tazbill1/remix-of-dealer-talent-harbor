@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { deliveryLabel } from "@/lib/messaging/labels";
 import { EmailHistory } from "@/components/email-compose";
 import { useMessagingMode } from "@/lib/texting-mode";
+import { ScorecardButton, ScorecardSummary } from "@/components/interview-scorecard";
 
 const toB64 = (f: File) => new Promise<string>((res, rej) => {
   const r = new FileReader();
@@ -250,10 +251,14 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
         {list.map((i) => (
           <li key={i.id} className="flex items-center justify-between rounded-lg bg-secondary px-2 py-1">
             <span className={i.status === "cancelled" ? "text-muted-foreground line-through" : ""}>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.status === "cancelled" ? "cancelled" : i.source === "werkandme" ? "booked in WerkandMe" : i.source === "self_scheduled" ? "picked by the candidate" : `found on ${i.source} calendar`}</span></span>
-            <Button size="sm" variant="ghost" onClick={() => download(i)} aria-label="Add to calendar"><Download /></Button>
+            <span className="flex shrink-0 items-center">
+              {i.status !== "cancelled" && <ScorecardButton interviewId={i.id} appId={appId} orgId={orgId} />}
+              <Button size="sm" variant="ghost" onClick={() => download(i)} aria-label="Add to calendar"><Download /></Button>
+            </span>
           </li>
         ))}
       </ul>
+      <ScorecardSummary appId={appId} />
       <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
         <Button size="sm" onClick={add} disabled={!when}>Schedule</Button></div>
       <Button size="sm" variant="outline" className="mt-2" disabled={linkBusy} onClick={async () => {
