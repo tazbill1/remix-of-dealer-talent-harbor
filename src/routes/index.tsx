@@ -23,7 +23,7 @@ const features = [
   { icon: Rss, title: "Out to Indeed and more", text: "A live job feed that Indeed, ZipRecruiter and Google Jobs pick up automatically." },
   { icon: Bot, title: "An HR assistant for each store", text: "Kind, upbeat and organized. Keeps applicants in the loop and managers on track." },
   { icon: Video, title: "Welcome videos", text: "Say thanks with a video from the store, and invite applicants to record their own intro." },
-  { icon: Mic, title: "Smarter interviews", text: "Record, transcribe and grade interviews, with questions tailored to each person." },
+  { icon: Mic, title: "Smarter interviews", text: "Structured interview kits and scorecards, with questions tailored to each role." },
   { icon: ShieldCheck, title: "Your data stays yours", text: "Each dealer group is fully private. Nothing ever crosses between groups." },
 ];
 

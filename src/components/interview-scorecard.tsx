@@ -21,8 +21,6 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { InterviewRecording, RecordingSuggestion, useInterviewRecordings } from "@/components/interview-recording";
-import { validSuggestions } from "@/lib/interview-recording";
 
 const cardsKey = (appId: string) => ["scorecards", appId];
 
@@ -151,9 +149,6 @@ function ScorecardDialog({
   const { data: me } = useQuery(meQuery);
   const { data: kit, isLoading } = useKit(appId);
   const questions: KitQuestion[] = kit?.questions ?? [];
-  const { data: recordings = [] } = useInterviewRecordings(interviewId);
-  const recording = recordings.find(r => r.transcript && (r.status === "ready" || r.status === "audio_deleted"));
-  const suggestions = recording ? validSuggestions({ suggestions: recording.ai_suggestions }, recording.transcript ?? "", questions.map(q => q.id)) : [];
   const [answers, setAnswers] = useState<ScoreAnswer[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(
     existing?.recommendation ?? null,

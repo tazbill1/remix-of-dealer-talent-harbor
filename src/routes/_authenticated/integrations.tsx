@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 import { IntegrationCard as Card } from "@/components/integration-card";
 import { TextingSettings } from "@/components/texting-settings";
 import { canEditIntegrationSettings } from "@/lib/integration-access";
-import { InterviewRecordingSettings } from "@/components/interview-recording-settings";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
   head: () => ({ meta: [
