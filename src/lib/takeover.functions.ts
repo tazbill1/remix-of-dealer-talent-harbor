@@ -65,11 +65,11 @@ export const sendStaffText = createServerFn({ method: "POST" })
     await db.from("applications").update({ needs_attention: null }).eq("id", data.applicationId);
     let status = row.status as string;
     if (row.status !== "blocked") {
-      const { data: after } = await db.from("messages").select("status").eq("id", row.id).maybeSingle();
+      const { data: after } = await db.from("messages").select("status, org_id").eq("id", row.id).maybeSingle();
       status = after?.status ?? status;
       const preview = data.body.length > 80 ? `${data.body.slice(0, 80)}…` : data.body;
-      await db.from("application_events").insert({
-        org_id: row.org_id, application_id: data.applicationId, kind: "texting",
+      if (after?.org_id) await db.from("application_events").insert({
+        org_id: after.org_id, application_id: data.applicationId, kind: "texting",
         message: `${status === "simulated" ? "Text sent (demo)" : "Text sent"}: "${preview}"`,
       });
     }
