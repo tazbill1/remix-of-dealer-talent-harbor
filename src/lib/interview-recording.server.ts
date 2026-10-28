@@ -19,7 +19,7 @@ export async function processInterviewRecording(request:Request){
  const token=request.headers.get('authorization')?.replace(/^Bearer /i,'');if(!token)return Response.json({error:'Sign in required.'},{status:401});
  const {data:{user}}=await db.auth.getUser(token);if(!user)return Response.json({error:'Sign in required.'},{status:401});
  const {createClient}=await import('@supabase/supabase-js');
- const client=createClient<Database>(process.env['SUPABASE_URL']??'',process.env['SUPABASE_ANON_KEY']??'',{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}});
+ const client=createClient<Database>(process.env['SUPABASE_URL']??'',process.env['SUPABASE_PUBLISHABLE_KEY']??import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY??'',{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}});
  const body=await request.json() as {id?:string;retry?:boolean};if(!body.id||! /^[0-9a-f-]{36}$/i.test(body.id))return Response.json({error:'Invalid recording.'},{status:400});
  const {data:r}=await db.from('interview_recordings').select('*').eq('id',body.id).single();if(!r)return Response.json({error:'Recording not found.'},{status:404});
  const {app}=await authorizeInterview(client,user.id,r.interview_id);
