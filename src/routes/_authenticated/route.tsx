@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { meQuery, OrgContext, type OrgCtx } from "@/lib/org";
 import { useMessagingMode } from "@/lib/texting-mode";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -98,17 +99,19 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
 
 /** Practice vs live, always visible, so nobody wonders whether a text really went out. */
 function ModeBadge({ orgId }: { orgId: string }) {
-  const { textLive, emailLive } = useMessagingMode(orgId);
+  const { emailLive } = useMessagingMode(orgId);
   const pill = (label: string, live: boolean) => (
     <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", live ? "bg-lime text-navy" : "bg-sidebar-accent text-sidebar-accent-foreground")}>
       {label}: {live ? "Live" : "Practice"}
     </span>
   );
   return (
-    <Link to="/integrations" className="mb-4 flex flex-wrap gap-1.5 px-2" title="Texting and email mode">
-      {pill("Texts", textLive)}
+    <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild>
+    <Link to="/integrations" className="mb-4 flex flex-wrap gap-1.5 px-2" aria-label="Sending status. Click to manage in Integrations.">
+      <span className="rounded-full bg-status-demo px-2 py-0.5 text-[11px] font-medium text-status-demo-foreground">Texts: Demo</span>
       {pill("Email", emailLive)}
     </Link>
+    </TooltipTrigger><TooltipContent side="right">Sending status. Click to manage in Integrations.</TooltipContent></Tooltip></TooltipProvider>
   );
 }
 
