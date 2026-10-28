@@ -29,6 +29,8 @@ export const inviteInput = z
     email: z.string().trim().toLowerCase().email().max(200),
     role: z.enum(ROLES.map((r) => r.v) as [Role, ...Role[]]),
     scopes: z.array(scopeSchema).max(100).default([]),
+    /** Optional: their private calendar link, linked when they accept. */
+    calendarUrl: z.string().trim().max(1000).optional().default(""),
   })
   .refine((d) => !isScopedRole(d.role) || d.scopes.length > 0, {
     message: "Pick at least one store or region this person covers.",
