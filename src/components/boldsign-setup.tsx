@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { listSignTemplates, saveHireOnSign } from "@/lib/documents.functions";
 import { saveOfferTemplate } from "@/lib/offers.functions";
-import { DOC_FIELDS } from "@/lib/offers";
 import { SITE_URL } from "@/lib/site";
+import { IntegrationCard } from "@/components/integration-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,11 +46,8 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
   const hookUrl = `${SITE_URL}/api/public/boldsign/webhook`;
 
   return (
-    <section aria-labelledby="boldsign-title" className="min-w-0 border-t pt-6 md:col-span-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="boldsign-title" className="flex items-center gap-2 text-xl font-semibold">
-          <FileSignature className="size-5 text-sapphire" /> BoldSign
-        </h2>
+    <IntegrationCard icon={FileSignature} title="Offer letters (BoldSign)" state={apiKey ? "connected" : "coming_soon"}>
+      <div className="flex justify-end">
         <Button variant="outline" size="sm" disabled={isFetching} onClick={() => { refetch(); onSaved(); }}>
           <RefreshCw className={isFetching ? "size-4 animate-spin" : "size-4"} />
           {isFetching ? "Checking…" : "Check connection"}
@@ -63,10 +60,9 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
           <div className="min-w-0 flex-1 space-y-1">
             <h3 className="font-medium">Connection</h3>
             <p className="text-sm text-muted-foreground">
-              {isLoading ? "Checking BoldSign…" : connectionError ? "Connection needs attention" : checked ? "Connected · template access checked" : apiKey ? "Connection added; access not confirmed" : "Not connected"}
+              {isLoading ? "Checking BoldSign…" : connectionError ? "Connection needs attention" : checked ? "Connected" : apiKey ? "Connection added; access not confirmed" : "Not connected"}
             </p>
             {connectionError && <p role="alert" className="break-words text-sm text-destructive">{connectionError}</p>}
-            {!apiKey && <p className="text-sm text-muted-foreground">Ask the account owner to connect BoldSign through Lovable’s secure connection form.</p>}
           </div>
         </div>
 
@@ -90,7 +86,7 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
                   {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {isAdmin && <Button size="sm" disabled={saving || !checked || value === (templateId ?? "")} onClick={async () => {
+              {isAdmin && <div className="space-y-1"><Button size="sm" disabled={saving || !checked || value === (templateId ?? "")} onClick={async () => {
                 setSaving(true);
                 try {
                   await saveTemplate({ data: { orgId, templateId: value } });
@@ -98,15 +94,11 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
                   onSaved();
                 } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save template"); }
                 finally { setSaving(false); }
-              }}>{saving && <Loader2 className="size-4 animate-spin" />} {saving ? "Saving…" : "Save template"}</Button>}
+              }}>{saving && <Loader2 className="size-4 animate-spin" />} {saving ? "Saving…" : "Save template"}</Button><p className="text-xs text-muted-foreground">Choose a different template to save.</p></div>}
             </div>
             {checked && templates.length === 0 && <p className="text-sm text-muted-foreground">No templates found. Create your first template in BoldSign, then check the connection again.</p>}
             {templates.length > 0 && <p className="text-xs text-muted-foreground">{templates.length} {templates.length === 1 ? "template" : "templates"} available</p>}
-            <details className="text-sm">
-              <summary className="cursor-pointer text-muted-foreground">Template field reference</summary>
-              <p className="mt-2 text-muted-foreground">Applicant: role 1, signer.</p>
-              <div className="mt-2 flex flex-wrap gap-1">{DOC_FIELDS.map((f) => <code key={f.id} className="rounded bg-secondary px-2 py-1 text-xs">{f.id}</code>)}</div>
-            </details>
+
           </div>
         </div>
 
@@ -114,13 +106,9 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
           <StepMarker done={webhook} number={3} />
           <div className="min-w-0 flex-1 space-y-2">
             <h3 className="font-medium">Signing updates</h3>
-            <p className="text-sm text-muted-foreground">{webhook ? "Signing secret saved · updates enabled" : "Not set up · documents can send, but signing status won’t update automatically"}</p>
+            <p className="text-sm text-muted-foreground">{webhook ? "Signing updates enabled" : "Not set up · documents can send, but signing status won’t update automatically"}</p>
             <details key={String(webhook)} open={webhook ? undefined : true} className="text-sm">
               <summary className="cursor-pointer text-muted-foreground">{webhook ? "View signing update settings" : "Complete signing update setup"}</summary>
-              <ol className="mt-3 list-decimal space-y-3 pl-5 text-muted-foreground">
-                <li>In BoldSign, open API → Webhooks → Add webhook.</li>
-                <li>
-                  <span>Use this address:</span>
                   <div className="mt-2 flex items-start gap-2">
                     <code className="min-w-0 flex-1 break-all rounded bg-secondary p-2 text-xs">{hookUrl}</code>
                     <Button variant="outline" size="icon" title="Copy signing update address" aria-label="Copy signing update address" onClick={async () => {
@@ -128,10 +116,6 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
                       catch { toast.error("Could not copy; select the address and copy it manually"); }
                     }}><Copy className="size-4" /></Button>
                   </div>
-                </li>
-                <li>Select Sent, Viewed, Completed, Declined, Revoked, Expired, Send Failed and Delivery Failed.</li>
-                <li>Save, then add the signing secret through Lovable’s secure secret form as <code className="break-all">BOLDSIGN_WEBHOOK_SECRET</code>. Never paste it into chat.</li>
-              </ol>
             </details>
           </div>
         </div>
@@ -145,7 +129,7 @@ export function BoldSignSetup({ orgId, isAdmin, apiKey, webhook, templateId, onS
           finally { setSavingHire(false); }
         }} />
       </label>
-    </section>
+    </IntegrationCard>
   );
 }
 

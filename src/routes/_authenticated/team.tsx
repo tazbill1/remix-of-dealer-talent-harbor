@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, type Membership } from "@/lib/org";
-import { TextingSettings } from "@/components/texting-settings";
 import { TeamInvites } from "@/components/team-invites";
 import { useServerFn } from "@tanstack/react-start";
 import { teamCalendars } from "@/lib/member-calendars.functions";
@@ -135,7 +134,6 @@ function Team() {
         })}
       </div>
       {data && <TeamInvites orgId={org.orgId} stores={data.stores} regions={data.regions} />}
-      <TextingSettings orgId={org.orgId} />
     </div>
   );
 }
