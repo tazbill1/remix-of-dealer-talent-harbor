@@ -145,6 +145,13 @@ export const bookInterview = createServerFn({ method: "POST" })
     } catch {
       /* booking stands even if a confirmation text can't go out */
     }
+    // Confirmation email with the time (once per time picked).
+    try {
+      const { emailApplicant } = await import("@/lib/email/applicant.server");
+      await emailApplicant(db, b.app.id, { kind: "interview", startsAt: new Date(start).toISOString() });
+    } catch {
+      /* the booking stands either way */
+    }
     return { when, moved: !!moved };
   });
 

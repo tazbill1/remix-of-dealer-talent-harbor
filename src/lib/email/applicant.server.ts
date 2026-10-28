@@ -40,6 +40,7 @@ export async function emailApplicant(sb: DB, applicationId: string, e: Applicant
       assistant: store?.assistant_name ?? "Penny",
       statusUrl: `${baseUrl}/status/${app.status_token}`,
       timezone: store?.timezone || "America/Chicago",
+      bookingUrl: e.kind === "interview" ? await bookingUrlFor(applicationId) : null,
     });
     if (!content) return null;
     const row = await queueEmail(sb, { applicationId, ...content, purpose, baseUrl });
@@ -50,6 +51,17 @@ export async function emailApplicant(sb: DB, applicationId: string, e: Applicant
     return row;
   } catch (err) {
     console.error("applicant email failed", applicationId, err);
+    return null;
+  }
+}
+
+/** The candidate's pick-a-time link for interview emails (null if it can't be made). */
+async function bookingUrlFor(applicationId: string) {
+  try {
+    const { bookingLink } = await import("@/lib/booking.functions");
+    const link = await bookingLink(applicationId);
+    return link.startsWith("http") ? link : null;
+  } catch {
     return null;
   }
 }

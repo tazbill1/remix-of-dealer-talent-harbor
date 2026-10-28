@@ -21,7 +21,7 @@ export function applicantEmailPurpose(e: ApplicantEmailKind) {
 
 export function applicantEmail(
   e: ApplicantEmailKind,
-  a: { first: string; job: string; store: string; assistant: string; statusUrl: string; timezone: string },
+  a: { first: string; job: string; store: string; assistant: string; statusUrl: string; timezone: string; bookingUrl?: string | null },
 ): { subject: string; body: string } | null {
   const sign = `${a.assistant}\n${a.store} hiring team`;
   const check = `Check your status anytime: ${a.statusUrl}`;
@@ -45,8 +45,10 @@ export function applicantEmail(
     return {
       subject: `Interview invite — ${a.job} at ${a.store}`,
       body: when
-        ? `Hi ${a.first},\n\nGreat news — we'd like to interview you for ${a.job}! You're scheduled for ${when} at ${a.store}.\n\nIf that time doesn't work, just reply to this email and we'll find another.\n\n${check}\n\n${sign}`
-        : `Hi ${a.first},\n\nGreat news — we'd like to interview you for ${a.job} at ${a.store}! We'll reach out shortly to set up a time. You can also reply to this email with times that work for you.\n\n${check}\n\n${sign}`,
+        ? `Hi ${a.first},\n\nGreat news — we'd like to interview you for ${a.job}! You're scheduled for ${when} at ${a.store}.\n\n${a.bookingUrl ? `Need a different time? Pick a new one here:\n${a.bookingUrl}` : "If that time doesn't work, just reply to this email and we'll find another."}\n\n${check}\n\n${sign}`
+        : a.bookingUrl
+          ? `Hi ${a.first},\n\nGreat news — we'd like to interview you for ${a.job} at ${a.store}!\n\nPick a time that works for you here (it takes a few seconds):\n${a.bookingUrl}\n\n${check}\n\n${sign}`
+          : `Hi ${a.first},\n\nGreat news — we'd like to interview you for ${a.job} at ${a.store}! We'll reach out shortly to set up a time. You can also reply to this email with times that work for you.\n\n${check}\n\n${sign}`,
     };
   }
   if (!STATUS_EMAIL_STAGES.includes(e.status)) return null;
