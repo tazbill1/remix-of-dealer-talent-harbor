@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AiNoticeRouteImport } from './routes/ai-notice'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiNoticeRoute = AiNoticeRouteImport.update({
+  id: '/ai-notice',
+  path: '/ai-notice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -324,6 +330,7 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-notice': typeof AiNoticeRoute
   '/auth': typeof AuthRoute
   '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-notice': typeof AiNoticeRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/ai-notice': typeof AiNoticeRoute
   '/auth': typeof AuthRoute
   '/careers': typeof CareersRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-notice'
     | '/auth'
     | '/careers'
     | '/privacy'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-notice'
     | '/auth'
     | '/privacy'
     | '/terms'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/ai-notice'
     | '/auth'
     | '/careers'
     | '/privacy'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AiNoticeRoute: typeof AiNoticeRoute
   AuthRoute: typeof AuthRoute
   CareersRoute: typeof CareersRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
@@ -678,6 +691,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-notice': {
+      id: '/ai-notice'
+      path: '/ai-notice'
+      fullPath: '/ai-notice'
+      preLoaderRoute: typeof AiNoticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1082,6 +1102,7 @@ const CareersRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AiNoticeRoute: AiNoticeRoute,
   AuthRoute: AuthRoute,
   CareersRoute: CareersRouteWithChildren,
   PrivacyRoute: PrivacyRoute,

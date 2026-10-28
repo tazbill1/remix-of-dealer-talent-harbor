@@ -121,6 +121,15 @@ export const submitApplication = createServerFn({ method: "POST" })
     await supabaseAdmin.from("application_events").insert({
       org_id: job.org_id, application_id: app.id, kind: "applied", message: "Application received",
     });
+    // AI-use notice shown above the submit button: keep the exact wording as evidence.
+    {
+      const { AI_NOTICE_TEXT, AI_NOTICE_VERSION } = await import("@/lib/ai-notice");
+      await supabaseAdmin.from("applicant_consents").insert({
+        org_id: job.org_id, store_id: job.dealership_id, applicant_id: app.id,
+        consent_type: "ai_notice", granted: true, consent_text: AI_NOTICE_TEXT,
+        consent_version: AI_NOTICE_VERSION, source: "careers_form",
+      });
+    }
     // Welcome text (respects consent, STOP and texting hours; never blocks applying).
     const { welcomeOnApply } = await import("@/lib/workflows/run.server");
     await welcomeOnApply(supabaseAdmin, app.id);

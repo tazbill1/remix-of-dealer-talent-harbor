@@ -4,6 +4,7 @@
  * in it is blank. Carrier rules are added automatically (program name on manager texts,
  * "Reply STOP" on the first text to a candidate), so edits can't break compliance.
  */
+import { withAiDisclosure } from "@/lib/ai-notice";
 import { z } from "zod";
 import { statusRulesSchema } from "@/lib/status-rules";
 
@@ -275,7 +276,8 @@ export function textFor(a: Automations, key: AutomationKey, vars: Record<string,
   const needsLink = (t: string) => /\{link\}/.test(t) && !vars["link"];
   let template = custom || def.text;
   if (needsLink(template)) template = !needsLink(def.text) ? def.text : (def.noLinkText ?? def.text);
-  return compliant(key, render(template, vars));
+  const out = compliant(key, render(template, vars));
+  return key === "welcome" ? withAiDisclosure(out, String(vars["assistant"] ?? ""), String(vars["store"] ?? "")) : out;
 }
 
 /**
