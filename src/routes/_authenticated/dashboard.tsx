@@ -101,7 +101,7 @@ function Dashboard() {
 
   const stats = [
     { label: "Open jobs", value: openJobs, icon: Briefcase, to: "/jobs" as const, search: {} },
-    { label: "New today", value: newToday, icon: Sparkles, to: "/applicants" as const, search: { filter: "today" as const } },
+    { label: "New today", value: newToday, icon: Sparkles, to: "/applicants" as const, search: { applied: "today" } },
     { label: "Total applicants", value: apps.length, icon: Users, to: "/applicants" as const, search: {} },
     { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy, to: "/applicants" as const, search: { status: "hired" } },
   ];
