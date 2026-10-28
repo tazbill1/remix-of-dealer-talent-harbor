@@ -81,20 +81,26 @@ export async function handleManagerShortReply(
         : "Hiring manager replied 2: pass",
     );
     const first = firstName(app.full_name);
-    await sendText(sb, admin, {
-      applicationId: app.id,
-      party: "candidate",
-      now,
-      ...(decision === "interview"
-        ? {
-            purpose: PURPOSE.inviteCandidate,
-            body: await inviteBody(app.id, first, input.storeName),
-          }
-        : {
-            purpose: PURPOSE.declineCandidate,
-            body: text.declineCandidate({ first, job: input.jobTitle, store: input.storeName }),
-          }),
-    });
+    const { loadSettings } = await import("@/lib/messaging/outbox.server");
+    const { parseAutomations, textFor } = await import("@/lib/automations");
+    const auto = parseAutomations((await loadSettings(admin, app.org_id)).automations);
+    const candidateText =
+      decision === "interview"
+        ? textFor(auto, "invite", {
+            first,
+            store: input.storeName,
+            job: input.jobTitle,
+            link: await inviteLink(app.id),
+          })
+        : textFor(auto, "decline", { first, job: input.jobTitle, store: input.storeName });
+    if (candidateText)
+      await sendText(sb, admin, {
+        applicationId: app.id,
+        party: "candidate",
+        now,
+        purpose: decision === "interview" ? PURPOSE.inviteCandidate : PURPOSE.declineCandidate,
+        body: candidateText,
+      });
     {
       const { emailApplicant } = await import("@/lib/email/applicant.server");
       await emailApplicant(admin, app.id, status === "interview"
@@ -116,7 +122,7 @@ export async function handleManagerShortReply(
 
   if (pending.kind === "checkin" && answer !== null) {
     const due =
-      checkinSchedule(app.start_date, app.hired_at).find((s) => s.mark === pending.mark)?.due ??
+      checkinSchedule(app.start_date, app.hired_at, [pending.mark]).find((s) => s.mark === pending.mark)?.due ??
       localDate(now, input.timeZone);
     await sb.from("retention_checkins").upsert(
       {
@@ -152,15 +158,13 @@ export async function handleManagerShortReply(
   return null;
 }
 
-/** The interview invite: a link to pick a time, or the old "when works?" text if the link can't be made. */
-async function inviteBody(applicationId: string, first: string, store: string) {
+/** The candidate's booking link, or "" if it can't be made (the invite then asks for times). */
+async function inviteLink(applicationId: string) {
   try {
     const { bookingLink } = await import("@/lib/booking.functions");
-    const { bookingInviteText } = await import("@/lib/booking");
     const link = await bookingLink(applicationId);
-    if (link.startsWith("http")) return bookingInviteText({ first, store, link });
+    return link.startsWith("http") ? link : "";
   } catch {
-    /* fall through */
+    return "";
   }
-  return text.inviteCandidate({ first, store });
 }

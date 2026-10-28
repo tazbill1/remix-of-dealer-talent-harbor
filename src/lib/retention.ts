@@ -5,10 +5,14 @@ export const ymd = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const dateOnly = (d: string) => Date.parse(`${d.slice(0, 10)}T00:00:00Z`);
 
 /** The 30/60/90 dates for a hire, counted from the start date (or hire date). */
-export function checkinSchedule(startDate: string | null, hiredAt: string | null) {
+export function checkinSchedule(
+  startDate: string | null,
+  hiredAt: string | null,
+  marks: readonly number[] = RETENTION_MARKS,
+) {
   const base = startDate ? dateOnly(startDate) : hiredAt ? dateOnly(hiredAt) : null;
   if (base === null) return [];
-  return RETENTION_MARKS.map((mark) => ({ mark, due: ymd(base + mark * DAY) }));
+  return marks.map((mark) => ({ mark, due: ymd(base + mark * DAY) }));
 }
 
 /**

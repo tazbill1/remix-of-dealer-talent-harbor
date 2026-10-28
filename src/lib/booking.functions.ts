@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { bookedText, bookingInviteText, hoursSchema, openSlots, parseHours, slotLabel, type Busy } from "@/lib/booking";
+import { hoursSchema, openSlots, parseHours, slotLabel, type Busy } from "@/lib/booking";
 
 type DB = import("@supabase/supabase-js").SupabaseClient;
 type Ctx = { supabase: DB; userId: string };
@@ -42,6 +42,9 @@ async function loadBooking(db: DB, applicationId: string, now = Date.now()) {
     .map((i) => ({ start: Date.parse(i.starts_at), end: Date.parse(i.starts_at) + (i.duration_min || 30) * 60e3 }));
   const timeZone = store.timezone || "America/Chicago";
   const minutes = store.interview_minutes || 30;
+  const { loadSettings } = await import("@/lib/messaging/outbox.server");
+  const { parseAutomations, bookingLeadHours, bookingDaysAhead } = await import("@/lib/automations");
+  const auto = parseAutomations((await loadSettings(db, app.org_id)).automations);
   // Busy times on the managers' own calendars (linked on the store page).
   try {
     const { storeBusy } = await import("@/lib/busy-calendar.server");
@@ -49,9 +52,18 @@ async function loadBooking(db: DB, applicationId: string, now = Date.now()) {
   } catch {
     /* a calendar problem never blocks booking */
   }
-  const slots = openSlots({ hours: parseHours(store.interview_hours), minutes, timeZone, busy, now, days: 7, max: 60 });
+  const slots = openSlots({
+    hours: parseHours(store.interview_hours),
+    minutes,
+    timeZone,
+    busy,
+    now,
+    days: bookingDaysAhead(auto),
+    leadHours: bookingLeadHours(auto),
+    max: 120,
+  });
   const address = [store.address, [store.city, store.state].filter(Boolean).join(", ")].filter(Boolean).join(", ") || null;
-  return { app, store, job, timeZone, minutes, slots, address, upcoming: mine[0] ?? null };
+  return { app, store, job, timeZone, minutes, slots, address, upcoming: mine[0] ?? null, auto };
 }
 
 /** Public: the open times for the candidate's booking link. */
@@ -124,21 +136,22 @@ export const bookInterview = createServerFn({ method: "POST" })
 
     try {
       const { queueText, deliverDue } = await import("@/lib/messaging/outbox.server");
-      const { BRAND } = await import("@/lib/workflows/rules");
+      const { textFor } = await import("@/lib/automations");
       const first = b.app.full_name.split(" ")[0] ?? "";
+      const candidateBody = textFor(b.auto, "booked", { first, store: b.store.name, when, address: b.address });
+      const managerBody = textFor(b.auto, "bookedManager", {
+        name: b.app.full_name,
+        change: moved ? "moved their interview to" : "booked an interview for",
+        when,
+        job: b.job?.title ?? "",
+      });
       const rows = await Promise.all([
-        queueText(db, {
-          applicationId: b.app.id,
-          party: "candidate",
-          purpose: "candidate_interview_booked",
-          body: bookedText({ first, store: b.store.name, when, address: b.address }),
-        }),
-        queueText(db, {
-          applicationId: b.app.id,
-          party: "manager",
-          purpose: "manager_interview_booked",
-          body: `${BRAND}: ${b.app.full_name} ${moved ? "moved their interview to" : "booked an interview for"} ${when}${b.job ? ` (${b.job.title})` : ""}. It's on your hireme calendar.`,
-        }),
+        ...(candidateBody
+          ? [queueText(db, { applicationId: b.app.id, party: "candidate", purpose: "candidate_interview_booked", body: candidateBody })]
+          : []),
+        ...(managerBody
+          ? [queueText(db, { applicationId: b.app.id, party: "manager", purpose: "manager_interview_booked", body: managerBody })]
+          : []),
       ]);
       const due = rows.filter((r) => r.status === "queued").map((r) => r.id);
       if (due.length) await deliverDue(db, { ids: due });
@@ -165,14 +178,17 @@ export const sendBookingLink = createServerFn({ method: "POST" })
     if (!ok) throw new Error("You don't have access to this applicant.");
     const link = await bookingLink(data.applicationId, getRequest());
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: app } = await db.from("applications").select("full_name, dealership_id").eq("id", data.applicationId).single();
+    const { data: app } = await db.from("applications").select("full_name, dealership_id, org_id").eq("id", data.applicationId).single();
     const { data: store } = await db.from("dealerships").select("name").eq("id", app?.dealership_id ?? "").maybeSingle();
-    const { queueText, deliverDue } = await import("@/lib/messaging/outbox.server");
+    const { queueText, deliverDue, loadSettings } = await import("@/lib/messaging/outbox.server");
+    const { parseAutomations, wordingFor } = await import("@/lib/automations");
+    const auto = parseAutomations((await loadSettings(db, app?.org_id ?? "")).automations);
+    // Staff asked for this, so it goes even if the automatic invite is turned off.
     const row = await queueText(db, {
       applicationId: data.applicationId,
       party: "candidate",
       purpose: "candidate_booking_link",
-      body: bookingInviteText({ first: app?.full_name.split(" ")[0] ?? "", store: store?.name ?? "the dealership", link }),
+      body: wordingFor(auto, "invite", { first: app?.full_name.split(" ")[0] ?? "", store: store?.name ?? "the dealership", link }),
     });
     if (row.status === "queued") await deliverDue(db, { ids: [row.id] });
     return { link, note: row.status === "blocked" ? `Text not sent: ${row.error ?? "blocked"}` : null };

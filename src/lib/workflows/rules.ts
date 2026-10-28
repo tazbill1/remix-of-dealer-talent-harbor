@@ -63,6 +63,9 @@ export function nextManagerStep(input: {
   hasEscalationContact: boolean;
   window: SendWindow;
   now: number;
+  /** Turned off in Automatic texts settings. */
+  nudgeOn?: boolean;
+  escalationOn?: boolean;
 }): ManagerStep | null {
   if (input.status !== "screening") return null;
   const mine = input.messages.filter((m) => m.party === "manager");
@@ -77,8 +80,8 @@ export function nextManagerStep(input: {
   const replied = mine.some((m) => m.direction === "in" && Date.parse(m.created_at) > since);
   if (replied) return null;
   const has = (p: string) => mine.some((m) => m.purpose === p);
-  const canEscalate = input.hasEscalationContact && !has(PURPOSE.escalation);
-  const canNudge = !has(PURPOSE.nudge) && !has(PURPOSE.escalation);
+  const canEscalate = input.escalationOn !== false && input.hasEscalationContact && !has(PURPOSE.escalation);
+  const canNudge = input.nudgeOn !== false && !has(PURPOSE.nudge) && !has(PURPOSE.escalation);
   if (!canEscalate && !canNudge) return null;
   const cap = Math.max(input.escalateAfterHours, input.nudgeAfterHours);
   const waited = windowHoursBetween(since, input.now, input.window, cap);
@@ -142,6 +145,10 @@ export function dueReminders(input: {
   messages: Msg[];
   window: SendWindow;
   now: number;
+  /** Hours before the interview each reminder goes out (null = turned off). */
+  dayHours?: number | null;
+  soonHours?: number | null;
+  managerHours?: number | null;
 }): ReminderStep[] {
   const { startsAt, now } = input;
   if (startsAt <= now) return [];
@@ -152,14 +159,17 @@ export function dueReminders(input: {
     const at = nextSendTime(now, input.window);
     return at !== null && at < startsAt - 15 * 60e3;
   };
-  if (until <= 2 * HOUR) {
-    if (!sent(PURPOSE.reminderSoon) && canLand())
-      out.push({ purpose: PURPOSE.reminderSoon, party: "candidate" });
-    if (!sent(PURPOSE.reminderManager) && canLand())
-      out.push({ purpose: PURPOSE.reminderManager, party: "manager" });
-  } else if (until <= 26 * HOUR && !sent(PURPOSE.reminderDay) && canLand()) {
+  const day = input.dayHours === undefined ? 24 : input.dayHours;
+  const soon = input.soonHours === undefined ? 2 : input.soonHours;
+  const mgr = input.managerHours === undefined ? 2 : input.managerHours;
+  const inSoon = soon !== null && until <= soon * HOUR;
+  if (inSoon && !sent(PURPOSE.reminderSoon) && canLand())
+    out.push({ purpose: PURPOSE.reminderSoon, party: "candidate" });
+  if (mgr !== null && until <= mgr * HOUR && !sent(PURPOSE.reminderManager) && canLand())
+    out.push({ purpose: PURPOSE.reminderManager, party: "manager" });
+  // The earlier reminder is skipped once the day-of one is due (no back-to-back texts).
+  if (day !== null && !inSoon && until <= day * HOUR && !sent(PURPOSE.reminderDay) && canLand())
     out.push({ purpose: PURPOSE.reminderDay, party: "candidate" });
-  }
   return out;
 }
 

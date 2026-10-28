@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { docsText, documentFields, sendDocsInput } from "@/lib/offers";
+import { documentFields, sendDocsInput } from "@/lib/offers";
+import { parseAutomations, wordingFor } from "@/lib/automations";
 
 type Ctx = { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
 
@@ -121,13 +122,18 @@ export const sendDocuments = createServerFn({ method: "POST" })
       try {
         const { docsToken } = await import("@/lib/offers-token.server");
         const { appBaseUrl } = await import("@/lib/email/provider.server");
-        const { queueText, deliverDue } = await import("@/lib/messaging/outbox.server");
+        const { queueText, deliverDue, loadSettings } = await import("@/lib/messaging/outbox.server");
         const link = `${appBaseUrl(getRequest())}/api/public/docs/${await docsToken(app.id)}`;
         const msg = await queueText(db, {
           applicationId: app.id,
           party: "candidate",
           purpose: "candidate_documents",
-          body: docsText({ first: app.full_name.split(" ")[0] ?? "", store: storeName, count: sent.length, link }),
+          body: wordingFor(parseAutomations((await loadSettings(db, data.orgId)).automations), "documents", {
+            first: app.full_name.split(" ")[0] ?? "",
+            store: storeName,
+            documents: sent.length === 1 ? "a document" : `${sent.length} documents`,
+            link,
+          }),
         });
         if (msg.status === "queued") await deliverDue(db, { ids: [msg.id] });
         textNote = msg.status === "blocked" ? `Text not sent: ${msg.error ?? "blocked"}` : null;

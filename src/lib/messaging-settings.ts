@@ -8,6 +8,8 @@ export const messagingSettingsSchema = z.object({
   nudge_after_hours: z.number().int().min(1).max(168).default(4),
   escalate_after_hours: z.number().int().min(1).max(336).default(24),
   ai_provider: z.enum(["lovable", "anthropic"]).default("lovable"),
+  /** Automatic text wording, on/off and timing (see src/lib/automations.ts). */
+  automations: z.unknown().optional(),
 });
 export type MessagingSettings = z.infer<typeof messagingSettingsSchema>;
 export const defaultMessagingSettings = () => messagingSettingsSchema.parse({});
