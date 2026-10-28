@@ -30,6 +30,7 @@ import { z } from "zod";
 import { isTestName, plural, sourceLabel } from "@/lib/display";
 import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applicant-filters";
 import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
+import { ReferralBadge, ReferralPanelRow, useReferrerNames } from "@/components/referral-badge";
 
 type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
 
@@ -73,6 +74,8 @@ function Applicants() {
       return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
     },
   });
+  const { data: referrerRows = [] } = useReferrerNames(org.orgId);
+  const referrerNames = new Map(referrerRows.map((r) => [r.id, r.employee_name]));
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const set = (patch: Partial<Record<SearchKey, string | undefined>>) =>
@@ -314,6 +317,7 @@ function Applicants() {
                         <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
                       )}
                       <BackgroundCheckBadge status={a.background_check_status} />
+                      <ReferralBadge app={a} names={referrerNames} />
                       {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                       <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                         <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
@@ -386,7 +390,8 @@ function Applicants() {
 type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
-  background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null };
+  background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null;
+  referrer_id: string | null; referred_by_text: string | null };
 
 const PANEL_TABS = [
   { id: "overview", label: "Overview" },
@@ -465,6 +470,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            <ReferralPanelRow app={app} orgId={orgId} isHr={isHr} onLink={(id) => onUpdate({ referrer_id: id })} />
             <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">LinkedIn profile</div>

@@ -29,6 +29,7 @@ import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authen
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
+import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
@@ -162,6 +163,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
 const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
   id: '/platform',
   path: '/platform',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatusRulesRoute =
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
+  '/referrals': typeof AuthenticatedReferralsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
+  '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/onboarding'
     | '/platform'
+    | '/referrals'
     | '/status-rules'
     | '/stores'
     | '/team'
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/onboarding'
     | '/platform'
+    | '/referrals'
     | '/status-rules'
     | '/stores'
     | '/team'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs'
     | '/_authenticated/onboarding'
     | '/_authenticated/platform'
+    | '/_authenticated/referrals'
     | '/_authenticated/status-rules'
     | '/_authenticated/stores'
     | '/_authenticated/team'
@@ -817,6 +829,13 @@ declare module '@tanstack/react-router' {
       path: '/platform'
       fullPath: '/platform'
       preLoaderRoute: typeof AuthenticatedPlatformRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/referrals': {
+      id: '/_authenticated/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof AuthenticatedReferralsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/status-rules': {
@@ -1053,6 +1072,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
+  AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
@@ -1074,6 +1094,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
+  AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
