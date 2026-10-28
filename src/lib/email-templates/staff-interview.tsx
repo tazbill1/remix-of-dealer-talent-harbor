@@ -30,7 +30,7 @@ function StaffInterview({ applicant = "Applicant", job = "Interview", store = "Y
 
 export const template = {
   component: StaffInterview,
-  subject: (data) => `${data.moved ? "Interview moved" : "Interview booked"}: ${data.applicant ?? "Applicant"}`,
+  subject: (data) => `${data['moved'] ? "Interview moved" : "Interview booked"}: ${data['applicant'] ?? "Applicant"}`,
   displayName: "Staff interview invite",
   previewData: { applicant: "Sample Applicant", job: "Service advisor", store: "Sample Store", when: "Wednesday, October 28 at 10:00 AM CDT", minutes: 30 },
 } satisfies TemplateEntry;

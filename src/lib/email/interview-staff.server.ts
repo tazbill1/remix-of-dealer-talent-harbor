@@ -47,7 +47,7 @@ export async function emailInterviewStaff(db: DB, interviewId: string, moved = f
         const result = await sendTemplateEmail("staff-interview", recipient.email, {
           idempotencyKey: key,
           fromAddress: settings.email_from_address,
-          replyTo: settings.email_reply_to ?? undefined,
+          ...(settings.email_reply_to ? { replyTo: settings.email_reply_to } : {}),
           templateData: { applicant: app.full_name, job: job?.title, store: store?.name, when, minutes: iv.duration_min, location, calendarUrl, appUrl: base, moved },
         });
         status = result.sent ? "sent" : "blocked";
