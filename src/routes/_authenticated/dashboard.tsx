@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Briefcase, Users, Sparkles, Trophy, Timer } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { RouteSpinner } from "@/components/route-spinner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
