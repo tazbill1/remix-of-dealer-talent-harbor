@@ -156,7 +156,7 @@ function Dashboard() {
     .sort((a, b) => b.total - a.total);
 
   // Data is still loading — show a spinner instead of an empty dashboard.
-  if (isLoading) return <DashboardLoading />;
+  if (isLoading) return <RouteSpinner />;
 
   const stats = [
     {
