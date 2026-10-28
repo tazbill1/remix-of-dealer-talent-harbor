@@ -44,3 +44,4 @@
 - Interview recording is hidden from all screens (code, table and bucket kept; setting stays off) until the client re-enables it. Why: paused feature, data preserved.
 - LinkedIn profile links normalize through src/lib/linkedin.ts (pure, tested); the apply form and staff panel share it. Why: one validation rule and one canonical stored form.
 - Store setup rules (required fields, US phone, defaults, Missing info) live in src/lib/store-validation.ts (pure, tested) and the shared StoreFormFields; app-side only. Why: create and edit forms enforce the same rules while incomplete existing stores keep working.
+- AI-use disclosure wording, the first-message line and HUMAN detection live in src/lib/ai-notice.ts (pure, tested); apply saves an ai_notice consent row, and HUMAN pauses the assistant and sets needs_attention "Wants a person", which stops automated candidate texts/emails. Why: one source for disclosure wording and opt-to-human handling.
