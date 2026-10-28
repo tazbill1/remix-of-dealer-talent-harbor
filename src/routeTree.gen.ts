@@ -21,6 +21,7 @@ import { Route as AuthenticatedAutomationsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
+import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
@@ -110,6 +111,12 @@ const AuthenticatedIntegrationsRoute =
   AuthenticatedIntegrationsRouteImport.update({
     id: '/integrations',
     path: '/integrations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInterviewKitsRoute =
+  AuthenticatedInterviewKitsRouteImport.update({
+    id: '/interview-kits',
+    path: '/interview-kits',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
@@ -275,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
+  '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
@@ -316,6 +324,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
+  '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
@@ -360,6 +369,7 @@ export interface FileRoutesById {
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
+  '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/integrations'
+    | '/interview-kits'
     | '/jobs'
     | '/onboarding'
     | '/platform'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/integrations'
+    | '/interview-kits'
     | '/jobs'
     | '/onboarding'
     | '/platform'
@@ -488,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/calendar'
     | '/_authenticated/dashboard'
     | '/_authenticated/integrations'
+    | '/_authenticated/interview-kits'
     | '/_authenticated/jobs'
     | '/_authenticated/onboarding'
     | '/_authenticated/platform'
@@ -630,6 +643,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof AuthenticatedIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/interview-kits': {
+      id: '/_authenticated/interview-kits'
+      path: '/interview-kits'
+      fullPath: '/interview-kits'
+      preLoaderRoute: typeof AuthenticatedInterviewKitsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/jobs': {
@@ -845,6 +865,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
+  AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
@@ -862,6 +883,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
+  AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,

@@ -57,5 +57,5 @@
 ## Still to do
 - [ ] Background checks (partner TBD) — tracking on the profile done (Requested / In progress / Clear / Flagged, set by Recruiting/HR); vendor hookup still to do
 - [x] Weekly HR summary per store: one email per person for the stores they cover, chosen day/time, preview button (off until turned on)
-- [ ] Interview intelligence: question kits, recording/transcripts, AI scorecards (needs consent handling)
+- [~] Interview intelligence: question kits and interviewer scorecards done (docs/interview-scorecards-update.md); recording/transcripts and AI-drafted scorecards still to do (needs consent wording, signed off by the group)
 - [ ] Separate Twilio brand per client before go-live; bulk email via Resend/SES
