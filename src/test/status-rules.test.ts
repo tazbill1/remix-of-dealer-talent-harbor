@@ -157,7 +157,7 @@ describe("status rules: settings", () => {
     expect(describeRule(rule())).toBe("No reply for 5 days in Not Contacted Yet or Contacted → Not Selected");
     expect(
       describeRule(rule({ trigger: "no_change", days: 1, from: ["new"], to: "screening" })),
-    ).toBe("1 day with no change in New → Screening");
+    ).toBe("1 day with no change in Not Contacted Yet → Contacted");
   });
 
   it("stamps the turned-on time, keeps it while on, clears it when off", () => {
