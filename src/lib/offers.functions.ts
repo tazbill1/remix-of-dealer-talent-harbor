@@ -89,9 +89,9 @@ export const sendOffer = createServerFn({ method: "POST" })
     const events: { org_id: string; application_id: string; kind: string; message: string; actor_id?: string }[] = [
       { org_id: data.orgId, application_id: app.id, kind: "offer", message: `Offer sent for signature: ${data.jobTitle}`, actor_id: context.userId },
     ];
-    if (["new", "screening"].includes(app.status)) {
-      await db.from("applications").update({ status: "interview" }).eq("id", app.id);
-      events.push(...statusEventRows(data.orgId, [app.id], "interview"));
+    if (["new", "screening", "interview", "other_location", "hiring_event"].includes(app.status)) {
+      await db.from("applications").update({ status: "offer" }).eq("id", app.id);
+      events.push(...statusEventRows(data.orgId, [app.id], "offer"));
     }
     await db.from("application_events").insert(events);
 
