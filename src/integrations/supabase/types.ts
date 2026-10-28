@@ -963,6 +963,7 @@ export type Database = {
           pay_min: number | null
           pay_period: string
           questions: Json
+          referral_tier_id: string | null
           req_type: string
           requested_by: string | null
           status: string
@@ -987,6 +988,7 @@ export type Database = {
           pay_min?: number | null
           pay_period?: string
           questions?: Json
+          referral_tier_id?: string | null
           req_type?: string
           requested_by?: string | null
           status?: string
@@ -1011,6 +1013,7 @@ export type Database = {
           pay_min?: number | null
           pay_period?: string
           questions?: Json
+          referral_tier_id?: string | null
           req_type?: string
           requested_by?: string | null
           status?: string
@@ -1037,6 +1040,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_referral_tier_id_fkey"
+            columns: ["referral_tier_id"]
+            isOneToOne: false
+            referencedRelation: "referral_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -1582,12 +1592,15 @@ export type Database = {
           due_date: string | null
           due_notified_at: string | null
           id: string
+          ineligible_reason: string | null
           notes: string | null
           org_id: string
           paid_at: string | null
           payout_stage: string
           referrer_id: string
           status: string
+          tier_id: string | null
+          tier_name: string | null
         }
         Insert: {
           amount?: number | null
@@ -1596,12 +1609,15 @@ export type Database = {
           due_date?: string | null
           due_notified_at?: string | null
           id?: string
+          ineligible_reason?: string | null
           notes?: string | null
           org_id: string
           paid_at?: string | null
           payout_stage: string
           referrer_id: string
           status?: string
+          tier_id?: string | null
+          tier_name?: string | null
         }
         Update: {
           amount?: number | null
@@ -1610,12 +1626,15 @@ export type Database = {
           due_date?: string | null
           due_notified_at?: string | null
           id?: string
+          ineligible_reason?: string | null
           notes?: string | null
           org_id?: string
           paid_at?: string | null
           payout_stage?: string
           referrer_id?: string
           status?: string
+          tier_id?: string | null
+          tier_name?: string | null
         }
         Relationships: [
           {
@@ -1639,27 +1658,159 @@ export type Database = {
             referencedRelation: "referrers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "referral_bonuses_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "referral_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_drawing_entries: {
+        Row: {
+          applicant_id: string
+          bonus_id: string
+          created_at: string
+          id: string
+          org_id: string
+          quarter: string
+          referrer_id: string
+        }
+        Insert: {
+          applicant_id: string
+          bonus_id: string
+          created_at?: string
+          id?: string
+          org_id: string
+          quarter: string
+          referrer_id: string
+        }
+        Update: {
+          applicant_id?: string
+          bonus_id?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          quarter?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_drawing_entries_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_drawing_entries_bonus_id_fkey"
+            columns: ["bonus_id"]
+            isOneToOne: true
+            referencedRelation: "referral_bonuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_drawing_entries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_drawing_entries_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_drawings: {
+        Row: {
+          amount: number | null
+          entry_count: number
+          id: string
+          org_id: string
+          picked_at: string
+          picked_by: string | null
+          quarter: string
+          winner_entry_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          entry_count?: number
+          id?: string
+          org_id: string
+          picked_at?: string
+          picked_by?: string | null
+          quarter: string
+          winner_entry_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          entry_count?: number
+          id?: string
+          org_id?: string
+          picked_at?: string
+          picked_by?: string | null
+          quarter?: string
+          winner_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_drawings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_drawings_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "referral_drawing_entries"
+            referencedColumns: ["id"]
+          },
         ]
       }
       referral_settings: {
         Row: {
           bonus_30_amount: number | null
           bonus_90_amount: number | null
+          drawing_amount: number | null
+          drawing_enabled: boolean
+          excluded_roles: string[]
+          full_time_only: boolean
           org_id: string
+          payout_days: number
+          require_before_hire: boolean
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           bonus_30_amount?: number | null
           bonus_90_amount?: number | null
+          drawing_amount?: number | null
+          drawing_enabled?: boolean
+          excluded_roles?: string[]
+          full_time_only?: boolean
           org_id: string
+          payout_days?: number
+          require_before_hire?: boolean
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           bonus_30_amount?: number | null
           bonus_90_amount?: number | null
+          drawing_amount?: number | null
+          drawing_enabled?: boolean
+          excluded_roles?: string[]
+          full_time_only?: boolean
           org_id?: string
+          payout_days?: number
+          require_before_hire?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -1668,6 +1819,50 @@ export type Database = {
             foreignKeyName: "referral_settings_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_tiers: {
+        Row: {
+          amount: number
+          covers: string[]
+          created_at: string
+          excludes: string[]
+          id: string
+          is_default: boolean
+          name: string
+          org_id: string
+          sort_order: number
+        }
+        Insert: {
+          amount?: number
+          covers?: string[]
+          created_at?: string
+          excludes?: string[]
+          id?: string
+          is_default?: boolean
+          name: string
+          org_id: string
+          sort_order?: number
+        }
+        Update: {
+          amount?: number
+          covers?: string[]
+          created_at?: string
+          excludes?: string[]
+          id?: string
+          is_default?: boolean
+          name?: string
+          org_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_tiers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1685,6 +1880,7 @@ export type Database = {
           org_id: string
           phone: string | null
           referral_code: string
+          role_title: string | null
           store_id: string | null
         }
         Insert: {
@@ -1698,6 +1894,7 @@ export type Database = {
           org_id: string
           phone?: string | null
           referral_code?: string
+          role_title?: string | null
           store_id?: string | null
         }
         Update: {
@@ -1711,6 +1908,7 @@ export type Database = {
           org_id?: string
           phone?: string | null
           referral_code?: string
+          role_title?: string | null
           store_id?: string | null
         }
         Relationships: [
@@ -2049,6 +2247,14 @@ export type Database = {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      pick_referral_drawing_winner: {
+        Args: { _org: string; _quarter: string }
+        Returns: string
+      }
+      referral_word_match: {
+        Args: { _text: string; _words: string[] }
+        Returns: boolean
+      }
       referrer_by_code: {
         Args: { _code: string; _org: string }
         Returns: {
@@ -2056,6 +2262,7 @@ export type Database = {
           id: string
         }[]
       }
+      seed_referral_program: { Args: { _org: string }; Returns: undefined }
       store_texting_status: {
         Args: { _org: string }
         Returns: {
@@ -2064,6 +2271,10 @@ export type Database = {
           store_id: string
           store_name: string
         }[]
+      }
+      suggest_referral_tier: {
+        Args: { _org: string; _title: string }
+        Returns: string
       }
     }
     Enums: {
