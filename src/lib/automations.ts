@@ -5,6 +5,7 @@
  * "Reply STOP" on the first text to a candidate), so edits can't break compliance.
  */
 import { z } from "zod";
+import { statusRulesSchema } from "@/lib/status-rules";
 
 export const BRAND = "hireme by WerkandMe";
 
@@ -195,6 +196,8 @@ export const automationsSchema = z.object({
       hour: z.number().int().min(0).max(23).optional(),
     })
     .optional(),
+  /** Saved from the Status rules page (saveStatusRules), never from Automatic texts. */
+  statusRules: statusRulesSchema.optional(),
 });
 export type Automations = z.infer<typeof automationsSchema>;
 
