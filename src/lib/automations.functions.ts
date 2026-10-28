@@ -64,10 +64,18 @@ export const saveAutomations = createServerFn({ method: "POST" })
       if (entry.hours === undefined || ("timing" in def && entry.hours === def.timing.default)) delete entry.hours;
       if (Object.keys(entry).length) texts[k] = entry;
     }
+    // Status rules are saved from their own page; keep whatever is stored.
+    const { data: row } = await db.from("messaging_settings").select("automations").eq("org_id", data.orgId).maybeSingle();
+    const stored = row?.automations as { statusRules?: unknown } | null | undefined;
+    const { statusRules: _ignored, ...rest } = data.automations;
     const { error } = await db.from("messaging_settings").upsert(
       {
         org_id: data.orgId,
-        automations: { ...data.automations, texts },
+        automations: {
+          ...rest,
+          texts,
+          ...(stored?.statusRules !== undefined ? { statusRules: stored.statusRules } : {}),
+        } as never,
         nudge_after_hours: data.nudgeHours,
         escalate_after_hours: data.escalateHours,
         updated_at: new Date().toISOString(),

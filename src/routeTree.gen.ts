@@ -24,6 +24,7 @@ import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authent
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
+import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
@@ -126,6 +127,12 @@ const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
   path: '/platform',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStatusRulesRoute =
+  AuthenticatedStatusRulesRouteImport.update({
+    id: '/status-rules',
+    path: '/status-rules',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStoresRoute = AuthenticatedStoresRouteImport.update({
   id: '/stores',
   path: '/stores',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
+  '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof AuthenticatedJobsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/platform': typeof AuthenticatedPlatformRoute
+  '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -354,6 +363,7 @@ export interface FileRoutesById {
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
+  '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/onboarding'
     | '/platform'
+    | '/status-rules'
     | '/stores'
     | '/team'
     | '/templates'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/onboarding'
     | '/platform'
+    | '/status-rules'
     | '/stores'
     | '/team'
     | '/templates'
@@ -479,6 +491,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs'
     | '/_authenticated/onboarding'
     | '/_authenticated/platform'
+    | '/_authenticated/status-rules'
     | '/_authenticated/stores'
     | '/_authenticated/team'
     | '/_authenticated/templates'
@@ -638,6 +651,13 @@ declare module '@tanstack/react-router' {
       path: '/platform'
       fullPath: '/platform'
       preLoaderRoute: typeof AuthenticatedPlatformRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/status-rules': {
+      id: '/_authenticated/status-rules'
+      path: '/status-rules'
+      fullPath: '/status-rules'
+      preLoaderRoute: typeof AuthenticatedStatusRulesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/stores': {
@@ -828,6 +848,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
+  AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
@@ -844,6 +865,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
+  AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
