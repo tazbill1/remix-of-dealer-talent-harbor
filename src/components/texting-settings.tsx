@@ -52,7 +52,9 @@ function TextingForm({ orgId, initial }: { orgId: string; initial: MessagingSett
         return toast.error((err as Error).message);
       }
     }
-    const { error } = await supabase.from("messaging_settings").upsert({ org_id: orgId, ...parsed.data, updated_at: new Date().toISOString() }, { onConflict: "org_id" });
+    // Automatic text settings are saved on their own page; never overwrite them here.
+    const { automations: _automations, ...fields } = parsed.data;
+    const { error } = await supabase.from("messaging_settings").upsert({ org_id: orgId, ...fields, updated_at: new Date().toISOString() }, { onConflict: "org_id" });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Texting settings saved");

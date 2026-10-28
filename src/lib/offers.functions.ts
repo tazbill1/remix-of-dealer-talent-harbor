@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isOpen, offerInput, offerText, prefillFields, templateIdSchema } from "@/lib/offers";
+import { isOpen, offerInput, prefillFields, templateIdSchema } from "@/lib/offers";
+import { parseAutomations, wordingFor } from "@/lib/automations";
 
 type Ctx = { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
 
@@ -99,13 +100,18 @@ export const sendOffer = createServerFn({ method: "POST" })
       try {
         const { offerToken } = await import("@/lib/offers-token.server");
         const { appBaseUrl } = await import("@/lib/email/provider.server");
-        const { queueText, deliverDue } = await import("@/lib/messaging/outbox.server");
+        const { queueText, deliverDue, loadSettings } = await import("@/lib/messaging/outbox.server");
         const link = `${appBaseUrl(getRequest())}/api/public/offer/${await offerToken(offer.id)}`;
         const row = await queueText(db, {
           applicationId: app.id,
           party: "candidate",
           purpose: "candidate_offer",
-          body: offerText({ first: app.full_name.split(" ")[0] ?? "", store: storeName, title: data.jobTitle, link }),
+          body: wordingFor(parseAutomations((await loadSettings(db, data.orgId)).automations), "offer", {
+            first: app.full_name.split(" ")[0] ?? "",
+            store: storeName,
+            job: data.jobTitle,
+            link,
+          }),
         });
         if (row.status === "queued") await deliverDue(db, { ids: [row.id] });
         texted = row.status === "blocked" ? `Text not sent: ${row.error ?? "blocked"}` : null;

@@ -27,6 +27,7 @@ import {
   text,
   type Msg,
 } from "@/lib/workflows/rules";
+import { checkinDays, hoursFor, isOn, parseAutomations, textFor } from "@/lib/automations";
 
 type DB = SupabaseClient<Database>;
 const HOUR = 3600e3;
@@ -104,21 +105,25 @@ export async function welcomeOnApply(admin: DB, applicationId: string, now = Dat
       .eq("id", applicationId)
       .single();
     if (!app) return null;
-    const [{ data: store }, { data: job }] = await Promise.all([
+    const [{ data: store }, { data: job }, { data: org }] = await Promise.all([
       admin.from("dealerships").select("name, assistant_name").eq("id", app.dealership_id).single(),
       admin.from("jobs").select("title").eq("id", app.job_id).maybeSingle(),
+      admin.from("applications").select("org_id").eq("id", applicationId).single(),
     ]);
+    const s = await loadSettings(admin, org?.org_id ?? "");
+    const body = textFor(parseAutomations(s.automations), "welcome", {
+      first: firstName(app.full_name),
+      store: store?.name ?? "our store",
+      assistant: store?.assistant_name ?? "the hiring assistant",
+      job: job?.title ?? "the role",
+    });
+    if (!body) return null;
     return await sendText(admin, admin, {
       applicationId,
       party: "candidate",
       purpose: PURPOSE.welcome,
       now,
-      body: text.welcome({
-        first: firstName(app.full_name),
-        store: store?.name ?? "our",
-        assistant: store?.assistant_name ?? "the hiring assistant",
-        job: job?.title ?? "the role",
-      }),
+      body,
     });
   } catch (e) {
     console.error("welcome text failed", e);
@@ -217,7 +222,11 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
       const job = look.job(app.job_id);
       const s = await look.settings(app.org_id);
       const esc = escalationContact(store, job);
+      const auto = parseAutomations(s.automations);
+      if (!isOn(auto, "summary")) return;
       const step = nextManagerStep({
+        nudgeOn: isOn(auto, "nudge"),
+        escalationOn: isOn(auto, "escalation"),
         status: "screening",
         messages: screeningMsgs.get(app.id) ?? [],
         nudgeAfterHours: s.nudge_after_hours,
@@ -234,14 +243,14 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
           party: "manager",
           purpose: PURPOSE.summary,
           now,
-          body: text.summary({
+          body: textFor(auto, "summary", {
             assistant: store.assistant_name ?? "Your hiring assistant",
             name: app.full_name,
             job: title,
             store: store.name,
-            summary: app.ai_summary || "They've finished the screening questions.",
+            summary: trimSummary(app.ai_summary || "They've finished the screening questions."),
             rating: app.rating,
-          }),
+          })!,
         });
         result.summaries++;
       } else if (step === "nudge") {
@@ -250,7 +259,7 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
           party: "manager",
           purpose: PURPOSE.nudge,
           now,
-          body: text.nudge({ name: app.full_name, job: title }),
+          body: textFor(auto, "nudge", { name: app.full_name, job: title })!,
         });
         result.nudges++;
       } else {
@@ -260,12 +269,12 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
           purpose: PURPOSE.escalation,
           to: esc.phone ?? null,
           now,
-          body: text.escalation({
+          body: textFor(auto, "escalation", {
             manager: managerContact(store, job).name,
             name: app.full_name,
             job: title,
             hours: s.escalate_after_hours,
-          }),
+          })!,
         });
         await admin.from("application_events").insert({
           org_id: app.org_id,
@@ -286,7 +295,7 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
       .select("id, application_id, starts_at, created_at")
       .eq("status", "scheduled")
       .gte("starts_at", new Date(now).toISOString())
-      .lte("starts_at", new Date(now + 27 * HOUR).toISOString())
+      .lte("starts_at", new Date(now + 74 * HOUR).toISOString())
       .order("starts_at")
       .range(f, t),
   );
@@ -323,27 +332,28 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
         const since = Date.parse(iv.created_at);
         const mine = (msgs.get(app.id) ?? []).filter((m) => Date.parse(m.created_at) >= since);
         const when = whenText(iv.starts_at, tz);
+        const auto = parseAutomations(s.automations);
+        const hrs = (k: "reminderDay" | "reminderSoon" | "reminderManager") => (isOn(auto, k) ? hoursFor(auto, k) : null);
         for (const r of dueReminders({
           startsAt: Date.parse(iv.starts_at),
           messages: mine,
           window: windowFor(s, tz),
           now,
+          dayHours: hrs("reminderDay"),
+          soonHours: hrs("reminderSoon"),
+          managerHours: hrs("reminderManager"),
         })) {
-          const body =
-            r.purpose === PURPOSE.reminderDay
-              ? text.reminderDay({
-                  first: firstName(app.full_name),
-                  when,
-                  store: store.name,
-                  address: store.address,
-                })
-              : r.purpose === PURPOSE.reminderSoon
-                ? text.reminderSoon({ first: firstName(app.full_name), when, store: store.name })
-                : text.reminderManager({
-                    name: app.full_name,
-                    job: look.job(app.job_id)?.title ?? "the role",
-                    when,
-                  });
+          const key =
+            r.purpose === PURPOSE.reminderDay ? "reminderDay" : r.purpose === PURPOSE.reminderSoon ? "reminderSoon" : "reminderManager";
+          const body = textFor(auto, key, {
+            first: firstName(app.full_name),
+            name: app.full_name,
+            job: look.job(app.job_id)?.title ?? "the role",
+            when,
+            store: store.name,
+            address: store.address,
+          });
+          if (!body) continue;
           await sendText(admin, admin, {
             applicationId: app.id,
             party: r.party,
@@ -401,8 +411,10 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
       await safely(async () => {
         const store = look.store(h.dealership_id);
         if (!store) return;
+        const auto = parseAutomations((await look.settings(h.org_id)).automations);
+        if (!isOn(auto, "checkin")) return;
         const due = dueCheckin({
-          schedule: checkinSchedule(h.start_date, h.hired_at),
+          schedule: checkinSchedule(h.start_date, h.hired_at, checkinDays(auto)),
           rows: rows.filter((r) => r.application_id === h.id),
           today: localDate(now, store.timezone || "America/Chicago"),
         });
@@ -411,7 +423,7 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
           applicationId: h.id,
           party: "manager",
           purpose: PURPOSE.checkin(due.mark),
-          body: text.checkin({ name: h.full_name, mark: due.mark, store: store.name }),
+          body: textFor(auto, "checkin", { name: h.full_name, days: due.mark, store: store.name })!,
           now,
         });
         await admin.from("retention_checkins").upsert(
@@ -430,4 +442,10 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
   }
 
   return result;
+}
+
+/** The AI summary is trimmed so the manager text stays short. */
+function trimSummary(s: string, max = 130) {
+  const t = s.trim().replace(/\s+/g, " ");
+  return t.length <= max ? t : `${t.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
 }

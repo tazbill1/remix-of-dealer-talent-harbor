@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const nav = [
   { to: "/jobs", label: "Jobs", icon: Briefcase },
   { to: "/stores", label: "Stores", icon: Building2 },
   { to: "/templates", label: "Templates", icon: FileText },
+  { to: "/automations", label: "Automatic texts", icon: MessageSquareText },
   { to: "/integrations", label: "Integrations", icon: Plug },
 ] as const;
 
