@@ -170,7 +170,6 @@ export async function deliverDue(
     .limit(opts.limit ?? 200);
   if (opts.ids) q = q.in("id", opts.ids);
   const { data: due } = await q;
-  const settingsByOrg = new Map<string, MessagingSettings>();
   const emailSettingsByOrg = new Map<string, EmailSettings>();
   const result = { sent: 0, simulated: 0, failed: 0, blocked: 0 };
   const liveByApp = new Map<string, boolean>();
