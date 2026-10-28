@@ -41,4 +41,4 @@
 - Status rules use tested status-rules.ts and status-rules.server.ts via workflows cron; settings are automations.statusRules, edited only through saveStatusRules/can_post_jobs. Clocks start on activation unless include-waiting is checked; applicant email is opt-in. Why: no surprise backlog moves or messages.
 - Display wording helpers live in src/lib/display.ts (plural, sourceLabel, isTestName; pure, tested). Why: counts, source names and test-applicant hiding must read the same on every page without changing stored values.
 - Interview kits use can_post_jobs; scorecards are author-owned per interview, with pure rules in interview-kits.ts. Why: scores inform humans, never stages.
-- Recording uses private audio, authenticated consent-first server actions and scoped RLS; streamed AI is single-flight per recording and daily cleanup keeps transcripts. Why: private evidence and human-only decisions.
+- Interview recording is hidden from all screens (code, table and bucket kept; setting stays off) until the client re-enables it. Why: paused feature, data preserved.
