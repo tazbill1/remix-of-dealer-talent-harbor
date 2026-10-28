@@ -56,10 +56,25 @@ export const createInvite = createServerFn({ method: "POST" })
     if (scopes.length !== data.scopes.length)
       throw new Error("Pick stores and regions from this group.");
 
+    // Optional calendar link: check it now so a bad link is caught while you're here.
+    let calendarUrl: string | null = null;
+    if (data.calendarUrl) {
+      const { checkCalendarUrl } = await import("@/lib/busy-calendar");
+      const checked = checkCalendarUrl(data.calendarUrl);
+      if ("error" in checked) throw new Error(`Calendar link: ${checked.error}`);
+      const { fetchIcs } = await import("@/lib/busy-calendar.server");
+      try {
+        await fetchIcs(checked.url);
+      } catch (e) {
+        throw new Error(`Calendar link: ${(e as Error).message}`);
+      }
+      calendarUrl = checked.url;
+    }
+
     // A new invite replaces any open one for the same person.
     await supabaseAdmin
       .from("org_invites")
-      .update({ revoked_at: new Date().toISOString() })
+      .update({ revoked_at: new Date().toISOString(), calendar_url: null })
       .eq("org_id", data.orgId)
       .ilike("email", exactly(data.email))
       .is("accepted_at", null)
@@ -72,6 +87,7 @@ export const createInvite = createServerFn({ method: "POST" })
         role: data.role,
         scopes,
         invited_by: context.userId,
+        calendar_url: calendarUrl,
       })
       .select("id, token")
       .single();
@@ -132,7 +148,7 @@ export const cancelInvite = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("org_invites")
-      .update({ revoked_at: new Date().toISOString() })
+      .update({ revoked_at: new Date().toISOString(), calendar_url: null })
       .eq("id", data.inviteId)
       .eq("org_id", data.orgId)
       .is("accepted_at", null);
@@ -171,7 +187,7 @@ export const acceptInvite = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: inv } = await supabaseAdmin
       .from("org_invites")
-      .select("id, org_id, email, role, scopes, expires_at, accepted_at, revoked_at")
+      .select("id, org_id, email, role, scopes, expires_at, accepted_at, revoked_at, calendar_url")
       .eq("token", data.token)
       .maybeSingle();
     if (!inv) throw new Error("This invite link isn't valid.");
@@ -204,9 +220,34 @@ export const acceptInvite = createServerFn({ method: "POST" })
           })),
         );
     }
+    // Link the calendar HR added on the invite (unless they already have one).
+    if (inv.calendar_url) {
+      const { data: member } = await supabaseAdmin
+        .from("org_members")
+        .select("id")
+        .eq("org_id", inv.org_id)
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      if (member) {
+        const { data: existing } = await supabaseAdmin
+          .from("store_calendars")
+          .select("id")
+          .eq("member_id", member.id)
+          .maybeSingle();
+        if (!existing)
+          await supabaseAdmin.from("store_calendars").insert({
+            org_id: inv.org_id,
+            member_id: member.id,
+            label: "Personal calendar",
+            ics_url: inv.calendar_url,
+            created_by: context.userId,
+          });
+      }
+    }
+    // The link is a secret: don't keep a copy on the invite once it's used.
     await supabaseAdmin
       .from("org_invites")
-      .update({ accepted_at: new Date().toISOString(), accepted_by: context.userId })
+      .update({ accepted_at: new Date().toISOString(), accepted_by: context.userId, calendar_url: null })
       .eq("id", inv.id);
     return { orgId: inv.org_id };
   });

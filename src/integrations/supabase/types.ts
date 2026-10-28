@@ -889,6 +889,7 @@ export type Database = {
       }
       org_invites: {
         Row: {
+          calendar_url: string | null
           accepted_at: string | null
           accepted_by: string | null
           created_at: string
@@ -903,6 +904,7 @@ export type Database = {
           token: string
         }
         Insert: {
+          calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
@@ -917,6 +919,7 @@ export type Database = {
           token?: string
         }
         Update: {
+          calendar_url?: string | null
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string

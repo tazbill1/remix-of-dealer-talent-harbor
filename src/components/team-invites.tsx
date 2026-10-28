@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cancelInvite, createInvite } from "@/lib/team.functions";
 import { inviteStatus, isScopedRole, roleLabel, ROLES, type Role, type Scope } from "@/lib/invites";
 import { Button } from "@/components/ui/button";
+import { CalendarLinkHelp } from "@/components/calendar-link";
 import { Input } from "@/components/ui/input";
 
 type Option = { id: string; name: string };
@@ -36,6 +37,7 @@ export function TeamInvites({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("hiring_manager");
   const [scopes, setScopes] = useState<Scope[]>([]);
+  const [calendarUrl, setCalendarUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [lastLink, setLastLink] = useState<{
     email: string;
@@ -77,11 +79,12 @@ export function TeamInvites({
       return toast.error("Pick at least one store or region they cover.");
     setBusy(true);
     try {
-      const r = await invite({ data: { orgId, email, role, scopes: scoped ? scopes : [] } });
+      const r = await invite({ data: { orgId, email, role, scopes: scoped ? scopes : [], calendarUrl } });
       setLastLink({ email, link: r.link, note: r.emailed ? null : r.emailNote });
       toast.success(r.emailed ? `Invite emailed to ${email}` : "Invite ready: copy the link below");
       setEmail("");
       setScopes([]);
+      setCalendarUrl("");
       qc.invalidateQueries({ queryKey: key });
     } catch (err) {
       toast.error((err as Error).message);
@@ -171,9 +174,22 @@ export function TeamInvites({
             {roleLabel(role)} sees every store in the group.
           </p>
         )}
+        <div className="space-y-1">
+          <Input
+            placeholder="Their calendar link (optional): Outlook or Google iCal address"
+            value={calendarUrl}
+            onChange={(e) => setCalendarUrl(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            {isScopedRole(role)
+              ? "For hiring managers and GMs: candidates won't be offered times they're busy. They can also add it themselves later."
+              : "Optional. They can add it themselves later under Interviews."}
+          </p>
+          <CalendarLinkHelp />
+        </div>
         <Button type="submit" disabled={busy}>
           <Mail />
-          {busy ? "Sending…" : "Send invite"}
+          {busy ? (calendarUrl ? "Checking calendar…" : "Sending…") : "Send invite"}
         </Button>
       </form>
 

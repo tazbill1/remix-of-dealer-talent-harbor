@@ -68,3 +68,14 @@ describe("invites", () => {
     expect(m.text).toContain("https://x/invite/t");
   });
 });
+
+describe("calendar link on invites", () => {
+  it("is optional and trimmed", async () => {
+    const { inviteInput } = await import("@/lib/invites");
+    const base = { orgId: "00000000-0000-4000-8000-000000000001", email: "dana@store.com", role: "recruiter" };
+    expect(inviteInput.parse(base).calendarUrl).toBe("");
+    expect(inviteInput.parse({ ...base, calendarUrl: "  https://calendar.google.com/x/public/basic.ics " }).calendarUrl).toBe(
+      "https://calendar.google.com/x/public/basic.ics",
+    );
+  });
+});
