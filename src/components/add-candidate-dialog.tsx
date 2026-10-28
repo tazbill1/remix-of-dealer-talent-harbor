@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,6 +30,20 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
   const [parsed, setParsed] = useState<ParsedResume | null>(null);
   const [over, setOver] = useState(false);
   const set = (k: keyof typeof empty, v: string) => setF((x) => ({ ...x, [k]: v, ...(k === "store" ? { job: "" } : {}) }));
+  // Warn (but still allow saving) when the email or phone matches someone already in this group.
+  const [matches, setMatches] = useState<{ id: string; full_name: string }[]>([]);
+  useEffect(() => {
+    const email = f.email.trim().toLowerCase();
+    const digits = f.phone.replace(/\D/g, "");
+    const phone = digits.length >= 10 ? digits.slice(-10) : "";
+    const conds = [/^\S+@\S+\.\S+$/.test(email) ? `email_norm.eq.${email}` : "", phone ? `phone_norm.eq.${phone}` : ""].filter(Boolean);
+    if (!open || !conds.length) { setMatches([]); return; }
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("applications").select("id, full_name").eq("org_id", orgId).is("archived_at", null).or(conds.join(",")).limit(3);
+      setMatches(data ?? []);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [f.email, f.phone, open, orgId]);
   const storeJobs = jobs.filter((j) => j.dealership_id === f.store);
 
   function pick(fl: File | undefined) {
@@ -108,6 +123,13 @@ export function AddCandidateDialog({ open, onOpenChange, orgId, stores, jobs, on
           <div className="grid grid-cols-2 gap-3">{field("first", "First name")}{field("last", "Last name")}</div>
           {field("email", "Email", "email")}
           {field("phone", "Phone", "tel")}
+          {matches.length > 0 && (
+            <div className="rounded-xl bg-warning/20 p-3 text-sm text-warning-foreground">
+              This email or phone matches someone already in your group:{" "}
+              {matches.map((m, i) => <span key={m.id}>{i > 0 && ", "}<Link to="/applicants" search={{ applicant: m.id }} onClick={() => onOpenChange(false)} className="font-semibold underline">{m.full_name}</Link></span>)}
+              . You can still save.
+            </div>
+          )}
           <label className="block text-sm"><span className="font-medium">Store</span>
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.store} onChange={(e) => set("store", e.target.value)}>
               <option value="">Pick a store...</option>
