@@ -48,7 +48,6 @@ function Index() {
           and keep every applicant excited, informed and moving forward.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button size="lg" asChild><Link to="/auth" search={{ mode: "signup" }}>Set up your dealer group</Link></Button>
           <Button size="lg" variant="outline" asChild><Link to="/auth">I already have an account</Link></Button>
         </div>
       </section>
