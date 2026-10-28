@@ -188,6 +188,13 @@ export const automationsSchema = z.object({
       instructions: z.string().max(1500).optional(),
     })
     .optional(),
+  weeklySummary: z
+    .object({
+      enabled: z.boolean().optional(),
+      day: z.number().int().min(1).max(7).optional(),
+      hour: z.number().int().min(0).max(23).optional(),
+    })
+    .optional(),
 });
 export type Automations = z.infer<typeof automationsSchema>;
 
