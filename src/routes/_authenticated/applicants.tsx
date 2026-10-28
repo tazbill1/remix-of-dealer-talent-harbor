@@ -1,3 +1,4 @@
+import { PossibleDuplicateTag } from "@/components/possible-duplicate-tag";
 import { OnboardingPanel } from "@/components/onboarding-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -78,7 +79,7 @@ function Applicants() {
     queryKey: key,
     queryFn: async () => {
       const [apps, jobs, stores, regions] = await Promise.all([
-        supabase.from("applications").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
+        supabase.from("applications").select("*").eq("org_id", org.orgId).is("archived_at", null).order("created_at", { ascending: false }),
         supabase.from("jobs").select("id, title, dealership_id, status, questions").eq("org_id", org.orgId),
         supabase.from("dealerships").select("id, name, assistant_name, region_id, timezone").eq("org_id", org.orgId).order("name"),
         supabase.from("regions").select("id, name").eq("org_id", org.orgId).order("name"),
@@ -488,6 +489,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
           {doNotHireRepeat && <DoNotHireBadge />}
+          <PossibleDuplicateTag appId={app.id} />
           <OverdueTag overdue={overdueInfo(app, reminderRules)} />
           {app.in_talent_pool && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium" title={app.pool_reason ?? undefined}>In talent pool – {regionName ?? "region"}</span>}
           {isHr && !app.in_talent_pool && regionName && app.status !== "hired" && app.status !== "do_not_hire" && (
