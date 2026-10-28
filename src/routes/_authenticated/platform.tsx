@@ -1,11 +1,19 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/org";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/platform")({
-  head: () => ({ meta: [{ title: "WerkandMe Admin" }] }),
+  head: () => ({ meta: [
+    { title: "Dealer groups | WerkandMe Admin" },
+    { name: "description", content: "Manage dealer groups in hireme by WerkandMe." },
+    { property: "og:title", content: "Dealer groups | WerkandMe Admin" },
+    { property: "og:description", content: "Manage dealer groups in hireme by WerkandMe." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Platform,
 });
 
@@ -27,7 +35,12 @@ function Platform() {
   if (!me) return null;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl">WerkandMe Admin</h1><p className="text-muted-foreground">{data?.orgs.length ?? 0} dealer groups</p></div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h1 className="text-3xl">WerkandMe Admin</h1><p className="text-muted-foreground">{data?.orgs.length ?? 0} dealer groups</p></div>
+        <Button asChild>
+          <Link to="/onboarding"><Plus aria-hidden="true" />New dealer group</Link>
+        </Button>
+      </div>
       <div className="overflow-hidden rounded-2xl bg-background shadow-sm">
         {data?.orgs.map((o) => (
           <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 border-b p-4 last:border-0">
