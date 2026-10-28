@@ -274,6 +274,13 @@
       "when": 1793211126935,
       "tag": "0038_recruiting_events_store_qr",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793211479994,
+      "tag": "0039_status_reminders",
+      "breakpoints": true
     }
   ]
 }
