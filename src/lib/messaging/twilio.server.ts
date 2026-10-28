@@ -7,6 +7,17 @@ export function twilioConfigured() {
   return !!process.env["TWILIO_ACCOUNT_SID"] && !!process.env["TWILIO_AUTH_TOKEN"];
 }
 
+/** Twilio refused the number because it texted STOP to us at the carrier level. */
+export const TWILIO_UNSUBSCRIBED = 21610;
+
+export class TwilioError extends Error {
+  readonly code: number | null;
+  constructor(message: string, code: number | null) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export async function sendTwilio(input: {
   to: string;
   from: string;
@@ -31,7 +42,8 @@ export async function sendTwilio(input: {
     message?: string;
     code?: number;
   };
-  if (!res.ok || !json.sid) throw new Error(json.message ?? `Twilio error ${res.status}`);
+  if (!res.ok || !json.sid)
+    throw new TwilioError(json.message ?? `Twilio error ${res.status}`, json.code ?? null);
   return { providerMessageId: json.sid };
 }
 

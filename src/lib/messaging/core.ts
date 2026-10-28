@@ -111,6 +111,29 @@ export function keywordOf(body: string): Keyword | null {
   return null;
 }
 
+// Plain-language opt-outs ("please stop texting me"). Carriers expect these honored too,
+// but Twilio only catches the single keywords above. Messages that set a time limit
+// ("stop texting me after 5") are scheduling asks, so they go to the assistant instead.
+const OPT_OUT_PHRASES = [
+  /\b(stop|quit|cease)\s+(texting|messaging|txting|contacting|sending)\b/,
+  /\b(do\s*not|don'?t|dont|never)\s+(text|message|txt|contact)\s+(me|this\s+number)\b/,
+  /\b(do\s*not|don'?t|dont)\s+want\s+(any\s*more\s+|more\s+|your\s+)?(texts|messages|txts)\b/,
+  /\b(do\s*not|don'?t|dont)\s+want\s+(you|y'?all)\s+to\s+(text|message|contact)\b/,
+  /\bno\s+more\s+(texts|messages|txts|texting)\b/,
+  /\b(remove|take)\s+me\s+(off|from)\s+(your|the|this|ur)\s+(texting\s+|contact\s+|text\s+)?(list|texts|texting|messages)\b/,
+  /\bunsubscribe\s+me\b/,
+  /\bopt\s+(me\s+)?out\b/,
+  /\blose\s+my\s+number\b/,
+];
+const TIME_LIMIT =
+  /\d|\b(after|before|until|till|during|while|today|tonight|tomorrow|weekend|morning|evening|night|work)\b/;
+
+export function isOptOutRequest(body: string): boolean {
+  const text = body.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").trim();
+  if (!text || TIME_LIMIT.test(text)) return false;
+  return OPT_OUT_PHRASES.some((p) => p.test(text));
+}
+
 export function keywordReply(k: Keyword, storeName: string) {
   if (k === "stop")
     return `${storeName}: You're unsubscribed and won't get more texts from us. Reply START to resubscribe.`;

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { keywordOf, toE164 } from "@/lib/messaging/core";
+import { isOptOutRequest, keywordOf, toE164 } from "@/lib/messaging/core";
 import { publicUrl, verifyTwilioRequest } from "@/lib/messaging/twilio.server";
 import { resolveSender, storeForNumber, twiml } from "@/lib/messaging/inbound.server";
 
@@ -34,8 +34,9 @@ export const Route = createFileRoute("/api/sms/inbound")({
         const sender = await resolveSender(supabaseAdmin, store, from);
 
         if (!sender) {
-          // Unknown number: still honor STOP/START/HELP, then ignore anything else.
-          const keyword = keywordOf(body);
+          // Unknown number: still honor STOP/START/HELP (and "stop texting me"), then
+          // ignore anything else.
+          const keyword = keywordOf(body) ?? (isOptOutRequest(body) ? "stop" : null);
           if (keyword) {
             await applyKeyword(supabaseAdmin, {
               orgId: store.org_id,

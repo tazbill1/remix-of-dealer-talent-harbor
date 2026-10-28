@@ -220,6 +220,28 @@ describe("deliverDue", () => {
     delete process.env["TWILIO_AUTH_TOKEN"];
   });
 
+  it("records an opt-out when Twilio says the number already replied STOP", async () => {
+    process.env["TWILIO_ACCOUNT_SID"] = "AC1";
+    process.env["TWILIO_AUTH_TOKEN"] = "tok";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ code: 21610, message: "Attempt to send to unsubscribed recipient" }),
+      }),
+    );
+    const { client, tables } = world({ mode: "live" });
+    await queueText(client, { applicationId: "a1", party: "candidate", body: "Hi!", purpose: "welcome", now: noon });
+    const r = await deliverDue(client, { now: noon + 1000 });
+    expect(r.blocked).toBe(1);
+    expect(tables["messages"]![0]).toMatchObject({ status: "blocked", error: "This number replied STOP" });
+    expect(tables["sms_opt_outs"]).toMatchObject([{ org_id: "o1", phone: "+12145550199", source: "carrier" }]);
+    expect(tables["candidates"]![0]).toMatchObject({ sms_opt_in: false });
+    delete process.env["TWILIO_ACCOUNT_SID"];
+    delete process.env["TWILIO_AUTH_TOKEN"];
+  });
+
   it("live mode without Twilio connected fails safely with a clear reason", async () => {
     const { client, tables } = world({ mode: "live" });
     await queueText(client, {

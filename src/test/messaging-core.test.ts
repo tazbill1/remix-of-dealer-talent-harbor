@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   decideDelivery,
   isInSendWindow,
+  isOptOutRequest,
   keywordOf,
   nextSendTime,
   toE164,
@@ -108,5 +109,36 @@ describe("decideDelivery", () => {
       status: "queued",
       scheduledFor: night,
     });
+  });
+});
+
+describe("isOptOutRequest", () => {
+  it("catches plain-language opt-outs", () => {
+    for (const t of [
+      "Please stop texting me",
+      "stop messaging me!!",
+      "Don't text me anymore",
+      "do not contact me",
+      "I don’t want any more texts",
+      "No more texts please",
+      "remove me from your list",
+      "Take me off your texting list",
+      "unsubscribe me",
+      "opt me out",
+    ])
+      expect(isOptOutRequest(t), t).toBe(true);
+  });
+
+  it("leaves scheduling asks and normal replies to the assistant", () => {
+    for (const t of [
+      "please stop texting me after 5",
+      "don't text me before 9am",
+      "can't stop thinking about this job",
+      "can I stop by tomorrow?",
+      "Yes",
+      "remove me from consideration",
+      "STOP",
+    ])
+      expect(isOptOutRequest(t), t).toBe(false);
   });
 });

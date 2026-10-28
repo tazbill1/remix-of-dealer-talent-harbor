@@ -6,7 +6,12 @@ import {
   type MessagingSettings,
 } from "@/lib/messaging-settings";
 import { decideDelivery, keywordReply, toE164, type Keyword } from "@/lib/messaging/core";
-import { sendTwilio, twilioConfigured } from "@/lib/messaging/twilio.server";
+import {
+  TWILIO_UNSUBSCRIBED,
+  TwilioError,
+  sendTwilio,
+  twilioConfigured,
+} from "@/lib/messaging/twilio.server";
 import { deliverEmail, loadEmailSettings, type EmailSettings } from "@/lib/email/outbox.server";
 
 type DB = SupabaseClient<Database>;
@@ -248,6 +253,17 @@ export async function deliverDue(
         .eq("id", m.id);
       result.sent++;
     } catch (e) {
+      // Twilio already blocks this number (it replied STOP at some point): record the
+      // opt-out here too, so the app shows it and stops queueing texts to it.
+      if (e instanceof TwilioError && e.code === TWILIO_UNSUBSCRIBED) {
+        await recordCarrierOptOut(sb, m);
+        await sb
+          .from("messages")
+          .update({ status: "blocked", provider: "twilio", error: "This number replied STOP" })
+          .eq("id", m.id);
+        result.blocked++;
+        continue;
+      }
       await sb
         .from("messages")
         .update({ status: "failed", provider: "twilio", error: (e as Error).message })
@@ -298,6 +314,38 @@ export async function applyKeyword(
         })
         .eq("id", input.candidateId);
   }
+}
+
+/**
+ * Twilio says this number opted out (error 21610). Records it like a STOP for the group,
+ * and turns off the candidate's consent when it's the applicant's own number.
+ */
+export async function recordCarrierOptOut(
+  admin: DB,
+  m: { org_id: string; application_id: string | null; to_phone: string | null },
+) {
+  if (!m.to_phone) return;
+  const { data: app } = m.application_id
+    ? await admin
+        .from("applications")
+        .select("phone, candidate_id")
+        .eq("id", m.application_id)
+        .maybeSingle()
+    : { data: null };
+  await applyKeyword(admin, {
+    orgId: m.org_id,
+    phone: m.to_phone,
+    keyword: "stop",
+    candidateId: app && toE164(app.phone) === m.to_phone ? app.candidate_id : null,
+    source: "carrier",
+  });
+  if (m.application_id)
+    await admin.from("application_events").insert({
+      org_id: m.org_id,
+      application_id: m.application_id,
+      kind: "texting",
+      message: "The phone company reports this number opted out of texts (STOP)",
+    });
 }
 
 export { keywordReply };
