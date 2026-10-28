@@ -165,7 +165,32 @@ export const bookInterview = createServerFn({ method: "POST" })
     } catch {
       /* the booking stands either way */
     }
+    const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
+    await emailInterviewStaff(db, interview.id, !!moved);
     return { when, moved: !!moved };
+  });
+
+/** Staff booking is server-owned so staff invites cannot be bypassed by the form. */
+export const scheduleStaffInterview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { applicationId: string; startsAt: string }) => z.object({ applicationId: z.string().uuid(), startsAt: z.string().datetime() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: ok } = await ctx.supabase.rpc("can_access_application", { _app: data.applicationId, _uid: ctx.userId });
+    if (!ok) throw new Error("You don't have access to this applicant.");
+    const { data: app } = await ctx.supabase.from("applications").select("org_id, dealership_id").eq("id", data.applicationId).maybeSingle();
+    if (!app) throw new Error("Applicant not found.");
+    const { data: store } = await ctx.supabase.from("dealerships").select("interview_minutes, address, name").eq("id", app.dealership_id).maybeSingle();
+    const { data: interview, error } = await ctx.supabase.from("interviews").insert({ org_id: app.org_id, application_id: data.applicationId, starts_at: data.startsAt, created_by: ctx.userId, duration_min: store?.interview_minutes ?? 30, location: store?.address || store?.name, source: "manual" }).select("id").single();
+    if (error || !interview) throw new Error("Couldn't save the interview. Please try again.");
+    await ctx.supabase.from("applications").update({ status: "interview" }).eq("id", data.applicationId);
+    await ctx.supabase.from("application_events").insert({ org_id: app.org_id, application_id: data.applicationId, kind: "interview", actor_id: ctx.userId, message: `Interview scheduled for ${data.startsAt}` });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
+    await emailApplicant(supabaseAdmin, data.applicationId, { kind: "interview", startsAt: data.startsAt });
+    const invite = await emailInterviewStaff(supabaseAdmin, interview.id);
+    return { id: interview.id, invite };
   });
 
 /** Staff: text the candidate their booking link (e.g. to reschedule). */

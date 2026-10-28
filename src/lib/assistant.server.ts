@@ -439,7 +439,7 @@ Return:
       (i) => i.starts_at && new Date(i.starts_at).toISOString() === interviewAt,
     );
     if (!dup) {
-      await sb.from("interviews").insert({
+      const { data: booked, error: bookingError } = await sb.from("interviews").insert({
         org_id: app.org_id,
         application_id: app.id,
         starts_at: interviewAt,
@@ -447,8 +447,12 @@ Return:
         created_by: data.actorId,
         location: store?.name ?? null,
         duration_min: interviewMinutes,
-      });
-      patch.status = "interview";
+      }).select("id").single();
+      if (!bookingError && booked) {
+        patch.status = "interview";
+        const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
+        await emailInterviewStaff(admin, booked.id);
+      } else interviewAt = null;
     }
   }
   if (out.new_status && !patch.status) patch.status = out.new_status;

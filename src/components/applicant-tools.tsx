@@ -1,12 +1,11 @@
 import { clearAttention, sendStaffText, setAssistantPaused } from "@/lib/takeover.functions";
-import { sendBookingLink } from "@/lib/booking.functions";
+import { scheduleStaffInterview, sendBookingLink } from "@/lib/booking.functions";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Upload, Loader2, Send, CalendarPlus, Download, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyApplicants } from "@/lib/email.functions";
 import { parseResume, assistantMessage, type ParsedResume } from "@/lib/assistant.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -232,7 +231,8 @@ function ics(i: { id: string; starts_at: string; duration_min: number; location:
 export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: string; orgId: string; title: string; onChanged: () => void }) {
   const qc = useQueryClient();
   const [when, setWhen] = useState("");
-  const notify = useServerFn(notifyApplicants);
+  const schedule = useServerFn(scheduleStaffInterview);
+  const [scheduleBusy, setScheduleBusy] = useState(false);
   const textLink = useServerFn(sendBookingLink);
   const [linkBusy, setLinkBusy] = useState(false);
   const { data: list = [] } = useQuery({
@@ -242,13 +242,13 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
   async function add() {
     if (!when) return;
     const starts_at = new Date(when).toISOString();
-    const { error } = await supabase.from("interviews").insert({ org_id: orgId, application_id: appId, starts_at });
-    if (error) return toast.error(error.message);
-    await supabase.from("applications").update({ status: "interview" }).eq("id", appId);
-    await supabase.from("application_events").insert({ org_id: orgId, application_id: appId, kind: "interview", message: `Interview scheduled for ${new Date(starts_at).toLocaleString()}` });
-    void notify({ data: { orgId, applicationIds: [appId], event: { kind: "interview", startsAt: starts_at } } })
-      .then((r) => r.sent && toast.success("Interview invite emailed."))
-      .catch(() => {});
+    setScheduleBusy(true);
+    try {
+      const result = await schedule({ data: { applicationId: appId, startsAt: starts_at } });
+      if (result.invite.note) toast.warning(result.invite.note);
+      else toast.success(result.invite.status === "sent" ? "Interview saved. Staff calendar invite emailed." : "Interview saved.");
+    } catch (e) { toast.error((e as Error).message); return; }
+    finally { setScheduleBusy(false); }
     setWhen(""); qc.invalidateQueries({ queryKey: ["interviews", appId] }); onChanged();
   }
   function download(i: (typeof list)[number]) {
@@ -272,7 +272,7 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
       </ul>
       <ScorecardSummary appId={appId} />
       <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
-        <Button size="sm" onClick={add} disabled={!when}>Schedule</Button></div>
+        <Button size="sm" onClick={add} disabled={!when || scheduleBusy}>{scheduleBusy ? "Saving…" : "Schedule"}</Button></div>
       {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}
       <Button size="sm" variant="outline" className="mt-2" disabled={linkBusy} onClick={async () => {
         setLinkBusy(true);
