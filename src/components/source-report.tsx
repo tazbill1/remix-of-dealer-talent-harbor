@@ -11,6 +11,21 @@ export function SourceReport({ orgId, stores }: { orgId: string; stores: { id: s
     queryFn: async () => ((await supabase.from("applicant_source_counts").select("store_id, source, applicants, hires, org_total").eq("org_id", orgId)).data ?? []) as SourceRow[],
   });
   const report = sourceReport(rows, storeId);
+  const { data: scans = [] } = useQuery({
+    queryKey: ["scan-report", orgId],
+    queryFn: async () => (await supabase.from("applicant_scan_counts").select("kind, event_id, event_name, store_id, applicants, hires").eq("org_id", orgId)).data ?? [],
+  });
+  const scanRows = (() => {
+    const m = new Map<string, { label: string; applicants: number; hires: number }>();
+    for (const r of scans) {
+      if (storeId !== "all" && r.store_id !== storeId) continue;
+      const k = r.kind === "event" ? `e:${r.event_id}` : `s:${r.store_id}`;
+      const label = r.kind === "event" ? `Event: ${r.event_name ?? ""}` : `Store QR: ${stores.find((s) => s.id === r.store_id)?.name ?? "Store"}`;
+      const x = m.get(k) ?? { label, applicants: 0, hires: 0 };
+      x.applicants += r.applicants ?? 0; x.hires += r.hires ?? 0; m.set(k, x);
+    }
+    return [...m.values()].sort((a, b) => a.label.localeCompare(b.label));
+  })();
   return (
     <section className="rounded-2xl bg-background p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -25,6 +40,14 @@ export function SourceReport({ orgId, stores }: { orgId: string; stores: { id: s
           <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Source</th><th className="py-2 text-right">Applicants</th><th className="py-2 text-right">Hires</th><th className="py-2 text-right">Hire rate</th></tr></thead>
           <tbody>{report.map((r) => (
             <tr key={r.source} className="border-b last:border-0"><td className="py-2">{r.source}</td><td className="py-2 text-right">{r.applicants}</td><td className="py-2 text-right">{r.hires}</td><td className="py-2 text-right">{r.hireRate}%</td></tr>
+          ))}</tbody>
+        </table>
+      )}
+      {scanRows.length > 0 && (
+        <table className="mt-5 w-full text-sm">
+          <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Event or store QR code</th><th className="py-2 text-right">Applicants</th><th className="py-2 text-right">Hires</th><th className="py-2 text-right">Hire rate</th></tr></thead>
+          <tbody>{scanRows.map((r) => (
+            <tr key={r.label} className="border-b last:border-0"><td className="py-2">{r.label}</td><td className="py-2 text-right">{r.applicants}</td><td className="py-2 text-right">{r.hires}</td><td className="py-2 text-right">{r.applicants ? Math.round((r.hires / r.applicants) * 100) : 0}%</td></tr>
           ))}</tbody>
         </table>
       )}
