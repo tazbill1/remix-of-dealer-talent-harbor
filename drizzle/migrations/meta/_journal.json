@@ -246,6 +246,13 @@
       "when": 1793208699851,
       "tag": "0034_client_applicant_statuses",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793209427141,
+      "tag": "0035_store_videos",
+      "breakpoints": true
     }
   ]
 }

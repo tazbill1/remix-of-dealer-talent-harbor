@@ -2149,6 +2149,60 @@ export type Database = {
           },
         ]
       }
+      store_videos: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          file_name: string | null
+          id: string
+          kind: string
+          org_id: string
+          storage_path: string
+          store_id: string | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          file_name?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          storage_path: string
+          store_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          file_name?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          storage_path?: string
+          store_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_videos_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_videos_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_summaries: {
         Row: {
           body: string | null
@@ -2221,6 +2275,10 @@ export type Database = {
       }
       can_manage_referrals: {
         Args: { _org: string; _uid: string }
+        Returns: boolean
+      }
+      can_manage_store_videos: {
+        Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
       can_post_jobs: { Args: { _org: string; _uid: string }; Returns: boolean }
