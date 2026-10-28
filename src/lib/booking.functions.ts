@@ -194,6 +194,35 @@ export const scheduleStaffInterview = createServerFn({ method: "POST" })
     return { id: interview.id, invite };
   });
 
+/** Staff: move an existing interview to a new time (same row, never cancel + rebook). Notices follow the email mode, like booking. */
+export const rescheduleInterview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { interviewId: string; startsAt: string }) => z.object({ interviewId: z.string().uuid(), startsAt: z.string().datetime() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: iv } = await ctx.supabase.from("interviews").select("id, org_id, application_id, starts_at, status").eq("id", data.interviewId).maybeSingle();
+    if (!iv) throw new Error("Interview not found.");
+    if (iv.status === "cancelled") throw new Error("This interview was cancelled.");
+    const { data: ok } = await ctx.supabase.rpc("can_access_application", { _app: iv.application_id, _uid: ctx.userId });
+    if (!ok) throw new Error("You don't have access to this applicant.");
+    const { data: updated, error } = await ctx.supabase.from("interviews").update({ starts_at: data.startsAt }).eq("id", iv.id).select("id").maybeSingle();
+    if (error || !updated) throw new Error("Couldn't reschedule the interview. Please try again.");
+    const { data: app } = await ctx.supabase.from("applications").select("dealership_id").eq("id", iv.application_id).maybeSingle();
+    const { data: store } = await ctx.supabase.from("dealerships").select("timezone").eq("id", app?.dealership_id ?? "").maybeSingle();
+    const fmt = (x: string) => new Date(x).toLocaleString("en-US", { timeZone: store?.timezone || "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+    await ctx.supabase.from("application_events").insert({ org_id: iv.org_id, application_id: iv.application_id, kind: "interview", actor_id: ctx.userId,
+      message: `Interview rescheduled from ${fmt(iv.starts_at)} to ${fmt(data.startsAt)}` });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { loadEmailSettings } = await import("@/lib/email/outbox.server");
+    const settings = await loadEmailSettings(supabaseAdmin, iv.org_id);
+    if (settings.email_mode !== "live") return { demo: true, note: null as string | null };
+    const { emailApplicant } = await import("@/lib/email/applicant.server");
+    const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
+    await emailApplicant(supabaseAdmin, iv.application_id, { kind: "interview", startsAt: data.startsAt });
+    const invite = await emailInterviewStaff(supabaseAdmin, iv.id);
+    return { demo: false, note: invite.note ?? null };
+  });
+
 /** Staff: text the candidate their booking link (e.g. to reschedule). */
 export const sendBookingLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
