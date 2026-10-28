@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { cleanScanCode, scanDestination, scanLink } from "@/lib/scan";
+import { applicationScan, cleanScanCode, scanDestination, scanLink } from "@/lib/scan";
 
 describe("QR scans", () => {
+  it("explicit Indeed source overrides a remembered store scan", () => {
+    expect(applicationScan("indeed", undefined, "6A9608F6")).toBeUndefined();
+  });
+  it("uses the remembered scan only when the current URL has no source", () => {
+    expect(applicationScan(undefined, undefined, "6A9608F6")).toBe("6A9608F6");
+    expect(applicationScan("", undefined, "6A9608F6")).toBeUndefined();
+  });
+  it("preserves the current event QR scan over remembered history", () => {
+    expect(applicationScan(undefined, "AB12CD34", "6A9608F6")).toBe("AB12CD34");
+    expect(applicationScan("event", "AB12CD34", "6A9608F6")).toBe("AB12CD34");
+  });
   it("builds short links", () => {
     expect(scanLink("https://x.com", "event", "AB12CD34")).toBe("https://x.com/e/AB12CD34");
     expect(scanLink("https://x.com", "store", "6A9608F6")).toBe("https://x.com/s/6A9608F6");
