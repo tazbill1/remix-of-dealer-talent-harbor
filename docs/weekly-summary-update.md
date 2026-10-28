@@ -50,3 +50,21 @@ revoke all on public.weekly_summaries from anon;
 
 The on/off switch, send day and time are saved in the existing Automatic texts settings,
 so no other database change is needed.
+
+## If Lovable won't run the SQL
+
+Paste this plain-English version into Lovable's chat instead (same result):
+
+> Please add a new database table called `weekly_summaries` that logs the weekly HR summary
+> email we send to each team member. Don't change any app code or screens.
+> Columns: `id` uuid primary key default random uuid; `org_id` uuid required, references
+> organizations(id) on delete cascade; `member_id` uuid required, references org_members(id) on
+> delete cascade; `week_of` date required; `to_email` text; `subject` text; `body` text; `status`
+> text required default 'queued'; `error` text; `sent_at` timestamptz; `created_at` timestamptz
+> required default now().
+> Make (member_id, week_of) unique. Add an index on (org_id, week_of). Turn on row level security
+> with exactly one select policy for authenticated users, "read weekly summaries", allowing
+> has_org_role(org_id, auth.uid(), 'group_admin'), is_platform_admin(auth.uid()), or rows whose
+> member_id is an org_members row with user_id = auth.uid(). No insert/update/delete policies;
+> revoke insert, update, delete from anon and authenticated, and revoke all from anon.
+> Show me the table's columns and policies when done.
