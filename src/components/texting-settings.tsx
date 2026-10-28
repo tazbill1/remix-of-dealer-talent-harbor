@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function TextingSettings({ orgId }: { orgId: string }) {
+export function TextingSettings({ orgId, canEdit }: { orgId: string; canEdit: boolean }) {
   const query = useQuery({
     queryKey: ["messaging-settings", orgId],
     queryFn: async () => {
@@ -21,10 +21,10 @@ export function TextingSettings({ orgId }: { orgId: string }) {
   });
   if (query.isPending) return <p>Loading texting settings…</p>;
   if (query.isError) return <p role="alert">Unable to load texting settings.</p>;
-  return <TextingForm key={`${orgId}-${query.dataUpdatedAt}`} orgId={orgId} initial={query.data} />;
+  return <TextingForm key={`${orgId}-${query.dataUpdatedAt}`} orgId={orgId} initial={query.data} canEdit={canEdit} />;
 }
 
-function TextingForm({ orgId, initial }: { orgId: string; initial: MessagingSettings }) {
+function TextingForm({ orgId, initial, canEdit }: { orgId: string; initial: MessagingSettings; canEdit: boolean }) {
   const [f, setF] = useState(initial);
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
@@ -39,6 +39,7 @@ function TextingForm({ orgId, initial }: { orgId: string; initial: MessagingSett
   });
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     const parsed = messagingSettingsSchema.safeParse(f);
     if (!parsed.success) return toast.error("Check your texting settings.");
     if (goingLive && !confirmed) return toast.error("Confirm the switch to live texting first.");
@@ -61,12 +62,11 @@ function TextingForm({ orgId, initial }: { orgId: string; initial: MessagingSett
     qc.invalidateQueries({ queryKey: ["messaging-settings", orgId] });
     qc.invalidateQueries({ queryKey: ["messaging-mode", orgId] });
   }
-  return <section className="border-t pt-6">
-    <h2 className="text-xl">Texting</h2>
-    <form onSubmit={save} className="mt-4 max-w-2xl space-y-4">
+  return <form onSubmit={save} className="mt-4 space-y-4">
+    <fieldset disabled={!canEdit || saving} className="min-w-0 space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5"><Label asChild><span>Mode</span></Label><select aria-label="Texting mode" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value === "live" ? "live" : "practice" })}><option value="practice">Practice</option><option value="live">Live</option></select></label>
-        <label className="space-y-1.5"><Label asChild><span>AI provider</span></Label><select aria-label="AI provider" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.ai_provider} onChange={(e) => setF({ ...f, ai_provider: e.target.value === "anthropic" ? "anthropic" : "lovable" })}><option value="lovable">Lovable</option><option value="anthropic">Anthropic</option></select></label>
+        <label className="space-y-1.5"><Label asChild><span>AI provider</span></Label><select aria-label="AI provider" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.ai_provider} onChange={(e) => setF({ ...f, ai_provider: e.target.value === "anthropic" ? "anthropic" : "lovable" })}><option value="lovable">Lovable</option><option value="anthropic" disabled>Anthropic (Claude) — Coming soon</option></select></label>
         <label className="space-y-1.5">Texting starts<Input aria-label="Texting starts" type="time" required value={f.send_start.slice(0, 5)} onChange={(e) => setF({ ...f, send_start: e.target.value })} /></label>
         <label className="space-y-1.5">Texting ends<Input aria-label="Texting ends" type="time" required value={f.send_end.slice(0, 5)} onChange={(e) => setF({ ...f, send_end: e.target.value })} /></label>
         <label className="space-y-1.5">Nudge after (hours)<Input aria-label="Nudge after (hours)" type="number" step="1" required value={f.nudge_after_hours} onChange={(e) => setF({ ...f, nudge_after_hours: Number(e.target.value) })} /></label>
@@ -78,14 +78,14 @@ function TextingForm({ orgId, initial }: { orgId: string; initial: MessagingSett
           <p>Candidates who agreed to texts and hiring managers will start getting messages from the store's texting number, between the hours below. Make sure each store's texting number is set on the Stores page and Twilio is connected (see Integrations).</p>
           {(waiting.data?.waiting ?? 0) > 0 && (
             <label className="flex items-start gap-2"><Checkbox className="mt-0.5" checked={skipBacklog} onCheckedChange={(c) => setSkipBacklog(c === true)} />
-              <span>Don't text managers about the {waiting.data!.waiting} candidate{waiting.data!.waiting === 1 ? "" : "s"} already in Screening. Only candidates who reach Screening from now on get a summary.</span></label>
+              <span>Don't text managers about the {waiting.data?.waiting} candidate{waiting.data?.waiting === 1 ? "" : "s"} already in Screening. Only candidates who reach Screening from now on get a summary.</span></label>
           )}
           <label className="flex items-start gap-2 font-medium"><Checkbox className="mt-0.5" checked={confirmed} onCheckedChange={(c) => setConfirmed(c === true)} />
             <span>I understand: turn on live texting.</span></label>
         </div>
       )}
       <fieldset><legend className="mb-2 text-sm font-medium">Texting days</legend><div className="flex flex-wrap gap-4">{["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day, i) => <label key={day} className="flex items-center gap-2 text-sm"><Checkbox checked={f.send_days.includes(i + 1)} onCheckedChange={(checked) => setF({ ...f, send_days: checked ? [...f.send_days, i + 1].sort() : f.send_days.filter((d) => d !== i + 1) })} />{day}</label>)}</div></fieldset>
-      <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save texting settings"}</Button>
-    </form>
-  </section>;
+      {canEdit && <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save texting settings"}</Button>}
+    </fieldset>
+  </form>;
 }

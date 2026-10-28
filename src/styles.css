@@ -39,6 +39,10 @@
   --color-lime: var(--lime);
   --color-chartreuse: var(--chartreuse);
   --color-success: var(--lime);
+  --color-status-connected: var(--status-connected);
+  --color-status-connected-foreground: var(--status-connected-foreground);
+  --color-status-demo: var(--status-demo);
+  --color-status-demo-foreground: var(--status-demo-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -56,6 +60,10 @@
 
 :root {
   --radius: 0.75rem;
+  --status-connected: oklch(0.94 0.055 145);
+  --status-connected-foreground: oklch(0.39 0.1 145);
+  --status-demo: oklch(0.95 0.065 85);
+  --status-demo-foreground: oklch(0.43 0.1 70);
   /* WerkandMe palette */
   --navy: oklch(0.255 0.075 274);          /* #1d224b */
   --navy-foreground: oklch(0.99 0 0);
@@ -121,3 +129,5 @@
   background-clip: text;
   color: transparent;
 }
+
+.integration-card { height: 30rem; }
