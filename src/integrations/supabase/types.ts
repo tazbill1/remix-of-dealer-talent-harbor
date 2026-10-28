@@ -267,6 +267,7 @@ export type Database = {
           phone: string | null
           profile: Json
           rating: number | null
+          recruiting_event_id: string | null
           referral_source: string | null
           referred_by_text: string | null
           referrer_id: string | null
@@ -309,6 +310,7 @@ export type Database = {
           phone?: string | null
           profile?: Json
           rating?: number | null
+          recruiting_event_id?: string | null
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
@@ -351,6 +353,7 @@ export type Database = {
           phone?: string | null
           profile?: Json
           rating?: number | null
+          recruiting_event_id?: string | null
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
@@ -392,6 +395,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_recruiting_event_id_fkey"
+            columns: ["recruiting_event_id"]
+            isOneToOne: false
+            referencedRelation: "recruiting_events"
             referencedColumns: ["id"]
           },
           {
@@ -475,6 +485,7 @@ export type Database = {
           manager_phone: string | null
           name: string
           org_id: string
+          qr_code: string
           region_id: string | null
           sms_number: string | null
           state: string | null
@@ -495,6 +506,7 @@ export type Database = {
           manager_phone?: string | null
           name: string
           org_id: string
+          qr_code?: string
           region_id?: string | null
           sms_number?: string | null
           state?: string | null
@@ -515,6 +527,7 @@ export type Database = {
           manager_phone?: string | null
           name?: string
           org_id?: string
+          qr_code?: string
           region_id?: string | null
           sms_number?: string | null
           state?: string | null
@@ -1602,6 +1615,70 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiting_events: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          event_date: string
+          id: string
+          is_active: boolean
+          job_id: string | null
+          location: string | null
+          name: string
+          org_id: string
+          store_id: string | null
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          event_date: string
+          id?: string
+          is_active?: boolean
+          job_id?: string | null
+          location?: string | null
+          name: string
+          org_id: string
+          store_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          id?: string
+          is_active?: boolean
+          job_id?: string | null
+          location?: string | null
+          name?: string
+          org_id?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiting_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruiting_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruiting_events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_bonuses: {
         Row: {
           amount: number | null
@@ -2280,6 +2357,18 @@ export type Database = {
       }
     }
     Views: {
+      applicant_scan_counts: {
+        Row: {
+          applicants: number | null
+          event_id: string | null
+          event_name: string | null
+          hires: number | null
+          kind: string | null
+          org_id: string | null
+          store_id: string | null
+        }
+        Relationships: []
+      }
       applicant_source_counts: {
         Row: {
           applicants: number | null
@@ -2313,6 +2402,10 @@ export type Database = {
         Returns: boolean
       }
       can_access_store: {
+        Args: { _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
+      can_manage_events: {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
@@ -2361,6 +2454,18 @@ export type Database = {
         Returns: {
           employee_name: string
           id: string
+        }[]
+      }
+      resolve_scan: {
+        Args: { _code: string }
+        Returns: {
+          event_id: string
+          job_id: string
+          kind: string
+          name: string
+          org_slug: string
+          store_id: string
+          store_name: string
         }[]
       }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
