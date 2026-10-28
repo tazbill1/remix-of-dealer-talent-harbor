@@ -73,6 +73,7 @@ export function askSystemPrompt(input: { now: string; timeZone: string; name: st
 Answer questions about their applicants, interviews and open roles using the tools. You only see the stores this person has access to; never guess about anything the tools didn't return.
 Right now: ${input.now} (their time zone: ${input.timeZone}). Work out date ranges like "last week" (Monday to Sunday) yourself and pass ISO dates to the tools.
 "Who did I interview" means interviews at their stores in that range; mention which ones they scored.
+For counts, breakdowns, "how many", pipelines or anything they call a report, use pipeline_report: it shows them a table (and a chart if they ask). Then write one or two sentences on what stands out; don't repeat the numbers as a list. For a follow-up like "only last 30 days" or "split by region", call pipeline_report again with the earlier filters adjusted.
 When asked for good candidates, use find_top_candidates and give a one-line reason for each pick (feedback, rating, experience from the summary). If it found fewer than asked, say so.
 Write short, plain answers. Link every applicant you name as a markdown link to their "link", e.g. [Sam Jones](/applicants?applicant=...). No tables. Never write phone numbers, emails or home addresses.
 You can't text, email, move or change anyone; if asked, say how to do it in the app instead.`;
@@ -93,3 +94,76 @@ export function parseLinks(text: string): Segment[] {
   if (last < text.length) out.push({ text: text.slice(last) });
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Pipeline reports: counts per stage, grouped by store, region or role.
+// ---------------------------------------------------------------------------
+
+export const REPORT_STAGES = [
+  ["new", "New"],
+  ["screening", "Screening"],
+  ["interview", "Interview"],
+  ["offer", "Offer"],
+  ["hired", "Hired"],
+  ["rejected", "Not selected"],
+] as const;
+
+export type ReportGroupBy = "store" | "region" | "role";
+export type PipelineRow = {
+  status: string;
+  storeId: string | null;
+  store: string | null;
+  region: string | null;
+  role: string | null;
+};
+export type Report = {
+  title: string;
+  subtitle: string;
+  groupLabel: string;
+  columns: string[];
+  rows: { label: string; href: string | null; cells: number[]; total: number }[];
+  totals: number[];
+  total: number;
+  chart: boolean;
+};
+
+/** Counts applicants per stage for each store/region/role; closed stages only when asked. */
+export function pipelineReport(
+  input: PipelineRow[],
+  opts: { title: string; subtitle: string; groupBy: ReportGroupBy; includeClosed: boolean; chart: boolean },
+): Report {
+  const stages = REPORT_STAGES.filter(([k]) => opts.includeClosed || (k !== "hired" && k !== "rejected"));
+  const keys = stages.map(([k]) => k as string);
+  const groups = new Map<string, { href: string | null; cells: number[] }>();
+  for (const r of input) {
+    const i = keys.indexOf(r.status);
+    if (i < 0) continue;
+    const label =
+      (opts.groupBy === "store" ? r.store : opts.groupBy === "region" ? r.region : r.role) ??
+      (opts.groupBy === "region" ? "No region" : "Unknown");
+    const g = groups.get(label) ?? {
+      href: opts.groupBy === "store" && r.storeId ? `/applicants?store=${r.storeId}&view=list` : null,
+      cells: keys.map(() => 0),
+    };
+    g.cells[i] = (g.cells[i] ?? 0) + 1;
+    groups.set(label, g);
+  }
+  const rows = [...groups.entries()]
+    .map(([label, g]) => ({ label, href: g.href, cells: g.cells, total: g.cells.reduce((a, b) => a + b, 0) }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
+  const totals = keys.map((_, i) => rows.reduce((n, r) => n + (r.cells[i] ?? 0), 0));
+  return {
+    title: opts.title,
+    subtitle: opts.subtitle,
+    groupLabel: opts.groupBy === "store" ? "Store" : opts.groupBy === "region" ? "Region" : "Role",
+    columns: stages.map(([, l]) => l),
+    rows,
+    totals,
+    total: totals.reduce((a, b) => a + b, 0),
+    chart: opts.chart,
+  };
+}
+
+/** Short text the AI keeps in the conversation so follow-ups can adjust the same report. */
+export const reportNote = (r: Report) =>
+  `[Report shown: "${r.title}" (${r.subtitle}), ${r.total} applicants across ${r.rows.length} ${r.groupLabel.toLowerCase()}s]`;
