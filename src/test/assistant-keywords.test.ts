@@ -69,3 +69,23 @@ describe("STOP from a real phone", () => {
     expect(out[0]).toMatchObject({ purpose: "keyword", status: "simulated" });
   });
 });
+
+describe("plain-language opt-out", () => {
+  it("live: records the opt-out and sends our own confirmation (Twilio doesn't catch it)", async () => {
+    const { client, tables } = world("live");
+    const r = await runAssistant(client, client, {
+      applicationId: "a1",
+      party: "candidate",
+      body: "Please stop texting me",
+      actorId: null,
+      source: "sms",
+      inbound: { from: "+12145550199", to: "+14798020607", providerMessageId: "SM2" },
+    });
+    expect(r.keyword).toBe("stop");
+    expect(tables["sms_opt_outs"]).toHaveLength(1);
+    const out = tables["messages"]!.filter((m) => m["direction"] === "out");
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ purpose: "keyword" });
+    expect(String(out[0]!["body"])).toContain("unsubscribed");
+  });
+});

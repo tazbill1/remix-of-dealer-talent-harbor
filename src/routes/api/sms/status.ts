@@ -29,6 +29,15 @@ export const Route = createFileRoute("/api/sms/status")({
                 status === "failed" ? `Carrier error ${params["ErrorCode"] ?? ""}`.trim() : null,
             })
             .eq("provider_message_id", sid);
+          if (params["ErrorCode"] === "21610") {
+            const { recordCarrierOptOut } = await import("@/lib/messaging/outbox.server");
+            const { data: m } = await supabaseAdmin
+              .from("messages")
+              .select("org_id, application_id, to_phone")
+              .eq("provider_message_id", sid)
+              .maybeSingle();
+            if (m) await recordCarrierOptOut(supabaseAdmin, m);
+          }
         }
         return new Response(null, { status: 204 });
       },

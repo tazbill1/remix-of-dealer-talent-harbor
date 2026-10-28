@@ -1,4 +1,4 @@
-import { clearAttention, sendStaffText, setAssistantPaused } from "@/lib/takeover.functions";
+import { clearAttention, getTextingOptOut, sendStaffText, setAssistantPaused, setTextingOptOut } from "@/lib/takeover.functions";
 import { scheduleStaffInterview, sendBookingLink } from "@/lib/booking.functions";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -192,6 +192,7 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged, pause
         })}
         {busy && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" />{assistantName} is typing...</div>}
       </div>
+      {party === "candidate" && <TextingOptOut appId={appId} onChanged={onChanged} />}
       {party === "candidate" && paused && (
         <form className="flex gap-2 border-t bg-accent/40 p-2" onSubmit={(e) => { e.preventDefault(); void sendAsTeam(); }}>
           <Input value={staffText} maxLength={600} onChange={(e) => setStaffText(e.target.value)} placeholder="Reply to the candidate as the team..." />
@@ -218,6 +219,39 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged, pause
       </details>
     )}
     </>
+  );
+}
+
+/** "Do not text" status for the applicant's number, with a button for staff to set it. */
+function TextingOptOut({ appId, onChanged }: { appId: string; onChanged: () => void }) {
+  const qc = useQueryClient();
+  const read = useServerFn(getTextingOptOut);
+  const save = useServerFn(setTextingOptOut);
+  const [busy, setBusy] = useState(false);
+  const { data: s } = useQuery({ queryKey: ["texting-opt-out", appId], queryFn: () => read({ data: { applicationId: appId } }) });
+  if (!s?.phone) return null;
+  const byStaff = s.source === "staff";
+  async function set(optedOut: boolean) {
+    if (optedOut && !window.confirm("Stop all texts to this number? Use this when the applicant asks not to be texted.")) return;
+    setBusy(true);
+    try {
+      await save({ data: { applicationId: appId, optedOut } });
+      toast.success(optedOut ? "Marked do-not-text. No more texts will go to this number." : "Do-not-text mark removed.");
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["texting-opt-out", appId] }); onChanged();
+  }
+  return (
+    <div className={cn("flex flex-wrap items-center justify-between gap-2 border-t px-3 py-1.5 text-xs", s.optedOut && "bg-destructive/10")}>
+      <span className={s.optedOut ? "font-medium text-destructive" : "text-muted-foreground"}>
+        {s.optedOut
+          ? `Opted out of texts${s.since ? ` on ${new Date(s.since).toLocaleDateString()}` : ""}${byStaff ? " (marked by the team)" : s.source === "carrier" ? " (reported by the phone company)" : " (by the applicant)"}. No texts will be sent.`
+          : "Texts allowed to this number."}
+      </span>
+      {!s.optedOut && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busy} onClick={() => set(true)}>Mark do not text</Button>}
+      {s.optedOut && byStaff && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busy} onClick={() => set(false)}>Undo</Button>}
+      {s.optedOut && !byStaff && <span className="text-[10px] text-muted-foreground">Only the applicant can turn texts back on, by texting START.</span>}
+    </div>
   );
 }
 

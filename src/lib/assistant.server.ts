@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { statusEventRows } from "@/lib/status-log";
-import { keywordOf, toE164 } from "@/lib/messaging/core";
+import { isOptOutRequest, keywordOf, toE164 } from "@/lib/messaging/core";
 import { handleManagerShortReply } from "@/lib/workflows/replies.server";
 import { answersForAi, parseQuestions } from "@/lib/questions";
 import {
@@ -261,6 +261,43 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
     to_phone: toE164(data.inbound?.to ?? store?.sms_number),
     provider_message_id: data.inbound?.providerMessageId ?? null,
   });
+
+  // "Please stop texting me" is an opt-out too, but Twilio doesn't catch it, so the
+  // confirmation comes from us (it's the one text allowed after an opt-out).
+  if (!keywordOf(data.body) && isOptOutRequest(data.body)) {
+    if (senderPhone)
+      await applyKeyword(admin, {
+        orgId: app.org_id,
+        phone: senderPhone,
+        keyword: "stop",
+        candidateId: data.party === "candidate" ? app.candidate_id : null,
+        source: `${data.source}_request`,
+      });
+    const reply = keywordReply("stop", store?.name ?? "Hiring team");
+    const row = await queueText(sb, {
+      applicationId: app.id,
+      party: data.party,
+      body: reply,
+      purpose: "keyword",
+      to: senderPhone,
+      isKeywordReply: true,
+    });
+    await admin.from("application_events").insert({
+      org_id: app.org_id,
+      application_id: app.id,
+      kind: "texting",
+      message: `${data.party === "candidate" ? "Candidate" : "Hiring manager"} asked to stop texts`,
+    });
+    if (row.status === "queued") await deliverDue(admin, { ids: [row.id] });
+    return {
+      reply,
+      keyword: "stop" as const,
+      changed: [] as string[],
+      status: null,
+      interviewAt: null,
+      delivery: row.status,
+    };
+  }
 
   // Carrier keywords never reach the AI.
   const keyword = keywordOf(data.body);
