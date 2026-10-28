@@ -35,7 +35,7 @@ export type TodoItem = {
   detail: string;
 };
 
-const OPEN = ["new", "screening", "interview", "offer"];
+const OPEN = ["new", "screening", "interview", "offer", "other_location", "hiring_event"];
 
 const ago = (since: number, now: number) => {
   const d = Math.floor((now - since) / DAY);
@@ -87,7 +87,7 @@ export function managerTodo(
   }
 
   const letters = rows.offers.filter((o) => o.is_offer_letter);
-  for (const a of open.filter((x) => x.status === "offer" && !x.needs_attention)) {
+  for (const a of open.filter((x) => !x.needs_attention && (x.status === "offer" || letters.some((o) => o.application_id === x.id)))) {
     const mine = letters.filter((o) => o.application_id === a.id);
     const sent = mine.filter((o) => isOpen(o.status)).sort((x, y) => Date.parse(x.created_at) - Date.parse(y.created_at))[0];
     if (sent) {

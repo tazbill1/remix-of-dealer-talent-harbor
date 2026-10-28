@@ -1,3 +1,4 @@
+import { CLOSED_STATUSES, STATUSES } from "@/lib/jobs";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -77,7 +78,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
       const stores = await storeIds(f.store);
       if (stores) q = q.in("dealership_id", stores.length ? stores : [NONE]);
       if (f.stage) q = q.eq("status", f.stage as any);
-      if (f.openOnly) q = q.not("status", "in", "(hired,rejected)");
+      if (f.openOnly) q = q.not("status", "in", `(${CLOSED_STATUSES.join(",")})`);
       if (f.name) q = q.ilike("full_name", `%${clean(f.name)}%`);
       if (f.applied_after) q = q.gte("created_at", f.applied_after);
       if (f.applied_before) q = q.lt("created_at", f.applied_before);
@@ -87,7 +88,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
     }
 
     const reports: Report[] = [];
-    const stage = z.enum(["new", "screening", "interview", "offer", "hired", "rejected"]);
+    const stage = z.enum(STATUSES);
     const tools = {
       search_applicants: tool({
         description:

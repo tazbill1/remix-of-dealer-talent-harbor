@@ -1,3 +1,4 @@
+import { ALL_STATUSES } from "@/lib/jobs";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -185,7 +186,7 @@ const notifySchema = z.object({
   applicationIds: z.array(z.string().uuid()).min(1).max(500),
   event: z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("interview"), startsAt: z.string().datetime().nullable() }),
-    z.object({ kind: z.literal("status"), status: z.enum(["new", "screening", "interview", "offer", "hired", "rejected"]) }),
+    z.object({ kind: z.literal("status"), status: z.enum(ALL_STATUSES) }),
   ]),
 });
 
