@@ -178,6 +178,16 @@ export const automationsSchema = z.object({
       daysAhead: z.number().int().min(1).max(30).optional(),
     })
     .optional(),
+  assistant: z
+    .object({
+      tone: z.enum(["upbeat", "friendly", "professional"]).optional(),
+      facts: z.string().max(4000).optional(),
+      screening: z.string().max(1500).optional(),
+      handoff: z.string().max(1500).optional(),
+      pauseOnHandoff: z.boolean().optional(),
+      instructions: z.string().max(1500).optional(),
+    })
+    .optional(),
 });
 export type Automations = z.infer<typeof automationsSchema>;
 
@@ -256,4 +266,68 @@ export function segments(body: string) {
   const unicode = /[^\x00-\x7F]/.test(body);
   const per = unicode ? 67 : 153;
   return body.length <= (unicode ? 70 : 160) ? 1 : Math.ceil(body.length / per);
+}
+
+// ---------------------------------------------------------------------------
+// The AI assistant: what it may say, what it asks, and when a person takes over.
+// ---------------------------------------------------------------------------
+
+export const TONES = {
+  upbeat: { label: "Upbeat", prompt: "Bubbly, warm and super organized, like the HR assistant everyone loves. At most one emoji." },
+  friendly: { label: "Friendly", prompt: "Warm, friendly and clear. Only use an emoji if the candidate does." },
+  professional: { label: "Professional", prompt: "Polite, concise and professional. No emoji." },
+} as const;
+export type Tone = keyof typeof TONES;
+
+export const DEFAULT_SCREENING = [
+  "Years of experience in this kind of role",
+  "Certifications (ASE, manufacturer/OEM)",
+  "Availability, including Saturdays",
+  "Earliest start date",
+  "Pay expectations",
+  "Valid driver's license",
+].join("\n");
+
+export const DEFAULT_HANDOFF = [
+  "Negotiating pay or asking for a specific offer",
+  "Anything legal: immigration, visas, background or criminal record, lawsuits",
+  "Medical, disability or accommodation questions",
+  "Complaints, or the candidate seems upset",
+  "Questions the facts below don't answer",
+].join("\n");
+
+export function assistantSettings(a: Automations) {
+  const x = a.assistant ?? {};
+  return {
+    tone: (x.tone ?? "upbeat") as Tone,
+    facts: x.facts?.trim() ?? "",
+    screening: x.screening?.trim() || DEFAULT_SCREENING,
+    handoff: x.handoff?.trim() || DEFAULT_HANDOFF,
+    pauseOnHandoff: x.pauseOnHandoff !== false,
+    instructions: x.instructions?.trim() ?? "",
+  };
+}
+
+const lines = (s: string) =>
+  s
+    .split(/\n+/)
+    .map((l) => l.replace(/^[-*•\s]+/, "").trim())
+    .filter(Boolean);
+
+/** The group's rules for the assistant, as instructions for the AI. */
+export function assistantRules(a: Automations, party: "candidate" | "manager") {
+  const s = assistantSettings(a);
+  const out = [`Tone: ${TONES[s.tone].prompt}`];
+  if (party === "candidate") {
+    out.push(
+      `Screening: ask one simple question at a time about these, skipping anything already known:\n${lines(s.screening).map((l) => `- ${l}`).join("\n")}`,
+      s.facts
+        ? `Facts you may share with candidates (the ONLY source for pay, benefits, schedules and perks; never guess or promise anything beyond them):\n${s.facts}`
+        : "No facts about pay, benefits or schedules were provided: never state or guess them; say the hiring team will share details.",
+      `Hand off to a person (set handoff_reason, and reply only that someone from the team will follow up) when the candidate brings up:\n${lines(s.handoff).map((l) => `- ${l}`).join("\n")}`,
+      "Never ask about or comment on age, race, religion, national origin, disability, pregnancy, marital or family status, or other protected traits. Never promise a job.",
+    );
+  }
+  if (s.instructions) out.push(`Extra instructions from the dealer group: ${s.instructions}`);
+  return out.join("\n\n");
 }

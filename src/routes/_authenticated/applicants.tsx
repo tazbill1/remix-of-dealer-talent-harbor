@@ -169,6 +169,7 @@ function Applicants() {
                     <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                     {a.knockout_failed && (
                       <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
+                      {a.needs_attention && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     )}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
@@ -254,7 +255,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
       {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
       <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
       <ProfileFacts profile={app.profile as Record<string, unknown>} />
-      <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} />
+      <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} paused={!!app.ai_paused_at} needsAttention={app.needs_attention} />
       <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
       {app.status !== "rejected" && !app.departed_at && (
         <>

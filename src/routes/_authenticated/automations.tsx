@@ -18,6 +18,7 @@ import {
   type Automations,
 } from "@/lib/automations";
 import { Button } from "@/components/ui/button";
+import { AssistantSettings } from "@/components/assistant-settings";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,13 +100,15 @@ function AutomationsPage() {
       <div>
         <h1 className="flex items-center gap-2 text-3xl">
           <MessageSquareText className="size-7 text-sapphire" />
-          Automatic texts
+          Automatic texts & assistant
         </h1>
         <p className="text-muted-foreground">
           Choose which texts hireme sends on its own, what they say and when. Texting hours, consent and STOP always
           apply. {canEdit ? "" : "Only group admins can make changes."}
         </p>
       </div>
+
+      <AssistantSettings a={a} canEdit={canEdit} onChange={setA} />
 
       {GROUPS.map((g) => (
         <section key={g.title} className="space-y-3">

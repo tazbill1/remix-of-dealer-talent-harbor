@@ -9,7 +9,7 @@ type Ctx = { supabase: DB; userId: string };
 const tokenSchema = z.object({ token: z.string().min(10).max(120) });
 
 /** Everything the booking page needs, or null if the link is bad. */
-async function loadBooking(db: DB, applicationId: string, now = Date.now()) {
+export async function loadBooking(db: DB, applicationId: string, now = Date.now()) {
   const { data: app } = await db
     .from("applications")
     .select("id, org_id, full_name, status, dealership_id, job_id")

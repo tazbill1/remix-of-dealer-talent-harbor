@@ -1,3 +1,4 @@
+import { clearAttention, sendStaffText, setAssistantPaused } from "@/lib/takeover.functions";
 import { sendBookingLink } from "@/lib/booking.functions";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -104,8 +105,24 @@ export function AddApplicantDialog({ open, onOpenChange, orgId, jobs, onCreated 
   );
 }
 
-export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { appId: string; orgId: string; assistantName: string; onChanged: () => void }) {
+export function AssistantThreads({ appId, orgId, assistantName, onChanged, paused, needsAttention }: { appId: string; orgId: string; assistantName: string; onChanged: () => void; paused?: boolean; needsAttention?: string | null }) {
   const send = useServerFn(assistantMessage);
+  const pause = useServerFn(setAssistantPaused);
+  const handled = useServerFn(clearAttention);
+  const staffSend = useServerFn(sendStaffText);
+  const [staffText, setStaffText] = useState("");
+  async function toggle(p: boolean) {
+    try { await pause({ data: { applicationId: appId, paused: p } }); toast.success(p ? "You've taken over. The assistant won't reply." : `${assistantName} is back on these texts.`); }
+    catch (e) { toast.error((e as Error).message); }
+    onChanged();
+  }
+  async function sendAsTeam() {
+    const body = staffText.trim(); if (!body) return;
+    setStaffText("");
+    try { const r = await staffSend({ data: { applicationId: appId, body } }); if (r.note) toast.warning(r.note); }
+    catch (e) { toast.error((e as Error).message); setStaffText(body); }
+    qc.invalidateQueries({ queryKey: ["messages", appId] }); onChanged();
+  }
   const qc = useQueryClient();
   const [party, setParty] = useState<"candidate" | "manager">("candidate");
   const [text, setText] = useState("");
@@ -135,7 +152,22 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
   }
   return (
     <>
+    {needsAttention && (
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm">
+        <span className="font-semibold text-destructive">Needs a person:</span>
+        <span className="min-w-0 flex-1">{needsAttention}</span>
+        <Button size="sm" variant="outline" onClick={async () => { await handled({ data: { applicationId: appId } }); onChanged(); }}>Mark handled</Button>
+      </div>
+    )}
     <div className="rounded-xl border">
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-1.5 text-xs">
+        <span className={paused ? "font-medium text-destructive" : "text-muted-foreground"}>
+          {paused ? `${assistantName} is paused: a team member is handling the candidate texts.` : `${assistantName} is answering the candidate.`}
+        </span>
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => toggle(!paused)}>
+          {paused ? `Hand back to ${assistantName}` : "Take over"}
+        </Button>
+      </div>
       <div className="flex border-b text-sm">
         {(["candidate", "manager"] as const).map((p) => (
           <button key={p} onClick={() => setParty(p)} className={cn("flex-1 px-3 py-2 font-medium", party === p ? "border-b-2 border-sapphire text-sapphire" : "text-muted-foreground")}>
@@ -157,6 +189,12 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged }: { a
         })}
         {busy && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" />{assistantName} is typing...</div>}
       </div>
+      {party === "candidate" && paused && (
+        <form className="flex gap-2 border-t bg-accent/40 p-2" onSubmit={(e) => { e.preventDefault(); void sendAsTeam(); }}>
+          <Input value={staffText} maxLength={600} onChange={(e) => setStaffText(e.target.value)} placeholder="Reply to the candidate as the team..." />
+          <Button size="icon" disabled={!staffText.trim()} aria-label="Send to candidate"><Send /></Button>
+        </form>
+      )}
       {textLive ? (
         <p className="border-t p-3 text-xs text-muted-foreground">Live texting is on: replies here come from the {party === "candidate" ? "candidate's" : "hiring manager's"} real phone.</p>
       ) : (

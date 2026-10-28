@@ -15,6 +15,7 @@ import {
   type Party,
 } from "@/lib/messaging/outbox.server";
 
+import { assistantRules, assistantSettings, parseAutomations } from "@/lib/automations";
 type DB = SupabaseClient<Database>;
 
 // ---------------------------------------------------------------------------
@@ -122,6 +123,8 @@ const replySchema = z.object({
   interview_start_iso: z.string().nullable(),
   summary: z.string(),
   timeline_note: z.string().nullable(),
+  /** Set when a person should take over (the group's hand-off topics). */
+  handoff_reason: z.string().nullable(),
 });
 type Reply = z.infer<typeof replySchema>;
 
@@ -167,6 +170,7 @@ const replyJsonSchema = {
     interview_start_iso: nullable("string"),
     summary: { type: "string" },
     timeline_note: nullable("string"),
+    handoff_reason: nullable("string"),
   },
   required: [
     "reply",
@@ -176,6 +180,7 @@ const replyJsonSchema = {
     "interview_start_iso",
     "summary",
     "timeline_note",
+    "handoff_reason",
   ],
 };
 
@@ -305,18 +310,52 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
     if (handled) return handled;
   }
 
+  const auto = parseAutomations(settings.automations);
+  const rules = assistantSettings(auto);
+  // A person has taken over this conversation: keep the text, don't answer it.
+  if (data.party === "candidate" && app.ai_paused_at) {
+    if (!app.needs_attention)
+      await admin.from("applications").update({ needs_attention: "New text while the assistant is paused" }).eq("id", app.id);
+    return { reply: "", keyword: null, changed: [] as string[], status: null, interviewAt: null, delivery: "paused" };
+  }
+  // Real open interview times (store hours, existing bookings, managers' calendars).
+  let offered: { iso: string; ms: number; label: string }[] = [];
+  let bookingUrl = "";
+  let interviewMinutes = 30;
+  if (data.party === "candidate") {
+    try {
+      const { loadBooking, bookingLink } = await import("@/lib/booking.functions");
+      const { slotLabel } = await import("@/lib/booking");
+      const b = await loadBooking(admin, app.id);
+      if (b) {
+        offered = b.slots.slice(0, 15).map((ms) => ({ iso: new Date(ms).toISOString(), ms, label: slotLabel(ms, b.timeZone) }));
+        interviewMinutes = b.minutes;
+        bookingUrl = await bookingLink(app.id);
+      }
+    } catch {
+      /* without open times the assistant falls back to sending the link or asking */
+    }
+  }
   const assistant = store?.assistant_name ?? "Your HR assistant";
   const questions = parseQuestions(job?.questions);
   const screening = questions.length
     ? answersForAi(questions, (app.answers ?? {}) as Record<string, string>)
     : "";
   const now = new Date().toISOString();
-  const system = `You are ${assistant}, the AI HR assistant for ${store?.name ?? "the dealership"}. Personality: bubbly, kind, sweet and super organized — the assistant HR manager everyone loves. You text by SMS, so keep replies under 320 characters, warm, with at most one emoji.
+  const system = `You are ${assistant}, the AI HR assistant for ${store?.name ?? "the dealership"}. You text by SMS, so keep replies under 320 characters.
+${assistantRules(auto, data.party)}
 You are talking ONLY about this one applicant: ${app.full_name} (application ${app.id}) for ${job?.title ?? "an open role"}. Never mention or confuse any other applicant.
 Right now you are texting with the ${data.party === "candidate" ? `CANDIDATE (${app.full_name})` : `HIRING MANAGER (${manager.name})`}.
 ${
   data.party === "candidate"
-    ? "Keep them engaged and excited. Ask one simple screening question at a time (experience, certifications like ASE/OEM, availability, start date, pay expectations, driver's license). If they agree to an interview time, confirm it."
+    ? `Keep them engaged. Follow the screening list above.
+Interviews: ${
+        offered.length
+          ? `only offer times from this list of open slots (store local time; value in brackets is for interview_start_iso):\n${offered.map((o) => `- ${o.label} [${o.iso}]`).join("\n")}\nNever suggest any other time.${bookingUrl ? ` If none of these work, send this link so they can see every open time: ${bookingUrl}` : ""}`
+          : bookingUrl
+            ? `send this link so they can pick an open time: ${bookingUrl}. Don't suggest specific times yourself.`
+            : "ask which days and times work, and say the team will confirm."
+      }`
     : 'Keep the manager accountable: summarize where the candidate stands, ask for decisions (interview? move forward? pass?), and offer specific interview times. Follow their instructions about stage changes and scheduling. A reply of "1" means interview, "2" means pass.'
 }
 Current time (UTC): ${now}. Store time zone: ${tz}.
@@ -331,7 +370,8 @@ Return:
 - new_status: only when clearly warranted (e.g. qualifications confirmed → "screening"; interview booked → "interview"; manager says hire/pass → "hired"/"rejected"). Else null.
 - interview_start_iso: ISO 8601 with offset ONLY when both a specific date+time is agreed/instructed for an interview. Else null.
 - summary: one-paragraph running summary of this applicant for the hiring team.
-- timeline_note: a short note for the timeline if something important happened, else null.`;
+- timeline_note: a short note for the timeline if something important happened, else null.
+- handoff_reason: ${data.party === "candidate" ? "a short reason (under 80 characters) when this needs a person per the hand-off rules, else null" : "always null"}.`;
   const msgs: ChatMsg[] = (history ?? [])
     .filter((m) => m.status !== "blocked")
     .map((m) => ({
@@ -389,8 +429,12 @@ Return:
   if (u.phone) patch.phone = u.phone;
   if (out.rating && out.rating >= 1 && out.rating <= 5) patch.rating = Math.round(out.rating);
   let interviewAt: string | null = null;
-  if (out.interview_start_iso && !isNaN(Date.parse(out.interview_start_iso))) {
-    interviewAt = new Date(out.interview_start_iso).toISOString();
+  // Candidates can only land on a real open slot; managers can set any time.
+  const picked = out.interview_start_iso ? Date.parse(out.interview_start_iso) : NaN;
+  const allowed =
+    !isNaN(picked) && (data.party !== "candidate" || !offered.length || offered.some((o) => o.ms === picked));
+  if (allowed) {
+    interviewAt = new Date(picked).toISOString();
     const dup = (interviews ?? []).some(
       (i) => i.starts_at && new Date(i.starts_at).toISOString() === interviewAt,
     );
@@ -402,12 +446,38 @@ Return:
         source: "werkandme",
         created_by: data.actorId,
         location: store?.name ?? null,
+        duration_min: interviewMinutes,
       });
       patch.status = "interview";
     }
   }
   if (out.new_status && !patch.status) patch.status = out.new_status;
+  const handoff = data.party === "candidate" ? out.handoff_reason?.trim().slice(0, 120) || null : null;
+  if (handoff) {
+    patch.needs_attention = handoff;
+    if (rules.pauseOnHandoff) patch.ai_paused_at = new Date().toISOString();
+  }
   await sb.from("applications").update(patch).eq("id", app.id);
+  if (handoff) {
+    await admin.from("application_events").insert({
+      org_id: app.org_id,
+      application_id: app.id,
+      kind: "assistant",
+      message: `${assistant} handed this conversation to a person: ${handoff}${rules.pauseOnHandoff ? " (assistant paused)" : ""}`,
+    });
+    try {
+      const { BRAND } = await import("@/lib/workflows/rules");
+      const heads = await queueText(admin, {
+        applicationId: app.id,
+        party: "manager",
+        purpose: "manager_handoff",
+        body: `${BRAND}: ${app.full_name} needs a person: ${handoff}. Open their profile in hireme to reply.`,
+      });
+      if (heads?.status === "queued") await deliverDue(admin, { ids: [heads.id] });
+    } catch {
+      /* the flag on the profile is the main signal */
+    }
+  }
 
   const row = await queueText(sb, {
     applicationId: app.id,
