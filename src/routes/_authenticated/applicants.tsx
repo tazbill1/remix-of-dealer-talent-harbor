@@ -417,7 +417,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   return (
     <div>
       {/* mb-6 cancels the -mt-6 pull on following content, so nothing slides under the header. */}
-      <div className="sticky top-0 z-10 -mx-6 -mb-0 -mt-6 mb-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
         <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
           <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
         <div className="flex flex-wrap items-center gap-2">
