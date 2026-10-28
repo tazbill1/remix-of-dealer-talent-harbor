@@ -165,9 +165,12 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged, pause
         <span className={paused ? "font-medium text-destructive" : "text-muted-foreground"}>
           {paused ? `${assistantName} is paused: a team member is handling the candidate texts.` : `${assistantName} is answering the candidate.`}
         </span>
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => toggle(!paused)}>
-          {paused ? `Hand back to ${assistantName}` : "Take over"}
-        </Button>
+        <div className="shrink-0 text-right">
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => toggle(!paused)}>
+            {paused ? `Hand back to ${assistantName}` : `Take over from ${assistantName}`}
+          </Button>
+          {!paused && <p className="max-w-44 text-[10px] leading-tight text-muted-foreground">{assistantName} stops replying to this candidate until you hand back.</p>}
+        </div>
       </div>
       <div className="flex border-b text-sm">
         {(["candidate", "manager"] as const).map((p) => (
@@ -196,16 +199,25 @@ export function AssistantThreads({ appId, orgId, assistantName, onChanged, pause
           <Button size="icon" disabled={!staffText.trim()} aria-label="Send to candidate"><Send /></Button>
         </form>
       )}
-      {textLive ? (
+      {textLive && (
         <p className="border-t p-3 text-xs text-muted-foreground">Live texting is on: replies here come from the {party === "candidate" ? "candidate's" : "hiring manager's"} real phone.</p>
-      ) : (
-      <form className="flex gap-2 border-t p-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={party === "candidate" ? "Practice: text as the candidate..." : "Practice: text as the hiring manager..."} />
-        <Button size="icon" disabled={busy || !text.trim()} aria-label="Send"><Send /></Button>
-      </form>
       )}
     </div>
     <EmailHistory messages={msgs} />
+    {!textLive && (
+      <details className="rounded-xl border bg-secondary/40">
+        <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-muted-foreground">
+          Practice: text as the {party === "candidate" ? "candidate" : "hiring manager"}
+        </summary>
+        <div className="space-y-1.5 px-3 pb-3">
+          <p className="text-[11px] text-muted-foreground">Practice only. Nothing is sent.</p>
+          <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+            <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={party === "candidate" ? "Practice: text as the candidate..." : "Practice: text as the hiring manager..."} />
+            <Button size="icon" disabled={busy || !text.trim()} aria-label="Send"><Send /></Button>
+          </form>
+        </div>
+      </details>
+    )}
     </>
   );
 }
@@ -261,6 +273,7 @@ export function InterviewsPanel({ appId, orgId, title, onChanged }: { appId: str
       <ScorecardSummary appId={appId} />
       <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
         <Button size="sm" onClick={add} disabled={!when}>Schedule</Button></div>
+      {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}
       <Button size="sm" variant="outline" className="mt-2" disabled={linkBusy} onClick={async () => {
         setLinkBusy(true);
         try {

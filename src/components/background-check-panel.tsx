@@ -33,6 +33,8 @@ export function BackgroundCheckPanel({ orgId, appId, status, note, updatedAt, ca
   }
 
   if (!canEdit && !current) return null;
+  const steps = ["Requested", "In progress", current === "clear" ? "Cleared" : current === "flagged" ? "Flagged" : "Complete"];
+  const stepIndex = current === "requested" ? 0 : current === "in_progress" ? 1 : current ? 2 : -1;
   return (
     <div className="space-y-2 rounded-xl border p-3">
       <div className="flex items-center justify-between gap-2">
@@ -41,6 +43,16 @@ export function BackgroundCheckPanel({ orgId, appId, status, note, updatedAt, ca
           ? <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", BG_TONE[current])}>{BG_LABEL[current]}</span>
           : <span className="text-xs text-muted-foreground">Not started</span>}
       </div>
+      <ol className="flex items-center py-1 text-[11px]">
+        {steps.map((label, i) => (
+          <li key={label} className="flex min-w-0 flex-1 items-center last:flex-none">
+            <span className={cn("flex size-4 shrink-0 items-center justify-center rounded-full border text-[9px]",
+              i <= stepIndex ? "border-sapphire bg-sapphire text-primary-foreground" : "border-border text-muted-foreground")}>{i + 1}</span>
+            <span className={cn("ml-1 whitespace-nowrap", i === stepIndex ? "font-semibold text-foreground" : "text-muted-foreground")}>{label}</span>
+            {i < steps.length - 1 && <span className={cn("mx-1.5 h-px min-w-2 flex-1", i < stepIndex ? "bg-sapphire" : "bg-border")} />}
+          </li>
+        ))}
+      </ol>
       {canEdit ? (
         <>
           <div className="flex flex-wrap gap-2">
