@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { WeeklySummaryCard } from "@/components/weekly-summary-settings";
 
 export const Route = createFileRoute("/_authenticated/automations")({
   head: () => ({ meta: [{ title: "Automatic texts | WerkandMe Hiring" }] }),
@@ -178,6 +179,8 @@ function AutomationsPage() {
           )}
         </section>
       ))}
+
+      <WeeklySummaryCard a={a} canEdit={canEdit} onChange={setA} />
 
       {canEdit && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:left-64">
