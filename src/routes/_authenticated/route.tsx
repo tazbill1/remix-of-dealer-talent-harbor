@@ -106,6 +106,15 @@ function Layout() {
 
 type Me = NonNullable<Awaited<ReturnType<NonNullable<typeof meQuery.queryFn>>>>;
 
+/** Logo doubles as Home: signed-in users land on the dashboard. */
+function LogoLink({ light, className }: { light?: boolean; className?: string }) {
+  return (
+    <Link to="/dashboard" aria-label="Go to dashboard" className={cn("inline-flex cursor-pointer", className)}>
+      <Logo light={light} className="h-full w-auto" />
+    </Link>
+  );
+}
+
 function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void; children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const loc = useLocation();
