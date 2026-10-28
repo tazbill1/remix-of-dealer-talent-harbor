@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { rememberReferral } from "@/lib/referral-capture";
+import { rememberScan } from "@/lib/scan";
 import { MapPin, Search } from "lucide-react";
 import { getCareers } from "@/lib/public.functions";
 import { formatPay } from "@/lib/jobs";
@@ -10,7 +11,7 @@ import { Logo, GradientText } from "@/components/brand";
 import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/journey-faq";
 
 export const Route = createFileRoute("/c/$orgSlug/")({
-  validateSearch: z.object({ ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
+  validateSearch: z.object({ store: z.string().max(60).optional(), scan: z.string().max(16).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
   loader: async ({ params }) => {
     const d = await getCareers({ data: { slug: params.orgSlug } });
     if (!d) throw notFound();
@@ -26,10 +27,11 @@ export const Route = createFileRoute("/c/$orgSlug/")({
 
 function Careers() {
   const { org, stores, jobs } = Route.useLoaderData();
-  const { ref, via } = Route.useSearch();
+  const { ref, via, scan, store: storeParam } = Route.useSearch();
   useEffect(() => { rememberReferral(org.slug, ref, via); }, [org.slug, ref, via]);
+  useEffect(() => { rememberScan(org.slug, scan); }, [org.slug, scan]);
   const [q, setQ] = useState("");
-  const [store, setStore] = useState("all");
+  const [store, setStore] = useState(storeParam && stores.some((x) => x.id === storeParam) ? storeParam : "all");
   const s = (id: string) => stores.find((x) => x.id === id);
   const list = jobs.filter((j) => (store === "all" || j.dealership_id === store)
     && `${j.title} ${j.department ?? ""} ${s(j.dealership_id)?.city ?? ""} ${s(j.dealership_id)?.name ?? ""}`.toLowerCase().includes(q.toLowerCase()));
