@@ -10,7 +10,7 @@ import { statusRulesSchema } from "@/lib/status-rules";
 
 export const BRAND = "hireme by WerkandMe";
 
-type Timing = { label: string; default: number; min: number; max: number; unit: "hours before" | "texting hours" };
+type Timing = { label: string; default: number; min: number; max: number; unit: "hours before" | "texting hours" | "days" };
 export type AutomationDef = {
   label: string;
   who: "candidate" | "manager";
@@ -18,6 +18,8 @@ export type AutomationDef = {
   fields: string[];
   text: string;
   canTurnOff: boolean;
+  /** Starts off: the group has to turn it on. */
+  defaultOff?: boolean;
   timing?: Timing;
   /** Used when the link can't be made (e.g. invite asks for times instead). */
   noLinkText?: string;
@@ -134,6 +136,16 @@ export const AUTOMATIONS = {
     text: "{store}: Hi {first}, you have {documents} to review and sign. It takes a few minutes on your phone: {link}",
     canTurnOff: true,
   },
+  waiting: {
+    label: "Still reviewing check-in",
+    who: "candidate",
+    when: "While an applicant waits in New or Screening (up to 4 times, never after hired, passed or STOP)",
+    fields: ["first", "store", "job"],
+    text: "Hi {first}, quick update: the team at {store} is still reviewing applications for {job}. Hang tight, I'll text you as soon as there's news.",
+    canTurnOff: true,
+    defaultOff: true,
+    timing: { label: "Send when it's been quiet for", default: 3, min: 2, max: 14, unit: "days" },
+  },
   checkin: {
     label: "New-hire check-in",
     who: "manager",
@@ -215,7 +227,11 @@ export const checkinDays = (a: Automations) =>
 export const bookingLeadHours = (a: Automations) => a.booking?.leadHours ?? 12;
 export const bookingDaysAhead = (a: Automations) => a.booking?.daysAhead ?? 7;
 
-export const isOn = (a: Automations, key: AutomationKey) => a.texts[key]?.enabled !== false;
+export function isOn(a: Automations, key: AutomationKey) {
+  const def: AutomationDef = AUTOMATIONS[key];
+  const enabled = a.texts[key]?.enabled;
+  return def.defaultOff ? enabled === true : enabled !== false;
+}
 
 export function hoursFor(a: Automations, key: AutomationKey) {
   const def: AutomationDef = AUTOMATIONS[key];
@@ -264,6 +280,23 @@ export function textFor(a: Automations, key: AutomationKey, vars: Record<string,
   if (needsLink(template)) template = !needsLink(def.text) ? def.text : (def.noLinkText ?? def.text);
   const out = compliant(key, render(template, vars));
   return key === "welcome" ? withAiDisclosure(out, String(vars["assistant"] ?? ""), String(vars["store"] ?? "")) : out;
+}
+
+/**
+ * Later "still reviewing" check-ins use different default wording, so the applicant
+ * doesn't get the same text twice. A group's own wording is used every time.
+ */
+export const WAITING_FOLLOWUPS = [
+  "Hey {first}, just checking in. Your application for {job} is still with the team at {store}. Nothing you need to do, I'll let you know the moment I hear back.",
+  "Hi {first}, still here! {store} hasn't wrapped up reviews for {job} yet. Thanks for hanging in there, I'll reach out as soon as there's an update.",
+  "Hi {first}, no news yet on {job} at {store}, but you're still in the running. If anything's changed on your end, just reply here.",
+];
+
+/** The text for the nth "still reviewing" check-in, or null when the group hasn't turned it on. */
+export function waitingText(a: Automations, n: number, vars: Record<string, string | number | null | undefined>) {
+  if (!isOn(a, "waiting")) return null;
+  if (n <= 1 || a.texts["waiting"]?.text) return textFor(a, "waiting", vars);
+  return compliant("waiting", render(WAITING_FOLLOWUPS[(n - 2) % WAITING_FOLLOWUPS.length]!, vars));
 }
 
 /**
