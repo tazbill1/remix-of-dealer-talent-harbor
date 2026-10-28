@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useOrg } from "@/lib/org";
-import { formatPhone } from "@/lib/store-texting";
 import { StoreFormFields } from "@/components/store-form-fields";
 import { storeToForm, storeValues, validateStore, type StoreErrors } from "@/lib/store-validation";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ export function StoreTextingContact({ store }: { store: Tables<"dealerships"> })
         <label className="block space-y-1.5 text-sm"><span>Store texting number</span>
           {org.isPlatformAdmin
             ? <Input aria-label="Store texting number" type="tel" value={sms} onChange={(e) => setSms(e.target.value)} />
-            : <p className="rounded-md border bg-muted px-3 py-2 text-muted-foreground">{store.sms_number ? formatPhone(store.sms_number) : "Not set up yet"} · Managed by WerkandMe</p>}
+            : <p className="rounded-md border bg-muted px-3 py-2 text-muted-foreground">{store.sms_number ? store.sms_number : "Not set up yet"} · Managed by WerkandMe</p>}
         </label>
         <Button type="submit" className="w-full" disabled={saving}>{saving ? "Saving…" : "Save contacts"}</Button>
       </form>
