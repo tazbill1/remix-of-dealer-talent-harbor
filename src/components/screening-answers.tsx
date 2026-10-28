@@ -19,7 +19,7 @@ export function ScreeningAnswers({
 }) {
   if (!questions.length) return null;
   return (
-    <div className="rounded-xl border">
+    <div className="rounded-xl border bg-background">
       <div className="border-b px-3 py-2 text-sm font-medium">Screening answers</div>
       <ul className="divide-y">
         {questions.map((q) => {
