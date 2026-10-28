@@ -33,7 +33,6 @@ function CalendarPage() {
   return (
     <div className="space-y-6">
       <div><h1 className="text-3xl">Interviews</h1><p className="text-muted-foreground">Every interview across your stores, whether booked by the assistant or added by a manager.</p></div>
-      <CalendarSubscribe orgId={org.orgId} />
       <MyCalendarCard orgId={org.orgId} />
       <ul className="space-y-2">
         {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
