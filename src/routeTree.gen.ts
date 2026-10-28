@@ -44,10 +44,12 @@ import { Route as ApiPublicBoldsignWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
 import { Route as ApiPublicCronMessagesRouteImport } from './routes/api/public/cron/messages'
+import { Route as ApiPublicCronRecordingCleanupRouteImport } from './routes/api/public/cron/recording-cleanup'
 import { Route as ApiPublicCronWorkflowsRouteImport } from './routes/api/public/cron/workflows'
 import { Route as ApiPublicDocsTokenRouteImport } from './routes/api/public/docs/$token'
 import { Route as ApiPublicFeedOrgSlugRouteImport } from './routes/api/public/feed.$orgSlug'
 import { Route as ApiPublicInterviewInviteTokenRouteImport } from './routes/api/public/interview-invite/$token'
+import { Route as ApiPublicInterviewsProcessRecordingRouteImport } from './routes/api/public/interviews/process-recording'
 import { Route as ApiPublicOfferTokenRouteImport } from './routes/api/public/offer/$token'
 import { Route as ApiPublicUnsubscribeTokenRouteImport } from './routes/api/public/unsubscribe/$token'
 import { Route as COrgSlugJobsJobIdRouteImport } from './routes/c.$orgSlug.jobs.$jobId'
@@ -233,6 +235,12 @@ const ApiPublicCronMessagesRoute = ApiPublicCronMessagesRouteImport.update({
   path: '/api/public/cron/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronRecordingCleanupRoute =
+  ApiPublicCronRecordingCleanupRouteImport.update({
+    id: '/api/public/cron/recording-cleanup',
+    path: '/api/public/cron/recording-cleanup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronWorkflowsRoute = ApiPublicCronWorkflowsRouteImport.update({
   id: '/api/public/cron/workflows',
   path: '/api/public/cron/workflows',
@@ -252,6 +260,12 @@ const ApiPublicInterviewInviteTokenRoute =
   ApiPublicInterviewInviteTokenRouteImport.update({
     id: '/api/public/interview-invite/$token',
     path: '/api/public/interview-invite/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicInterviewsProcessRecordingRoute =
+  ApiPublicInterviewsProcessRecordingRouteImport.update({
+    id: '/api/public/interviews/process-recording',
+    path: '/api/public/interviews/process-recording',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicOfferTokenRoute = ApiPublicOfferTokenRouteImport.update({
@@ -312,10 +326,12 @@ export interface FileRoutesByFullPath {
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/recording-cleanup': typeof ApiPublicCronRecordingCleanupRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
+  '/api/public/interviews/process-recording': typeof ApiPublicInterviewsProcessRecordingRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -355,10 +371,12 @@ export interface FileRoutesByTo {
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/recording-cleanup': typeof ApiPublicCronRecordingCleanupRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
+  '/api/public/interviews/process-recording': typeof ApiPublicInterviewsProcessRecordingRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -401,10 +419,12 @@ export interface FileRoutesById {
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/escalate': typeof ApiPublicCronEscalateRoute
   '/api/public/cron/messages': typeof ApiPublicCronMessagesRoute
+  '/api/public/cron/recording-cleanup': typeof ApiPublicCronRecordingCleanupRoute
   '/api/public/cron/workflows': typeof ApiPublicCronWorkflowsRoute
   '/api/public/docs/$token': typeof ApiPublicDocsTokenRoute
   '/api/public/feed/$orgSlug': typeof ApiPublicFeedOrgSlugRoute
   '/api/public/interview-invite/$token': typeof ApiPublicInterviewInviteTokenRoute
+  '/api/public/interviews/process-recording': typeof ApiPublicInterviewsProcessRecordingRoute
   '/api/public/offer/$token': typeof ApiPublicOfferTokenRoute
   '/api/public/unsubscribe/$token': typeof ApiPublicUnsubscribeTokenRoute
   '/c/$orgSlug/jobs/$jobId': typeof COrgSlugJobsJobIdRoute
@@ -447,10 +467,12 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
+    | '/api/public/cron/recording-cleanup'
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/interview-invite/$token'
+    | '/api/public/interviews/process-recording'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -490,10 +512,12 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
+    | '/api/public/cron/recording-cleanup'
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/interview-invite/$token'
+    | '/api/public/interviews/process-recording'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -535,10 +559,12 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token'
     | '/api/public/cron/escalate'
     | '/api/public/cron/messages'
+    | '/api/public/cron/recording-cleanup'
     | '/api/public/cron/workflows'
     | '/api/public/docs/$token'
     | '/api/public/feed/$orgSlug'
     | '/api/public/interview-invite/$token'
+    | '/api/public/interviews/process-recording'
     | '/api/public/offer/$token'
     | '/api/public/unsubscribe/$token'
     | '/c/$orgSlug/jobs/$jobId'
@@ -563,10 +589,12 @@ export interface RootRouteChildren {
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronEscalateRoute: typeof ApiPublicCronEscalateRoute
   ApiPublicCronMessagesRoute: typeof ApiPublicCronMessagesRoute
+  ApiPublicCronRecordingCleanupRoute: typeof ApiPublicCronRecordingCleanupRoute
   ApiPublicCronWorkflowsRoute: typeof ApiPublicCronWorkflowsRoute
   ApiPublicDocsTokenRoute: typeof ApiPublicDocsTokenRoute
   ApiPublicFeedOrgSlugRoute: typeof ApiPublicFeedOrgSlugRoute
   ApiPublicInterviewInviteTokenRoute: typeof ApiPublicInterviewInviteTokenRoute
+  ApiPublicInterviewsProcessRecordingRoute: typeof ApiPublicInterviewsProcessRecordingRoute
   ApiPublicOfferTokenRoute: typeof ApiPublicOfferTokenRoute
   ApiPublicUnsubscribeTokenRoute: typeof ApiPublicUnsubscribeTokenRoute
   COrgSlugJobsJobIdRoute: typeof COrgSlugJobsJobIdRoute
@@ -820,6 +848,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/recording-cleanup': {
+      id: '/api/public/cron/recording-cleanup'
+      path: '/api/public/cron/recording-cleanup'
+      fullPath: '/api/public/cron/recording-cleanup'
+      preLoaderRoute: typeof ApiPublicCronRecordingCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/workflows': {
       id: '/api/public/cron/workflows'
       path: '/api/public/cron/workflows'
@@ -846,6 +881,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/interview-invite/$token'
       fullPath: '/api/public/interview-invite/$token'
       preLoaderRoute: typeof ApiPublicInterviewInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/interviews/process-recording': {
+      id: '/api/public/interviews/process-recording'
+      path: '/api/public/interviews/process-recording'
+      fullPath: '/api/public/interviews/process-recording'
+      preLoaderRoute: typeof ApiPublicInterviewsProcessRecordingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/offer/$token': {
@@ -951,10 +993,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronEscalateRoute: ApiPublicCronEscalateRoute,
   ApiPublicCronMessagesRoute: ApiPublicCronMessagesRoute,
+  ApiPublicCronRecordingCleanupRoute: ApiPublicCronRecordingCleanupRoute,
   ApiPublicCronWorkflowsRoute: ApiPublicCronWorkflowsRoute,
   ApiPublicDocsTokenRoute: ApiPublicDocsTokenRoute,
   ApiPublicFeedOrgSlugRoute: ApiPublicFeedOrgSlugRoute,
   ApiPublicInterviewInviteTokenRoute: ApiPublicInterviewInviteTokenRoute,
+  ApiPublicInterviewsProcessRecordingRoute:
+    ApiPublicInterviewsProcessRecordingRoute,
   ApiPublicOfferTokenRoute: ApiPublicOfferTokenRoute,
   ApiPublicUnsubscribeTokenRoute: ApiPublicUnsubscribeTokenRoute,
   COrgSlugJobsJobIdRoute: COrgSlugJobsJobIdRoute,
