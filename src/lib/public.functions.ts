@@ -63,7 +63,22 @@ const applySchema = z.object({
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),
   answers: z.record(z.string().max(40), z.union([z.string().max(500), z.number(), z.boolean()])).optional(),
+  ref: z.string().trim().max(20).optional(),
+  refVia: z.enum(["link", "qr"]).optional(),
+  referredBy: z.string().trim().max(120).optional(),
 });
+
+/** Public referral lookup: name only, active referrers in this group. */
+export const getReferrer = createServerFn({ method: "GET" })
+  .inputValidator((d: { orgId: string; code: string }) => z.object({ orgId: z.string().uuid(), code: z.string().max(20) }).parse(d))
+  .handler(async ({ data }) => {
+    const { cleanCode } = await import("@/lib/referrals");
+    const code = cleanCode(data.code);
+    if (!code) return null;
+    const { data: rows } = await publicClient().rpc("referrer_by_code", { _org: data.orgId, _code: code });
+    const r = rows?.[0];
+    return r ? { name: r.employee_name } : null;
+  });
 
 export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((d: z.input<typeof applySchema>) => applySchema.parse(d))
@@ -108,7 +123,28 @@ export const submitApplication = createServerFn({ method: "POST" })
     const { normalizeLinkedInUrl } = await import("@/lib/linkedin");
     const linkedinUrl = normalizeLinkedInUrl(data.linkedinUrl);
     if (data.linkedinUrl?.trim() && !linkedinUrl) throw new Error("Please paste your LinkedIn profile link (linkedin.com/in/…)");
+    // Employee referral: a valid ?ref= code wins; otherwise keep what the candidate typed.
+    let referrerId: string | null = null;
+    let referralSource: string | null = null;
+    let referredByText: string | null = null;
+    {
+      const { cleanCode, matchTypedReferrer } = await import("@/lib/referrals");
+      const code = cleanCode(data.ref);
+      if (code) {
+        const { data: r } = await supabaseAdmin.from("referrers").select("id")
+          .eq("org_id", job.org_id).eq("referral_code", code).eq("active", true).maybeSingle();
+        if (r) { referrerId = r.id; referralSource = data.refVia ?? "link"; }
+      }
+      if (!referrerId && data.referredBy?.trim()) {
+        referredByText = data.referredBy.trim();
+        referralSource = "typed";
+        const { data: refs } = await supabaseAdmin.from("referrers")
+          .select("id, employee_name, store_id, active, referral_code").eq("org_id", job.org_id).eq("active", true);
+        referrerId = matchTypedReferrer(referredByText, refs ?? [])?.id ?? null;
+      }
+    }
     const { data: app, error } = await supabaseAdmin.from("applications").insert({
+      referrer_id: referrerId, referral_source: referralSource, referred_by_text: referredByText,
       org_id: job.org_id, job_id: job.id, dealership_id: job.dealership_id,
       full_name: data.fullName, email, phone,
       linkedin_url: linkedinUrl,

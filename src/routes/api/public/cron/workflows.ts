@@ -16,7 +16,9 @@ export const Route = createFileRoute("/api/public/cron/workflows")({
         const result = await runWorkflows(supabaseAdmin);
         const statusRules = await runStatusRules(supabaseAdmin);
         const weekly = await runWeeklySummaries(supabaseAdmin, { appUrl: appBaseUrl(request) });
-        return Response.json({ ...result, statusRules, weekly, at: new Date().toISOString() });
+        const { notifyDueReferralBonuses } = await import("@/lib/referrals.server");
+        const referrals = await notifyDueReferralBonuses(supabaseAdmin);
+        return Response.json({ ...result, statusRules, weekly, ...referrals, at: new Date().toISOString() });
       },
     },
   },
