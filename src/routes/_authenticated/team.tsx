@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/team")({
 
 const roles: { v: Membership["role"]; l: string }[] = [
   { v: "group_admin", l: "Group admin" },
-  { v: "recruiter", l: "Recruiter / HR" },
+  { v: "recruiter", l: "HR / Recruiter" },
   { v: "regional_leader", l: "Regional leader" },
   { v: "dealer_manager", l: "Dealer manager (GM)" },
   { v: "hiring_manager", l: "Hiring manager" },
