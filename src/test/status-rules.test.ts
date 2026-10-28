@@ -154,7 +154,7 @@ describe("status rules: settings", () => {
   });
 
   it("describes rules in plain words", () => {
-    expect(describeRule(rule())).toBe("No reply for 5 days in New or Screening → Not selected");
+    expect(describeRule(rule())).toBe("No reply for 5 days in Not Contacted Yet or Contacted → Not Selected");
     expect(
       describeRule(rule({ trigger: "no_change", days: 1, from: ["new"], to: "screening" })),
     ).toBe("1 day with no change in New → Screening");
@@ -218,8 +218,8 @@ describe("status rules: scheduled run", () => {
     expect(tables["applications"]!.map((a) => a["status"])).toEqual(["rejected", "new", "hired"]);
     const ev = tables["application_events"]!.filter((e) => e["application_id"] === "a1");
     expect(ev.map((e) => e["message"])).toEqual([
-      "Moved to Not selected",
-      "Moved automatically by status rule: 14 days with no change in New → Not selected",
+      "Moved to Not Selected",
+      "Moved automatically by status rule: 14 days with no change in Not Contacted Yet → Not Selected",
     ]);
     expect(tables["messages"]).toHaveLength(0);
     // Running again does nothing more.

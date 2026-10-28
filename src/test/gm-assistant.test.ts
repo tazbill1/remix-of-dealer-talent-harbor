@@ -72,7 +72,7 @@ describe("pipelineReport", () => {
 
   it("counts open applicants per store and stage, biggest first, with totals and links", () => {
     const r = pipelineReport(rows, { ...opts, groupBy: "store", includeClosed: false });
-    expect(r.columns).toEqual(["New", "Screening", "Interview", "Offer"]);
+    expect(r.columns).toEqual(["Not Contacted Yet", "Contacted", "Interviewing", "Consider for Another Location or Position", "Contacted for Hiring Event"]);
     expect(r.rows).toEqual([
       { label: "Lansing", href: "/applicants?store=id-Lansing&view=list", cells: [2, 0, 1, 0], total: 3 },
       { label: "Flint", href: "/applicants?store=id-Flint&view=list", cells: [0, 1, 0, 0], total: 1 },
