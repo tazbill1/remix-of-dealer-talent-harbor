@@ -29,6 +29,24 @@ export function StatusRemindersSettings({ orgId, canEdit }: { orgId: string; can
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [running, setRunning] = useState(false);
   useEffect(() => setDrafts(Object.fromEntries(rules.map((r) => [r.status, String(r.remind_after_days)]))), [rules]);
+  const { data: pool } = useQuery({
+    queryKey: ["talent-pool-setting", orgId],
+    queryFn: async () => (await supabase.from("messaging_settings").select("talent_pool_enabled, talent_pool_after_reminders").eq("org_id", orgId).maybeSingle()).data
+      ?? { talent_pool_enabled: false, talent_pool_after_reminders: 3 },
+  });
+  const [poolAfter, setPoolAfter] = useState("3");
+  useEffect(() => { if (pool) setPoolAfter(String(pool.talent_pool_after_reminders)); }, [pool]);
+  async function savePool(patch: { talent_pool_enabled?: boolean; talent_pool_after_reminders?: number }) {
+    const { data, error } = await supabase.from("messaging_settings").upsert({ org_id: orgId, ...patch }, { onConflict: "org_id" }).select("org_id").maybeSingle();
+    if (error || !data) { toast.error(error?.message ?? "Couldn't save. Please try again."); return; }
+    toast.success("Talent pool setting saved");
+    await qc.invalidateQueries({ queryKey: ["talent-pool-setting", orgId] });
+  }
+  function savePoolAfter() {
+    const n = Number(poolAfter);
+    if (!Number.isInteger(n) || n < 1 || n > 20) { toast.error("Use a whole number from 1 to 20."); return; }
+    if (n !== pool?.talent_pool_after_reminders) void savePool({ talent_pool_after_reminders: n });
+  }
   const refresh = () => qc.invalidateQueries({ queryKey: ["status-reminder-rules", orgId] });
 
   async function save(status: string, patch: Partial<ReminderRule>) {
@@ -90,6 +108,22 @@ export function StatusRemindersSettings({ orgId, canEdit }: { orgId: string; can
             </div>
           );
         })}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm">
+        <div>
+          <div className="font-medium">Talent pool</div>
+          <p className="text-xs text-muted-foreground">Move applicants with no status change into their store's regional talent pool. Stores without a region are never moved.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-muted-foreground">
+            Move after
+            <Input aria-label="Reminders before moving to the talent pool" type="number" min={1} max={20} className="h-8 w-16" disabled={!canEdit}
+              value={poolAfter} onChange={(e) => setPoolAfter(e.target.value)} onBlur={() => canEdit && savePoolAfter()}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} />
+            reminders
+          </label>
+          <Switch aria-label="Talent pool" disabled={!canEdit} checked={!!pool?.talent_pool_enabled} onCheckedChange={(c) => savePool({ talent_pool_enabled: c })} />
+        </div>
       </div>
     </section>
   );

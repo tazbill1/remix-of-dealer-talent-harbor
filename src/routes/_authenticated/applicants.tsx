@@ -422,7 +422,7 @@ function Applicants() {
   );
 }
 
-type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; status_changed_at: string | null; resume_path: string | null;
+type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; status_changed_at: string | null; in_talent_pool: boolean; pool_reason: string | null; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null;
@@ -491,6 +491,17 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
           </select>
           {doNotHireRepeat && <DoNotHireBadge />}
           <OverdueTag overdue={overdueInfo(app, reminderRules)} />
+          {app.in_talent_pool && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium" title={app.pool_reason ?? undefined}>In talent pool – {regionName ?? "region"}</span>}
+          {isHr && !app.in_talent_pool && regionName && app.status !== "hired" && app.status !== "do_not_hire" && (
+            <Button size="sm" variant="outline" onClick={async () => {
+              const reason = window.prompt("Move to talent pool. Reason (optional):", "");
+              if (reason === null) return;
+              const { error } = await supabase.rpc("return_to_talent_pool", { _app: app.id, ...(reason.trim() ? { _reason: reason.trim() } : {}) });
+              if (error) return toast.error(error.message);
+              toast.success(`Moved to the ${regionName} talent pool.`);
+              onRefresh();
+            }}>Move to talent pool</Button>
+          )}
           <div className="flex gap-0.5" aria-label="Rating">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} aria-label={`${n} stars`} onClick={() => onUpdate({ rating: n })}>
