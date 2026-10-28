@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   computeAnalytics,
+  filterScope,
   managerResponseHours,
+  storeBrands,
   median,
   toCsv,
   type AApp,
@@ -114,6 +116,45 @@ describe("computeAnalytics", () => {
     // a1: 4 hrs, a2: 2 hrs, a4: 24 hrs -> median 4
     expect(a.totals.medianFirstContactHrs).toBeCloseTo(4);
     expect(a.totals.firstContactMeasured).toBe(3);
+  });
+
+  it("measures time to hire from applying to being marked hired", () => {
+    // a2 applied 15 days ago and was hired 5 days ago
+    expect(run().totals.medianTimeToHireDays).toBeCloseTo(10);
+    expect(run().totals.avgTimeToHireDays).toBeCloseTo(10);
+    expect(
+      run({ apps: apps.filter((a) => a.status !== "hired") }).totals.medianTimeToHireDays,
+    ).toBeNull();
+  });
+
+  it("filters by store brand and by role", () => {
+    const branded = [
+      { id: "s1", name: "Grand Rapids Ford", brand: "Ford" },
+      { id: "s2", name: "Detroit Toyota", brand: " Toyota " },
+    ];
+    const ford = run({
+      stores: branded,
+      filters: { storeId: "all", division: "all", brand: "Ford" },
+    });
+    expect(ford.totals.applicants).toBe(2);
+    expect(ford.totals.hired).toBe(1);
+    const toyota = run({
+      stores: branded,
+      filters: { storeId: "all", division: "all", brand: "Toyota" },
+    });
+    expect(toyota.totals.applicants).toBe(2);
+    expect(toyota.totals.hired).toBe(0);
+    const sales = run({ filters: { storeId: "all", division: "all", role: "Sales Consultant" } });
+    expect(sales.totals.applicants).toBe(2);
+    expect(sales.totals.openRoles).toBe(1);
+    expect(storeBrands(branded)).toEqual(["Ford", "Toyota"]);
+  });
+
+  it("filterScope matches the same applications the analytics count", () => {
+    const scope = filterScope(stores, jobs, { storeId: "all", division: "all", role: "Porter" });
+    expect(scope.jobMatches(jobs[2])).toBe(true);
+    expect(scope.appMatches({ dealership_id: "s2", job_id: "j2" })).toBe(false);
+    expect(scope.storeMatches("s1")).toBe(true);
   });
 
   it("ages candidates from when they entered their current stage", () => {

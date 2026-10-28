@@ -5,7 +5,6 @@ import { Download, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { DIVISIONS, STATUS_LABEL } from "@/lib/jobs";
-import { STATUS_EVENT_KIND } from "@/lib/status-log";
 import {
   computeAnalytics,
   RETENTION_MARKS,
@@ -20,27 +19,48 @@ import {
   type RetentionCell,
   type RetentionRow,
 } from "@/lib/analytics";
-import { fetchAll } from "@/lib/fetch-all";
-import { isTestName, sourceLabel } from "@/lib/display";
+import { loadAnalyticsInputs } from "@/lib/analytics-data";
+import { sourceLabel } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AnalyticsReports } from "@/components/analytics-reports";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
-  head: () => ({ meta: [
-    { title: "Analytics & Reports | hireme by WerkandMe" },
-    { name: "description", content: "Hiring analytics and printable reports for your dealer group." },
-    { property: "og:title", content: "Analytics & Reports | hireme by WerkandMe" },
-    { property: "og:description", content: "Hiring analytics and printable reports for your dealer group." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Analytics & Reports | hireme by WerkandMe" },
+      {
+        name: "description",
+        content: "Hiring analytics and printable reports for your dealer group.",
+      },
+      { property: "og:title", content: "Analytics & Reports | hireme by WerkandMe" },
+      {
+        property: "og:description",
+        content: "Hiring analytics and printable reports for your dealer group.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: AnalyticsViews,
 });
 
 function AnalyticsViews() {
-  return <Tabs defaultValue="analytics"><TabsList className="analytics-view-tabs mb-5"><TabsTrigger value="analytics">Analytics</TabsTrigger><TabsTrigger value="reports">Reports</TabsTrigger></TabsList><TabsContent value="analytics"><AnalyticsPage /></TabsContent><TabsContent value="reports"><AnalyticsReports /></TabsContent></Tabs>;
+  return (
+    <Tabs defaultValue="analytics">
+      <TabsList className="analytics-view-tabs mb-5">
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsTrigger value="reports">Reports</TabsTrigger>
+      </TabsList>
+      <TabsContent value="analytics">
+        <AnalyticsPage />
+      </TabsContent>
+      <TabsContent value="reports">
+        <AnalyticsReports />
+      </TabsContent>
+    </Tabs>
+  );
 }
 
 const PERIODS = [
@@ -90,65 +110,7 @@ function AnalyticsPage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["analytics", org.orgId],
-    queryFn: async () => {
-      const [apps, jobs, stores, regions, events, messages] = await Promise.all([
-        fetchAll<AApp>((f, t) =>
-          supabase
-            .from("applications")
-            .select(
-              "id, job_id, dealership_id, status, source, full_name, created_at, updated_at, hired_at, start_date, departed_at",
-            )
-            .eq("org_id", org.orgId)
-            .order("created_at")
-            .range(f, t),
-        ),
-        fetchAll<AJob>((f, t) =>
-          supabase
-            .from("jobs")
-            .select(
-              "id, title, dealership_id, status, division, department, hiring_manager, created_at",
-            )
-            .eq("org_id", org.orgId)
-            .order("created_at")
-            .range(f, t),
-        ),
-        fetchAll<AStore>((f, t) =>
-          supabase
-            .from("dealerships")
-            .select("id, name, region_id")
-            .eq("org_id", org.orgId)
-            .order("name")
-            .range(f, t),
-        ),
-        fetchAll<ARegion>((f, t) =>
-          supabase
-            .from("regions")
-            .select("id, name")
-            .eq("org_id", org.orgId)
-            .order("name")
-            .range(f, t),
-        ),
-        fetchAll<AEvent>((f, t) =>
-          supabase
-            .from("application_events")
-            .select("application_id, kind, message, created_at")
-            .eq("org_id", org.orgId)
-            .eq("kind", STATUS_EVENT_KIND)
-            .order("created_at")
-            .range(f, t),
-        ),
-        fetchAll<AMessage>((f, t) =>
-          supabase
-            .from("messages")
-            .select("application_id, party, direction, created_at")
-            .eq("org_id", org.orgId)
-            .eq("party", "manager")
-            .order("created_at")
-            .range(f, t),
-        ),
-      ]);
-      return { apps: apps.filter((x) => !isTestName(x.full_name)), jobs, stores, regions, events, messages };
-    },
+    queryFn: () => loadAnalyticsInputs(org.orgId),
   });
 
   const a = useMemo(() => {
@@ -283,6 +245,11 @@ function AnalyticsPage() {
         ? `${t.filledJobs} job${t.filledJobs > 1 ? "s" : ""} filled`
         : "No fills yet",
     },
+    {
+      label: "Time to hire",
+      value: days(t.medianTimeToHireDays),
+      sub: t.hired ? `Apply to hired, median of ${t.hired}` : "No hires yet",
+    },
     { label: "Hired", value: String(t.hired), sub: periodLabel },
     {
       label: "Open roles",
@@ -366,7 +333,7 @@ function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {tiles.map((s) => (
           <div key={s.label} className="rounded-2xl bg-background p-4 shadow-sm">
             <div className="text-sm text-muted-foreground">{s.label}</div>

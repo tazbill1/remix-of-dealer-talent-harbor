@@ -25,7 +25,7 @@ export type AJob = {
   hiring_manager: string | null;
   created_at: string;
 };
-export type AStore = { id: string; name: string; region_id?: string | null };
+export type AStore = { id: string; name: string; region_id?: string | null; brand?: string | null };
 export type ARegion = { id: string; name: string };
 export type AEvent = {
   application_id: string;
@@ -41,7 +41,14 @@ export type AMessage = {
 };
 
 export type Range = { from: number | null; to: number };
-export type Filters = { storeId: string; division: string; regionId?: string };
+/** "all" (or leaving a field out) means no filter. role is a job title. */
+export type Filters = {
+  storeId: string;
+  division: string;
+  regionId?: string;
+  brand?: string;
+  role?: string;
+};
 export type GroupBy = "location" | "region" | "role" | "manager" | "source";
 
 export const RETENTION_MARKS = [30, 60, 90] as const;
@@ -110,6 +117,21 @@ export function hiredAt(app: AApp, timeline: Map<string, { at: number; to: AppSt
   return ev ? ev.at : t(app.updated_at);
 }
 
+/** Days from applying to being marked hired, or null if not hired. */
+export function timeToHireDays(
+  app: AApp,
+  timeline: Map<string, { at: number; to: AppStatus | null }[]>,
+) {
+  const h = hiredAt(app, timeline);
+  return h === null ? null : Math.max(0, (h - t(app.created_at)) / DAY);
+}
+
+/** Brands on the stores, trimmed, de-duplicated and sorted, for the brand filter. */
+export function storeBrands(stores: AStore[]) {
+  const set = new Set(stores.map((s) => s.brand?.trim()).filter((b): b is string => !!b));
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
 /**
  * Retention at 30/60/90 days. The clock starts at the start date (or the hire date if no
  * start date was entered). A hire counts toward a mark once that many days have passed,
@@ -159,6 +181,32 @@ export function managerResponseHours(messages: AMessage[]) {
   return out;
 }
 
+/** Which stores, jobs and applications fall inside the store/region/brand/division/role filters. */
+export function filterScope(stores: AStore[], jobs: AJob[], filters: Filters) {
+  const regionFilter = filters.regionId ?? "all";
+  const brandFilter = filters.brand ?? "all";
+  const roleFilter = filters.role ?? "all";
+  const jobById = new Map(jobs.map((j) => [j.id, j]));
+  const storeById = new Map(stores.map((s) => [s.id, s]));
+  const regionOf = (storeId: string) => storeById.get(storeId)?.region_id ?? null;
+  const storeMatches = (storeId: string) =>
+    (filters.storeId === "all" || storeId === filters.storeId) &&
+    (regionFilter === "all" ||
+      (regionFilter === "none" ? !regionOf(storeId) : regionOf(storeId) === regionFilter)) &&
+    (brandFilter === "all" || storeById.get(storeId)?.brand?.trim() === brandFilter);
+  const divisionMatches = (division: string | null | undefined) =>
+    filters.division === "all" || (division ?? "general") === filters.division;
+  const roleMatches = (title: string | undefined) =>
+    roleFilter === "all" || title?.trim() === roleFilter;
+  const jobMatches = (j: AJob | undefined) =>
+    !!j && storeMatches(j.dealership_id) && divisionMatches(j.division) && roleMatches(j.title);
+  const appMatches = (a: { dealership_id: string; job_id: string }) => {
+    const j = jobById.get(a.job_id);
+    return storeMatches(a.dealership_id) && divisionMatches(j?.division) && roleMatches(j?.title);
+  };
+  return { storeMatches, jobMatches, appMatches };
+}
+
 export type Analytics = ReturnType<typeof computeAnalytics>;
 
 export function computeAnalytics(input: {
@@ -173,26 +221,19 @@ export function computeAnalytics(input: {
   now?: number;
 }) {
   const now = input.now ?? Date.now();
-  const regionFilter = input.filters.regionId ?? "all";
   const jobById = new Map(input.jobs.map((j) => [j.id, j]));
   const storeById = new Map(input.stores.map((s) => [s.id, s]));
   const regionById = new Map((input.regions ?? []).map((r) => [r.id, r]));
   const storeName = (id: string) => storeById.get(id)?.name ?? "Unknown store";
-  const regionOf = (storeId: string) => storeById.get(storeId)?.region_id ?? null;
   const regionName = (storeId: string) => {
-    const rid = regionOf(storeId);
+    const rid = storeById.get(storeId)?.region_id;
     return (rid && regionById.get(rid)?.name) || NO_REGION;
   };
-  const storeMatches = (storeId: string) =>
-    (input.filters.storeId === "all" || storeId === input.filters.storeId) &&
-    (regionFilter === "all" ||
-      (regionFilter === "none" ? !regionOf(storeId) : regionOf(storeId) === regionFilter));
-  const divisionMatches = (division: string | null | undefined) =>
-    input.filters.division === "all" || (division ?? "general") === input.filters.division;
-  const jobMatches = (j: AJob | undefined) =>
-    !!j && storeMatches(j.dealership_id) && divisionMatches(j.division);
-  const appMatches = (a: AApp) =>
-    storeMatches(a.dealership_id) && divisionMatches(jobById.get(a.job_id)?.division);
+  const { storeMatches, jobMatches, appMatches } = filterScope(
+    input.stores,
+    input.jobs,
+    input.filters,
+  );
 
   const timeline = statusTimeline(input.events);
   const responses = managerResponseHours(input.messages);
@@ -212,6 +253,9 @@ export function computeAnalytics(input: {
       h !== null && (input.range.from === null || h >= input.range.from) && h <= input.range.to
     );
   });
+  const timeToHire = hiresInPeriod
+    .map((a) => timeToHireDays(a, timeline))
+    .filter((d): d is number => d !== null);
   const managerGaps = allApps.flatMap((a) => responses.get(a.id) ?? []);
 
   // Candidate aging by stage (active pipeline, regardless of period)
@@ -352,6 +396,8 @@ export function computeAnalytics(input: {
       managerResponsesMeasured: managerGaps.length,
       avgTimeToFillDays: average(fills.map((f) => f.days)),
       filledJobs: fills.length,
+      medianTimeToHireDays: median(timeToHire),
+      avgTimeToHireDays: average(timeToHire),
     },
     aging,
     openByDivision,
