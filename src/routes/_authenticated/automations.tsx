@@ -5,14 +5,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { MessageSquareText, RotateCcw } from "lucide-react";
 import { useOrg } from "@/lib/org";
-import { getAutomations, saveAutomations } from "@/lib/automations.functions";
+import { getAutomations, previewWaitingCheckins, saveAutomations } from "@/lib/automations.functions";
 import {
   AUTOMATIONS,
   AUTOMATION_KEYS,
   DEFAULT_CHECKIN_DAYS,
   FIELD_HELP,
+  isOn,
   segments,
   textFor,
+  waitingText,
   type AutomationDef,
   type AutomationKey,
   type Automations,
@@ -51,6 +53,7 @@ const SAMPLE: Record<string, string | number> = {
 
 const GROUPS: { title: string; keys: AutomationKey[] }[] = [
   { title: "Applying & screening", keys: ["welcome", "summary", "nudge", "escalation"] },
+  { title: "While applicants wait", keys: ["waiting"] },
   { title: "Interviews", keys: ["invite", "decline", "booked", "bookedManager", "reminderDay", "reminderSoon", "reminderManager"] },
   { title: "Offers & new hires", keys: ["offer", "documents", "checkin"] },
 ];
@@ -125,6 +128,7 @@ function AutomationsPage() {
               onPatch={(p) => patch(k, p)}
             />
           ))}
+          {g.title === "While applicants wait" && <WaitingPreview a={a} canEdit={canEdit} />}
           {g.title === "Offers & new hires" && (
             <div className="space-y-2 rounded-2xl bg-background p-4 shadow-sm">
               <div className="font-semibold">Check-in days</div>
@@ -218,7 +222,7 @@ function AutomationCard({
 }) {
   const def: AutomationDef = AUTOMATIONS[k];
   const setting = a.texts[k] ?? {};
-  const on = setting.enabled !== false;
+  const on = isOn(a, k);
   const value = setting.text ?? def.text;
   const changed = value.trim() !== def.text;
   const preview = textFor({ ...a, texts: { ...a.texts, [k]: { ...setting, enabled: true } } }, k, SAMPLE) ?? "";
@@ -305,6 +309,76 @@ function AutomationCard({
             {preview}
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+/** Later check-in wording, and who the next run would text with the settings on screen. */
+function WaitingPreview({ a, canEdit }: { a: Automations; canEdit: boolean }) {
+  const org = useOrg();
+  const preview = useServerFn(previewWaitingCheckins);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof previewWaitingCheckins>> | null>(null);
+  const forced: Automations = { ...a, texts: { ...a.texts, waiting: { ...a.texts["waiting"], enabled: true } } };
+  const later = a.texts["waiting"]?.text ? [] : [2, 3, 4].map((n) => waitingText(forced, n, SAMPLE)!);
+
+  async function run() {
+    setBusy(true);
+    try {
+      setResult(await preview({ data: { orgId: org.orgId, automations: a } }));
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="space-y-3 rounded-2xl bg-background p-4 shadow-sm">
+      <div className="font-semibold">How the check-ins work</div>
+      <p className="text-sm text-muted-foreground">
+        An applicant gets one only after they've already had a text from us, nobody has taken over their conversation,
+        and they haven't texted in the meantime. It stops after 4 check-ins, when they move to Interview, Offer, Hired
+        or Not selected, if they reply STOP, or 45 days after they applied.
+      </p>
+      {later.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="text-xs text-muted-foreground">Later check-ins switch up the wording so it doesn't repeat:</div>
+          {later.map((t, i) => (
+            <div key={i} className="rounded-xl bg-accent p-3 text-sm">
+              <div className="mb-1 text-xs text-muted-foreground">Check-in {i + 2}</div>
+              {t}
+            </div>
+          ))}
+        </div>
+      )}
+      {canEdit && (
+        <div className="space-y-2">
+          <Button variant="outline" size="sm" disabled={busy} onClick={run}>
+            {busy ? "Checking…" : "Preview who would get one now"}
+          </Button>
+          {result && (
+            <div className="space-y-2 text-sm">
+              <p>
+                {result.total === 0
+                  ? "Nobody would get a check-in right now."
+                  : `With these settings, ${result.total} applicant${result.total === 1 ? "" : "s"} would get a check-in on the next run.`}{" "}
+                <span className="text-muted-foreground">Nothing was sent.</span>
+              </p>
+              {result.people.map((p, i) => (
+                <div key={i} className="rounded-xl bg-accent p-3">
+                  <div className="mb-1 text-xs text-muted-foreground">
+                    {p.first} · {p.job} · {p.store} · check-in {p.n}
+                  </div>
+                  {p.body}
+                </div>
+              ))}
+              {result.total > result.people.length && (
+                <p className="text-xs text-muted-foreground">…and {result.total - result.people.length} more.</p>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 /**
  * Runs the texting workflows: welcome on apply, manager summary / nudge / escalation,
- * interview reminders and 30/60/90 check-ins. Every text goes through queueText, so
+ * interview reminders, "still reviewing" check-ins to waiting applicants and 30/60/90 check-ins. Every text goes through queueText, so
  * consent, STOP and texting hours always apply. Safe to run repeatedly: each step
  * checks what's already been sent.
  */
@@ -21,13 +21,24 @@ import { checkinSchedule } from "@/lib/retention";
 import {
   dueCheckin,
   dueReminders,
+  dueWaitingCheckin,
+  WAITING_MAX_AGE_DAYS,
+  WAITING_STATUSES,
   firstName,
   nextManagerStep,
   PURPOSE,
   text,
   type Msg,
 } from "@/lib/workflows/rules";
-import { checkinDays, hoursFor, isOn, parseAutomations, textFor } from "@/lib/automations";
+import {
+  checkinDays,
+  hoursFor,
+  isOn,
+  parseAutomations,
+  textFor,
+  waitingText,
+  type Automations,
+} from "@/lib/automations";
 
 type DB = SupabaseClient<Database>;
 const HOUR = 3600e3;
@@ -178,7 +189,15 @@ async function messagesFor(admin: DB, ids: string[]) {
 
 export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
   const now = opts.now ?? Date.now();
-  const result = { summaries: 0, nudges: 0, escalations: 0, reminders: 0, checkins: 0, errors: 0 };
+  const result = {
+    summaries: 0,
+    nudges: 0,
+    escalations: 0,
+    reminders: 0,
+    waitingCheckins: 0,
+    checkins: 0,
+    errors: 0,
+  };
   const look = lookups(admin);
   const safely = async (fn: () => Promise<void>) => {
     try {
@@ -367,7 +386,23 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
     }
   }
 
-  // 3. 30/60/90 check-ins to the hiring manager.
+  // 3. "Still reviewing" check-ins to applicants waiting in New or Screening.
+  await safely(async () => {
+    for (const p of await waitingCheckinPlan(admin, { now })) {
+      await safely(async () => {
+        await sendText(admin, admin, {
+          applicationId: p.applicationId,
+          party: "candidate",
+          purpose: PURPOSE.waiting(p.n),
+          body: p.body,
+          now,
+        });
+        result.waitingCheckins++;
+      });
+    }
+  });
+
+  // 4. 30/60/90 check-ins to the hiring manager.
   type Hire = {
     id: string;
     org_id: string;
@@ -442,6 +477,89 @@ export async function runWorkflows(admin: DB, opts: { now?: number } = {}) {
   }
 
   return result;
+}
+
+export type WaitingCheckin = {
+  applicationId: string;
+  first: string;
+  store: string;
+  job: string;
+  n: number;
+  body: string;
+};
+
+/**
+ * The "still reviewing" texts due right now. With `orgId` and `automations` it plans
+ * for one group using those settings as if the text were on (the settings preview);
+ * otherwise it uses each group's saved settings. Never sends anything.
+ */
+export async function waitingCheckinPlan(
+  admin: DB,
+  opts: { now?: number; orgId?: string; automations?: Automations } = {},
+): Promise<WaitingCheckin[]> {
+  const now = opts.now ?? Date.now();
+  type WaitApp = {
+    id: string;
+    org_id: string;
+    dealership_id: string;
+    job_id: string;
+    full_name: string;
+    status: string;
+    created_at: string;
+    ai_paused_at: string | null;
+    needs_attention: string | null;
+  };
+  const apps = await fetchAll<WaitApp>((f, t) => {
+    let q = admin
+      .from("applications")
+      .select("id, org_id, dealership_id, job_id, full_name, status, created_at, ai_paused_at, needs_attention")
+      .in("status", [...WAITING_STATUSES])
+      .gte("created_at", new Date(now - WAITING_MAX_AGE_DAYS * 24 * HOUR).toISOString());
+    if (opts.orgId) q = q.eq("org_id", opts.orgId);
+    return q.order("created_at").range(f, t);
+  });
+  if (!apps.length) return [];
+  const look = lookups(admin);
+  await look.load(
+    apps.map((a) => a.dealership_id),
+    apps.map((a) => a.job_id),
+  );
+  const autoFor = async (orgId: string) => {
+    if (opts.automations)
+      return {
+        ...opts.automations,
+        texts: { ...opts.automations.texts, waiting: { ...opts.automations.texts["waiting"], enabled: true } },
+      };
+    return parseAutomations((await look.settings(orgId)).automations);
+  };
+  const candidates: { app: WaitApp; auto: Automations }[] = [];
+  for (const app of apps) {
+    const auto = await autoFor(app.org_id);
+    if (isOn(auto, "waiting")) candidates.push({ app, auto });
+  }
+  if (!candidates.length) return [];
+  const msgs = await messagesFor(
+    admin,
+    candidates.map((c) => c.app.id),
+  );
+  const out: WaitingCheckin[] = [];
+  for (const { app, auto } of candidates) {
+    const store = look.store(app.dealership_id);
+    if (!store) continue;
+    const n = dueWaitingCheckin({
+      status: app.status,
+      appliedAt: app.created_at,
+      heldByPerson: !!(app.ai_paused_at || app.needs_attention),
+      messages: msgs.get(app.id) ?? [],
+      everyDays: hoursFor(auto, "waiting"),
+      now,
+    });
+    if (!n) continue;
+    const vars = { first: firstName(app.full_name), store: store.name, job: look.job(app.job_id)?.title ?? "the role" };
+    const body = waitingText(auto, n, vars);
+    if (body) out.push({ applicationId: app.id, ...vars, n, body });
+  }
+  return out;
 }
 
 /** The AI summary is trimmed so the manager text stays short. */

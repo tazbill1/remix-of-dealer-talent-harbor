@@ -60,7 +60,8 @@ export const saveAutomations = createServerFn({ method: "POST" })
       if (!def) continue;
       const entry = { ...v };
       if (!entry.text || entry.text.trim() === def.text) delete entry.text;
-      if (entry.enabled !== false) delete entry.enabled;
+      // Only store on/off when it differs from the text's default.
+      if (entry.enabled === undefined || entry.enabled === !("defaultOff" in def && def.defaultOff)) delete entry.enabled;
       if (entry.hours === undefined || ("timing" in def && entry.hours === def.timing.default)) delete entry.hours;
       if (Object.keys(entry).length) texts[k] = entry;
     }
@@ -84,4 +85,26 @@ export const saveAutomations = createServerFn({ method: "POST" })
     );
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+/** Group admins: who would get a "still reviewing" check-in on the next run, with these settings. Sends nothing. */
+export const previewWaitingCheckins = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { orgId: string; automations: unknown }) =>
+    z.object({ orgId: z.string().uuid(), automations: automationsSchema }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const [a, p] = await Promise.all([
+      ctx.supabase.rpc("has_org_role", { _org: data.orgId, _uid: ctx.userId, _role: "group_admin" }),
+      ctx.supabase.rpc("is_platform_admin", { _uid: ctx.userId }),
+    ]);
+    if (!a.data && !p.data) throw new Error("Only group admins can preview automatic texts.");
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { waitingCheckinPlan } = await import("@/lib/workflows/run.server");
+    const plan = await waitingCheckinPlan(db, { orgId: data.orgId, automations: data.automations });
+    return {
+      total: plan.length,
+      people: plan.slice(0, 15).map(({ first, store, job, n, body }) => ({ first, store, job, n, body })),
+    };
   });

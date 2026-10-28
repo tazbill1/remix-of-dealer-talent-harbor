@@ -17,6 +17,7 @@ export const PURPOSE = {
   reminderSoon: "interview_reminder_2h",
   reminderManager: "interview_reminder_manager",
   checkin: (mark: number) => `checkin_${mark}`,
+  waiting: (n: number) => `waiting_checkin_${n}`,
 } as const;
 
 const HOUR = 3600e3;
@@ -248,4 +249,53 @@ export function dueCheckin(input: {
     return s.due <= input.today && s.due >= oldest && !row?.sent_at && !row?.responded_at;
   });
   return open.at(-1) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// "Still reviewing" check-ins to applicants who are waiting
+// ---------------------------------------------------------------------------
+
+/** Stages where the applicant is waiting on the team (not booked, offered, hired or passed). */
+export const WAITING_STATUSES = ["new", "screening"] as const;
+/** Most check-ins one applicant gets, so nobody is texted forever. */
+export const WAITING_MAX_CHECKINS = 4;
+/** Applicants who applied longer ago than this never get one (no surprise texts to an old backlog). */
+export const WAITING_MAX_AGE_DAYS = 45;
+
+const isWaitingCheckin = (p: string | null) => !!p && /^waiting_checkin_\d+$/.test(p);
+
+/**
+ * Which "still reviewing" check-in (1, 2, ...) to text this applicant now, or null.
+ * Only for applicants still waiting in New or Screening whom no person has taken over,
+ * who already got a text from us (so the first one, with "Reply STOP", came earlier),
+ * and whose conversation has been quiet for `everyDays`. Stops after a few check-ins,
+ * after one is blocked (opted out / no consent), or once they move on.
+ */
+export function dueWaitingCheckin(input: {
+  status: string;
+  appliedAt: string;
+  /** A person paused the assistant or the applicant is flagged for attention. */
+  heldByPerson: boolean;
+  messages: Msg[];
+  everyDays: number;
+  now: number;
+  max?: number;
+  maxAgeDays?: number;
+}): number | null {
+  if (!(WAITING_STATUSES as readonly string[]).includes(input.status) || input.heldByPerson) return null;
+  if (input.now - Date.parse(input.appliedAt) > (input.maxAgeDays ?? WAITING_MAX_AGE_DAYS) * 24 * HOUR) return null;
+  const mine = input.messages.filter((m) => m.party === "candidate");
+  const prior = mine.filter((m) => isWaitingCheckin(m.purpose));
+  if (prior.some((m) => !sentOk(m))) return null;
+  if (prior.length >= (input.max ?? WAITING_MAX_CHECKINS)) return null;
+  // Something is already on its way to them.
+  if (mine.some((m) => m.direction === "out" && m.status === "queued")) return null;
+  if (!mine.some((m) => m.direction === "out" && sentOk(m))) return null;
+  const last = mine
+    .filter((m) => m.direction === "in" || sentOk(m))
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+  // They texted last: that needs an answer, not a check-in.
+  if (!last || last.direction === "in") return null;
+  if (input.now - Date.parse(last.created_at) < input.everyDays * 24 * HOUR) return null;
+  return prior.length + 1;
 }
