@@ -362,6 +362,17 @@ type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: 
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null };
 
+const PANEL_TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "messages", label: "Messages" },
+  { id: "interview", label: "Interview" },
+  { id: "offer", label: "Offer & checks" },
+  { id: "notes", label: "Notes & timeline" },
+] as const;
+type PanelTab = (typeof PANEL_TABS)[number]["id"];
+// Remembered for the session so reopening the panel lands on the last tab used.
+let lastPanelTab: PanelTab = "overview";
+
 function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail }: { questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => void; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
@@ -372,6 +383,8 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   const visibleTransfers = transferOptions.filter((o) => allRegions || o.sameRegion);
   const hiddenTransfers = transferOptions.length - visibleTransfers.length;
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
+  const [tab, setTab] = useState<PanelTab>(lastPanelTab);
+  const pickTab = (t: PanelTab) => { lastPanelTab = t; setTab(t); };
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
@@ -383,125 +396,148 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
     window.open(data.signedUrl, "_blank");
   }
   return (
-    <div className="space-y-6">
-      <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
-        <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
-      {otherApps.length > 0 && (
-        <div className="rounded-xl border p-3">
-          <div className="mb-2 text-sm font-semibold">Also applied for</div>
-          <div className="space-y-1">
-            {otherApps.map((o) => (
-              <button key={o.id} onClick={() => onOpenApp(o.id)}
-                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-secondary">
-                <span>{o.label}</span>
-                <span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LABEL[o.status]}</span>
+    <div>
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background px-6 pb-3 pt-6">
+        <SheetHeader><SheetTitle className="text-2xl">{app.full_name}</SheetTitle>
+          <p className="text-sm text-muted-foreground">{jobTitle} · {storeName}{regionName ? ` · ${regionName}` : ""}</p></SheetHeader>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
+          {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
+          {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
+          <select aria-label="Stage" className="h-9 rounded-md border bg-background px-2 text-sm" value={app.status}
+            onChange={(e) => onUpdate({ status: e.target.value as AppStatus })}>
+            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
+          <div className="flex gap-0.5" aria-label="Rating">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} aria-label={`${n} stars`} onClick={() => onUpdate({ rating: n })}>
+                <Star className={cn("size-4", (app.rating ?? 0) >= n ? "fill-chartreuse text-chartreuse" : "text-muted-foreground")} />
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Each application keeps its own stage, so you can pass on one without closing the others.</p>
         </div>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
-        {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
-        {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
-      </div>
-      <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
-      {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
-      <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
-      <ProfileFacts profile={app.profile as Record<string, unknown>} />
-      <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} paused={!!app.ai_paused_at} needsAttention={app.needs_attention} />
-      <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
-      <BackgroundCheckPanel key={app.id} orgId={orgId} appId={app.id} status={app.background_check_status} note={app.background_check_note}
-        updatedAt={app.background_check_updated_at} canEdit={isHr} onChanged={onRefresh} />
-      {app.status !== "rejected" && !app.departed_at && (
-        <>
-          <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} onChanged={onRefresh} />
-          <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} hasPhone={!!app.phone} />
-        </>
-      )}
-      <div>
-        <div className="mb-2 text-sm font-semibold">Stage</div>
-        <div className="flex flex-wrap gap-2">
-          {STATUSES.map((s) => (
-            <button key={s} onClick={() => onUpdate({ status: s })}
-              className={cn("rounded-full border px-3 py-1 text-xs", app.status === s ? "border-sapphire bg-sapphire text-primary-foreground" : "hover:border-sapphire")}>
-              {STATUS_LABEL[s]}</button>
+        <div className="flex gap-1 overflow-x-auto text-sm">
+          {PANEL_TABS.map((t) => (
+            <button key={t.id} onClick={() => pickTab(t.id)}
+              className={cn("whitespace-nowrap border-b-2 px-3 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
+              {t.label}</button>
           ))}
         </div>
       </div>
-      <div>
-        <div className="mb-2 text-sm font-semibold">Rating</div>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} aria-label={`${n} stars`} onClick={() => onUpdate({ rating: n })}>
-              <Star className={cn("size-5", (app.rating ?? 0) >= n ? "fill-chartreuse text-chartreuse" : "text-muted-foreground")} />
-            </button>
-          ))}
-        </div>
-      </div>
-      <label className="flex items-center justify-between rounded-xl bg-secondary p-3 text-sm">
-        <span><b>Open to other stores</b><br /><span className="text-muted-foreground">Other stores in your group can reach out. Never shared outside your group.</span></span>
-        <Switch checked={app.open_to_other_stores} onCheckedChange={(c) => onUpdate({ open_to_other_stores: c })} />
-      </label>
-      <div className="rounded-xl border p-3">
-        <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><ArrowRightLeft className="size-4" />Transfer to another store</div>
-        <p className="mb-2 text-xs text-muted-foreground">Better fit somewhere else in your group? Move them to that store's opening. Notes, rating and history come along.</p>
-        <div className="flex gap-2">
-          <select className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
-            <option value="">{visibleTransfers.length ? "Pick an open job..." : "No open jobs in this region"}</option>
-            {visibleTransfers.map((o) => <option key={o.id} value={o.id}>{o.label}{allRegions && !o.sameRegion ? " (other region)" : ""}</option>)}
-          </select>
-          <Button size="sm" disabled={!target} onClick={() => { onTransfer(target); setTarget(""); }}>Transfer</Button>
-        </div>
-        {(hiddenTransfers > 0 || allRegions) && (
-          <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-            <Checkbox checked={allRegions} onCheckedChange={(c) => { setAllRegions(c === true); setTarget(""); }} />
-            Show jobs in other regions{hiddenTransfers > 0 && !allRegions ? ` (${hiddenTransfers})` : ""}
-          </label>
-        )}
-      </div>
-      {(app.status === "hired" || app.hired_at) && (
-        <div className="space-y-3 rounded-xl border p-3">
-          <div className="flex items-center gap-2 text-sm font-semibold"><UserCheck className="size-4 text-lime" />Hiring & retention</div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><div className="text-xs text-muted-foreground">Hired on</div>
-              <div>{app.hired_at ? new Date(app.hired_at).toLocaleDateString() : "—"}</div></div>
-            <div><div className="text-xs text-muted-foreground">Start date</div>
-              {isHr && !app.departed_at
-                ? <Input type="date" className="h-8" defaultValue={app.start_date ?? ""} onBlur={(e) => e.target.value !== (app.start_date ?? "") && onUpdate({ start_date: e.target.value || null })} />
-                : <div>{app.start_date ? new Date(app.start_date + "T00:00:00").toLocaleDateString() : "—"}</div>}</div>
-          </div>
-          <RetentionCheckins orgId={orgId} appId={app.id} name={app.full_name} startDate={app.start_date} hiredAt={app.hired_at}
-            departedAt={app.departed_at} canRecord={isHr} onDeparted={(d) => onUpdate({ departed_at: d })} />
-          {app.departed_at ? (
-            <p className="rounded-lg bg-destructive/10 p-2 text-sm">
-              Departed {new Date(app.departed_at + "T00:00:00").toLocaleDateString()}{app.departure_reason ? ` — ${app.departure_reason}` : ""}
-              {isHr && <button className="ml-2 text-xs text-sapphire underline" onClick={() => onUpdate({ departed_at: null, departure_reason: null })}>Undo</button>}
-            </p>
-          ) : isHr && (
-            <div className="space-y-2">
-              <Input placeholder="Reason for leaving (optional)" value={departReason} onChange={(e) => setDepartReason(e.target.value)} />
-              <Button size="sm" variant="outline" onClick={() => {
-                const today = new Date().toISOString().slice(0, 10);
-                onUpdate({ departed_at: today, departure_reason: departReason || null });
-                toast.success(`Marked ${app.full_name} as departed.`);
-              }}>Mark as departed</Button>
+
+      <div className="space-y-6 pt-4">
+        {tab === "overview" && (
+          <>
+            <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
+            <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
+            <ProfileFacts profile={app.profile as Record<string, unknown>} />
+            {otherApps.length > 0 && (
+              <div className="rounded-xl border p-3">
+                <div className="mb-2 text-sm font-semibold">Also applied for</div>
+                <div className="space-y-1">
+                  {otherApps.map((o) => (
+                    <button key={o.id} onClick={() => onOpenApp(o.id)}
+                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-secondary">
+                      <span>{o.label}</span>
+                      <span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LABEL[o.status]}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Each application keeps its own stage, so you can pass on one without closing the others.</p>
+              </div>
+            )}
+            <label className="flex items-center justify-between rounded-xl bg-secondary p-3 text-sm">
+              <span><b>Open to other stores</b><br /><span className="text-muted-foreground">Other stores in your group can reach out. Never shared outside your group.</span></span>
+              <Switch checked={app.open_to_other_stores} onCheckedChange={(c) => onUpdate({ open_to_other_stores: c })} />
+            </label>
+            <div className="rounded-xl border p-3">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><ArrowRightLeft className="size-4" />Transfer to another store</div>
+              <p className="mb-2 text-xs text-muted-foreground">Better fit somewhere else in your group? Move them to that store's opening. Notes, rating and history come along.</p>
+              <div className="flex gap-2">
+                <select className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
+                  <option value="">{visibleTransfers.length ? "Pick an open job..." : "No open jobs in this region"}</option>
+                  {visibleTransfers.map((o) => <option key={o.id} value={o.id}>{o.label}{allRegions && !o.sameRegion ? " (other region)" : ""}</option>)}
+                </select>
+                <Button size="sm" disabled={!target} onClick={() => { onTransfer(target); setTarget(""); }}>Transfer</Button>
+              </div>
+              {(hiddenTransfers > 0 || allRegions) && (
+                <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Checkbox checked={allRegions} onCheckedChange={(c) => { setAllRegions(c === true); setTarget(""); }} />
+                  Show jobs in other regions{hiddenTransfers > 0 && !allRegions ? ` (${hiddenTransfers})` : ""}
+                </label>
+              )}
             </div>
-          )}
-        </div>
-      )}
-      <div>
-        <div className="mb-2 text-sm font-semibold">Notes</div>
-        <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => notes !== (app.notes ?? "") && onUpdate({ notes })} />
-      </div>
-      <div>
-        <div className="mb-2 text-sm font-semibold">Timeline</div>
-        <ol className="space-y-2 border-l pl-4 text-sm">
-          {events.map((e) => (
-            <li key={e.id}><div>{e.message}</div><div className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</div></li>
-          ))}
-        </ol>
+            {(app.status === "hired" || app.hired_at) && (
+              <div className="space-y-3 rounded-xl border p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold"><UserCheck className="size-4 text-lime" />Hiring & retention</div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><div className="text-xs text-muted-foreground">Hired on</div>
+                    <div>{app.hired_at ? new Date(app.hired_at).toLocaleDateString() : "—"}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Start date</div>
+                    {isHr && !app.departed_at
+                      ? <Input type="date" className="h-8" defaultValue={app.start_date ?? ""} onBlur={(e) => e.target.value !== (app.start_date ?? "") && onUpdate({ start_date: e.target.value || null })} />
+                      : <div>{app.start_date ? new Date(app.start_date + "T00:00:00").toLocaleDateString() : "—"}</div>}</div>
+                </div>
+                <RetentionCheckins orgId={orgId} appId={app.id} name={app.full_name} startDate={app.start_date} hiredAt={app.hired_at}
+                  departedAt={app.departed_at} canRecord={isHr} onDeparted={(d) => onUpdate({ departed_at: d })} />
+                {app.departed_at ? (
+                  <p className="rounded-lg bg-destructive/10 p-2 text-sm">
+                    Departed {new Date(app.departed_at + "T00:00:00").toLocaleDateString()}{app.departure_reason ? ` — ${app.departure_reason}` : ""}
+                    {isHr && <button className="ml-2 text-xs text-sapphire underline" onClick={() => onUpdate({ departed_at: null, departure_reason: null })}>Undo</button>}
+                  </p>
+                ) : isHr && (
+                  <div className="space-y-2">
+                    <Input placeholder="Reason for leaving (optional)" value={departReason} onChange={(e) => setDepartReason(e.target.value)} />
+                    <Button size="sm" variant="outline" onClick={() => {
+                      const today = new Date().toISOString().slice(0, 10);
+                      onUpdate({ departed_at: today, departure_reason: departReason || null });
+                      toast.success(`Marked ${app.full_name} as departed.`);
+                    }}>Mark as departed</Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {tab === "messages" && (
+          <AssistantThreads appId={app.id} orgId={orgId} assistantName={assistantName} onChanged={onRefresh} paused={!!app.ai_paused_at} needsAttention={app.needs_attention} />
+        )}
+
+        {tab === "interview" && (
+          <InterviewsPanel appId={app.id} orgId={orgId} title={`Interview: ${app.full_name} (${jobTitle})`} onChanged={onRefresh} />
+        )}
+
+        {tab === "offer" && (
+          <>
+            <BackgroundCheckPanel key={app.id} orgId={orgId} appId={app.id} status={app.background_check_status} note={app.background_check_note}
+              updatedAt={app.background_check_updated_at} canEdit={isHr} onChanged={onRefresh} />
+            {app.status !== "rejected" && !app.departed_at && (
+              <>
+                <OfferPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} defaultPay={null} hasPhone={!!app.phone} applicantName={app.full_name} onChanged={onRefresh} />
+                <DocumentsPanel orgId={orgId} appId={app.id} jobTitle={jobTitle} hasPhone={!!app.phone} />
+              </>
+            )}
+          </>
+        )}
+
+        {tab === "notes" && (
+          <>
+            <div>
+              <div className="mb-2 text-sm font-semibold">Notes</div>
+              <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => notes !== (app.notes ?? "") && onUpdate({ notes })} />
+            </div>
+            <div>
+              <div className="mb-2 text-sm font-semibold">Timeline</div>
+              <ol className="space-y-2 border-l pl-4 text-sm">
+                {events.map((e) => (
+                  <li key={e.id}><div>{e.message}</div><div className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</div></li>
+                ))}
+              </ol>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
