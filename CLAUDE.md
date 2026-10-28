@@ -76,6 +76,6 @@ Review its diffs before relying on them; keep what's better, fix bugs, don't fig
 
 ## Open items (see roadmap.md)
 - Live texting (waiting on Twilio). Background checks (partner TBD; client asked for it).
-- Interview intelligence (recording/transcripts/AI scorecards), video library, weekly HR summary.
+- Interview intelligence (recording/transcripts/AI scorecards), video library.
 - One-click Microsoft/Google calendar sign-in (link-based busy times work today).
 - Separate Twilio brand per client before their go-live. Bulk email via Resend/SES later.

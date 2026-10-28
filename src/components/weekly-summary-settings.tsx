@@ -1,4 +1,10 @@
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { Mail } from "lucide-react";
+import { useOrg } from "@/lib/org";
+import { previewWeeklySummary } from "@/lib/weekly-summary.functions";
+import { Button } from "@/components/ui/button";
 import type { Automations } from "@/lib/automations";
 import { WEEKDAYS, weeklySummarySettings } from "@/lib/weekly-summary";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +22,22 @@ export function WeeklySummaryCard({
   onChange: (a: Automations) => void;
 }) {
   const s = weeklySummarySettings(a);
+  const org = useOrg();
+  const preview = useServerFn(previewWeeklySummary);
+  const [sending, setSending] = useState(false);
+  async function onPreview() {
+    setSending(true);
+    try {
+      const r = await preview({ data: { orgId: org.orgId } });
+      if (r.status === "sent") toast.success(`Preview sent to ${r.to}`);
+      else if (r.status === "simulated")
+        toast.info(`Email is in practice mode, so the preview to ${r.to} was only simulated.`);
+      else toast.error(r.error ?? "The preview couldn't be sent.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setSending(false);
+  }
   const set = (p: Partial<NonNullable<Automations["weeklySummary"]>>) =>
     onChange({ ...a, weeklySummary: { ...a.weeklySummary, ...p } });
 
@@ -30,9 +52,9 @@ export function WeeklySummaryCard({
               Weekly HR summary email
             </div>
             <p className="text-sm text-muted-foreground">
-              One email to each person on the team, store by store, covering only the stores they can see: new
-              applicants, who's waiting on a decision, interviews, offers, hires and new-hire check-ins. It goes to the
-              email they sign in with.
+              One email to each person on the team, store by store, covering only the stores they
+              can see: new applicants, who's waiting on a decision, interviews, offers, hires and
+              new-hire check-ins. It goes to the email they sign in with.
             </p>
           </div>
           <Switch
@@ -59,7 +81,9 @@ export function WeeklySummaryCard({
             </select>
           </label>
           <label className="space-y-1">
-            <span className="block text-xs text-muted-foreground">Time (each person's first store's time zone)</span>
+            <span className="block text-xs text-muted-foreground">
+              Time (each person's first store's time zone)
+            </span>
             <select
               className="h-9 rounded-md border bg-background px-2 text-sm"
               disabled={!canEdit}
@@ -74,6 +98,16 @@ export function WeeklySummaryCard({
             </select>
           </label>
         </div>
+        {canEdit && (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="outline" size="sm" disabled={sending} onClick={onPreview}>
+              {sending ? "Sending…" : "Send me a preview now"}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Emails you this week's summary for your stores. Works even while the summary is off.
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );
