@@ -58,6 +58,7 @@ const applySchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
+  linkedinUrl: z.string().trim().max(300).optional().or(z.literal("")),
   source: z.string().trim().max(40).optional(),
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),
@@ -104,9 +105,13 @@ export const submitApplication = createServerFn({ method: "POST" })
       }).select("id").single();
       candidateId = created?.id ?? null;
     }
+    const { normalizeLinkedInUrl } = await import("@/lib/linkedin");
+    const linkedinUrl = normalizeLinkedInUrl(data.linkedinUrl);
+    if (data.linkedinUrl?.trim() && !linkedinUrl) throw new Error("Please paste your LinkedIn profile link (linkedin.com/in/…)");
     const { data: app, error } = await supabaseAdmin.from("applications").insert({
       org_id: job.org_id, job_id: job.id, dealership_id: job.dealership_id,
       full_name: data.fullName, email, phone,
+      linkedin_url: linkedinUrl,
       source: (data.source || "careers").toLowerCase(),
       candidate_id: candidateId,
       answers,

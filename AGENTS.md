@@ -42,3 +42,4 @@
 - Display wording helpers live in src/lib/display.ts (plural, sourceLabel, isTestName; pure, tested). Why: counts, source names and test-applicant hiding must read the same on every page without changing stored values.
 - Interview kits use can_post_jobs; scorecards are author-owned per interview, with pure rules in interview-kits.ts. Why: scores inform humans, never stages.
 - Interview recording is hidden from all screens (code, table and bucket kept; setting stays off) until the client re-enables it. Why: paused feature, data preserved.
+- LinkedIn profile links normalize through src/lib/linkedin.ts (pure, tested); the apply form and staff panel share it. Why: one validation rule and one canonical stored form.

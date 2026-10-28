@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List } from "lucide-react";
+import { Mail, Phone, FileText, Star, ArrowRightLeft, X, UserCheck, Search, LayoutGrid, List, Linkedin, Pencil } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,7 @@ import { UserPlus } from "lucide-react";
 import { z } from "zod";
 import { isTestName, plural, sourceLabel } from "@/lib/display";
 import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applicant-filters";
+import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
 
 type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
 
@@ -293,7 +294,7 @@ function Applicants() {
                     <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
                       onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
                       className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
-                      <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
+                      <div className="flex items-start justify-between gap-1"><div className="flex min-w-0 items-center gap-1 truncate text-sm font-semibold"><span className="truncate">{a.full_name}</span>{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</div>
                         <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
                       <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                       {a.knockout_failed && (
@@ -331,7 +332,7 @@ function Applicants() {
             <tbody>
               {sortedApps.map((a) => (
                 <tr key={a.id} onClick={() => setSelected(a.id)} className="cursor-pointer border-b last:border-0 hover:bg-secondary/60">
-                  <td className="px-3 py-2.5 font-medium">{a.full_name}</td>
+                  <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
                   <td className="px-3 py-2.5">{STATUS_LABEL[a.status]}</td>
@@ -369,7 +370,7 @@ function Applicants() {
   );
 }
 
-type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; status: AppStatus; resume_path: string | null;
+type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null };
@@ -396,6 +397,13 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const [tab, setTab] = useState<PanelTab>(initialTab ?? lastPanelTab);
   const pickTab = (t: PanelTab) => { lastPanelTab = t; setTab(t); };
+  const [editingLinkedin, setEditingLinkedin] = useState(false);
+  const [linkedinDraft, setLinkedinDraft] = useState(app.linkedin_url ?? "");
+  async function saveLinkedin() {
+    const trimmed = linkedinDraft.trim();
+    if (trimmed && !normalizeLinkedInUrl(trimmed)) return toast.error(LINKEDIN_ERROR);
+    if (await onUpdate({ linkedin_url: normalizeLinkedInUrl(trimmed) })) setEditingLinkedin(false);
+  }
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
@@ -414,6 +422,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
           {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
+          {app.linkedin_url && <Button size="sm" variant="outline" asChild><a href={app.linkedin_url} target="_blank" rel="noreferrer"><Linkedin />LinkedIn</a></Button>}
           {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
           <select aria-label="Stage" className="h-9 rounded-md border bg-background px-2 text-sm" value={app.status}
             onChange={(e) => onUpdate({ status: e.target.value as AppStatus })}>
@@ -442,6 +451,25 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         {tab === "overview" && (
           <>
             <div className="text-sm text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
+            <div className="flex items-center justify-between gap-2 rounded-xl border p-3 text-sm">
+              <div className="min-w-0">
+                <div className="text-xs text-muted-foreground">LinkedIn profile</div>
+                {editingLinkedin ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <Input className="h-8" placeholder="https://www.linkedin.com/in/yourname" value={linkedinDraft} onChange={(e) => setLinkedinDraft(e.target.value)} />
+                    <Button size="sm" onClick={saveLinkedin}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingLinkedin(false); setLinkedinDraft(app.linkedin_url ?? ""); }}>Cancel</Button>
+                  </div>
+                ) : app.linkedin_url ? (
+                  <a href={app.linkedin_url} target="_blank" rel="noreferrer" className="mt-0.5 block truncate text-sapphire underline">{app.linkedin_url}</a>
+                ) : (
+                  <div className="mt-0.5 text-muted-foreground">Not provided</div>
+                )}
+              </div>
+              {!editingLinkedin && (
+                <Button size="sm" variant="outline" onClick={() => { setLinkedinDraft(app.linkedin_url ?? ""); setEditingLinkedin(true); }}><Pencil />Edit</Button>
+              )}
+            </div>
             {app.ai_summary && <p className="rounded-xl bg-accent p-3 text-sm">{app.ai_summary}</p>}
             <ScreeningAnswers questions={questions} answers={(app.answers ?? {}) as Answers} />
             <ProfileFacts profile={app.profile as Record<string, unknown>} />
