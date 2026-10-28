@@ -621,6 +621,120 @@ export type Database = {
           },
         ]
       }
+      interview_recordings: {
+        Row: {
+          ai_suggestions: Json
+          applicant_id: string
+          attempts: number
+          audio_delete_after: string
+          audio_deleted_at: string | null
+          capture_method: string
+          consent_id: string
+          created_at: string
+          created_by: string
+          duration: number
+          error: string | null
+          error_status: number | null
+          format: string
+          id: string
+          interview_id: string
+          org_id: string
+          processing_started_at: string | null
+          retention_days: number
+          status: string
+          storage_path: string | null
+          store_id: string
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_suggestions?: Json
+          applicant_id: string
+          attempts?: number
+          audio_delete_after?: string
+          audio_deleted_at?: string | null
+          capture_method: string
+          consent_id: string
+          created_at?: string
+          created_by: string
+          duration?: number
+          error?: string | null
+          error_status?: number | null
+          format: string
+          id?: string
+          interview_id: string
+          org_id: string
+          processing_started_at?: string | null
+          retention_days?: number
+          status?: string
+          storage_path?: string | null
+          store_id: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_suggestions?: Json
+          applicant_id?: string
+          attempts?: number
+          audio_delete_after?: string
+          audio_deleted_at?: string | null
+          capture_method?: string
+          consent_id?: string
+          created_at?: string
+          created_by?: string
+          duration?: number
+          error?: string | null
+          error_status?: number | null
+          format?: string
+          id?: string
+          interview_id?: string
+          org_id?: string
+          processing_started_at?: string | null
+          retention_days?: number
+          status?: string
+          storage_path?: string | null
+          store_id?: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_recordings_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_recordings_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: true
+            referencedRelation: "applicant_consents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_recordings_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_recordings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_recordings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_scorecards: {
         Row: {
           answers: Json
@@ -1043,10 +1157,12 @@ export type Database = {
           email_reply_to: string | null
           escalate_after_hours: number
           hire_on_offer_signed: boolean
+          interview_recording_enabled: boolean
           mode: string
           nudge_after_hours: number
           offer_template_id: string | null
           org_id: string
+          recording_retention_days: number
           send_days: number[]
           send_end: string
           send_start: string
@@ -1061,10 +1177,12 @@ export type Database = {
           email_reply_to?: string | null
           escalate_after_hours?: number
           hire_on_offer_signed?: boolean
+          interview_recording_enabled?: boolean
           mode?: string
           nudge_after_hours?: number
           offer_template_id?: string | null
           org_id: string
+          recording_retention_days?: number
           send_days?: number[]
           send_end?: string
           send_start?: string
@@ -1079,10 +1197,12 @@ export type Database = {
           email_reply_to?: string | null
           escalate_after_hours?: number
           hire_on_offer_signed?: boolean
+          interview_recording_enabled?: boolean
           mode?: string
           nudge_after_hours?: number
           offer_template_id?: string | null
           org_id?: string
+          recording_retention_days?: number
           send_days?: number[]
           send_end?: string
           send_start?: string
