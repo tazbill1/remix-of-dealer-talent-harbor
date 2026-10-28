@@ -49,9 +49,21 @@ function CalendarPage() {
             {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
               <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
             )}
+            {i.status !== "cancelled" && (
+              <Button size="sm" variant="outline" className="shrink-0" aria-label="Add to calendar" onClick={() => {
+                const name = app(i.application_id)?.full_name ?? "Applicant";
+                const storeName = store(app(i.application_id)?.dealership_id);
+                const url = URL.createObjectURL(new Blob([ics(i, `Interview: ${name}${storeName ? ` (${storeName})` : ""}`)], { type: "text/calendar" }));
+                const a = document.createElement("a"); a.href = url; a.download = "interview.ics"; a.click(); URL.revokeObjectURL(url);
+              }}>
+                <CalendarPlus />
+                Add to calendar
+              </Button>
+            )}
           </li>
         ))}
       </ul>
+      <CalendarSubscribe orgId={org.orgId} />
     </div>
   );
 }
