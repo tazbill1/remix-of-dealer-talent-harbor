@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText, Workflow, ClipboardList, Sparkles, UserPlus, QrCode, Waves, ClipboardCheck, Copy } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText, Workflow, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { AskBubble, AskProvider } from "@/components/ask-chat";
 import { NotificationBell } from "@/components/notification-bell";
+import { canSeeNav } from "@/lib/nav";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -22,31 +23,44 @@ export const Route = createFileRoute("/_authenticated")({
   component: Layout,
 });
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/applicants", label: "Applicants", icon: Users },
-  { to: "/talent-pool", label: "Talent pool", icon: Waves },
-  { to: "/new-hires", label: "Onboarding", icon: ClipboardCheck },
-  { to: "/duplicates", label: "Possible duplicates", icon: Copy },
-  { to: "/ask", label: "Ask", icon: Sparkles },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/calendar", label: "Interviews", icon: CalendarDays },
-  { to: "/jobs", label: "Jobs", icon: Briefcase },
-  { to: "/interview-kits", label: "Interview kits", icon: ClipboardList },
-  { to: "/referrals", label: "Referrals", icon: UserPlus },
-  { to: "/events", label: "Recruiting events", icon: QrCode },
-  { to: "/consents", label: "Applicant consents", icon: Shield },
-  { to: "/adverse-actions", label: "Adverse-action notices", icon: FileText },
-  { to: "/stores", label: "Stores", icon: Building2 },
-  { to: "/templates", label: "Templates", icon: FileText },
-  { to: "/automations", label: "Automatic texts", icon: MessageSquareText },
-  { to: "/status-rules", label: "Status rules", icon: Workflow },
-  { to: "/integrations", label: "Integrations", icon: Plug },
-] as const;
+type NavItem = { to: string; label: string; icon: typeof Users };
+const dashboard: NavItem = { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard };
+const sections: { id: string; label: string; items: NavItem[] }[] = [
+  { id: "hiring", label: "Hiring", items: [
+    { to: "/applicants", label: "Applicants", icon: Users },
+    { to: "/calendar", label: "Interviews", icon: CalendarDays },
+  ] },
+  { id: "people", label: "People", items: [
+    { to: "/new-hires", label: "Onboarding", icon: ClipboardCheck },
+    { to: "/referrals", label: "Referrals", icon: UserPlus },
+    { to: "/consents", label: "Applicant consents", icon: Shield },
+    { to: "/adverse-actions", label: "Adverse-action notices", icon: FileText },
+  ] },
+  { id: "recruiting", label: "Recruiting", items: [
+    { to: "/jobs", label: "Jobs", icon: Briefcase },
+    { to: "/events", label: "Recruiting events", icon: QrCode },
+    { to: "/interview-kits", label: "Interview kits", icon: ClipboardList },
+  ] },
+  { id: "insights", label: "Insights", items: [
+    { to: "/analytics", label: "Analytics", icon: BarChart3 },
+    { to: "/ask", label: "Ask", icon: Sparkles },
+  ] },
+  { id: "settings", label: "Settings", items: [
+    { to: "/stores", label: "Stores", icon: Building2 },
+    { to: "/team", label: "Team", icon: UserCog },
+    { to: "/integrations", label: "Integrations", icon: Plug },
+    { to: "/status-rules", label: "Status rules", icon: Workflow },
+    { to: "/templates", label: "Templates", icon: FileText },
+    { to: "/automations", label: "Automatic texts", icon: MessageSquareText },
+    { to: "/onboarding-templates", label: "Onboarding templates", icon: ClipboardCheck },
+  ] },
+];
+/** Pages reached from another menu item still highlight it. */
+const ALIASES: Record<string, string> = { "/talent-pool": "/applicants", "/duplicates": "/applicants" };
+const SECTIONS_KEY = "wm_nav_sections";
 
 /** GMs and hiring managers only work in their assigned stores. */
 const isStoreRole = (role?: string) => role === "dealer_manager" || role === "hiring_manager";
-const ADMIN_ONLY = new Set<string>(["/templates", "/automations", "/status-rules", "/integrations"]);
 
 function Layout() {
   const { data: me, isLoading } = useQuery(meQuery);
@@ -180,24 +194,9 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
         </select>
       ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
       {org && <ModeBadge orgId={org.orgId} />}
-      <nav className="space-y-1">
-        {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions" && n.to !== "/referrals") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter" || (n.to === "/referrals" && org.role === "regional_leader"))
-          .filter(n => n.to !== "/events" || org.isPlatformAdmin || ["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(org.role))
-          .filter(n => n.to !== "/duplicates" || org.isPlatformAdmin || org.role !== "regional_leader")
-          .filter(n => n.to !== "/new-hires" || org.isPlatformAdmin || org.role !== "regional_leader")
-          .filter(n => org.isPlatformAdmin || !isStoreRole(org.role) || !ADMIN_ONLY.has(n.to)).map((n) => (
-          <Link key={n.to} to={n.to}
-            className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
-              loc.pathname.startsWith(n.to) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
-            <n.icon className="size-4" />{n.label}
-          </Link>
-        ))}
-        {org && (org.role === "group_admin" || org.isPlatformAdmin) && (
-          <Link to="/team" className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
-            loc.pathname === "/team" && "bg-sidebar-accent text-sidebar-accent-foreground")}>
-            <UserCog className="size-4" />Team
-          </Link>
-        )}
+      <nav className="space-y-1 overflow-y-auto">
+        {org && <NavLink item={dashboard} path={loc.pathname} />}
+        {org && <NavSections org={org} path={loc.pathname} />}
         {org && (
           <a href={`/c/${org.orgSlug}`} target="_blank" rel="noreferrer"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">
@@ -218,5 +217,61 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
         </button>
       </div>
     </div>
+  );
+}
+
+const activePath = (path: string) => ALIASES[path] ?? path;
+const isActive = (to: string, path: string) => activePath(path).startsWith(to);
+
+function NavLink({ item, path }: { item: NavItem; path: string }) {
+  return (
+    <Link to={item.to}
+      className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
+        isActive(item.to, path) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+      <item.icon className="size-4" />{item.label}
+    </Link>
+  );
+}
+
+function NavSections({ org, path }: { org: OrgCtx; path: string }) {
+  const visible = sections
+    .map((s) => ({ ...s, items: s.items.filter((i) => canSeeNav(i.to, org)) }))
+    .filter((s) => s.items.length);
+  const current = visible.find((s) => s.items.some((i) => isActive(i.to, path)))?.id;
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try { setOpen(JSON.parse(localStorage.getItem(SECTIONS_KEY) ?? "{}")); } catch { /* ignore */ }
+  }, []);
+  // Auto-open the section of the page you're on (remembered like a manual open).
+  useEffect(() => {
+    if (!current) return;
+    setOpen((o) => {
+      if (o[current]) return o;
+      const next = { ...o, [current]: true };
+      localStorage.setItem(SECTIONS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [current]);
+  const toggle = (id: string) => setOpen((o) => {
+    const next = { ...o, [id]: !o[id] };
+    localStorage.setItem(SECTIONS_KEY, JSON.stringify(next));
+    return next;
+  });
+  return (
+    <>
+      {visible.map((s) => {
+        const isOpen = !!open[s.id];
+        return (
+          <div key={s.id} className="pt-2">
+            <button type="button" onClick={() => toggle(s.id)} aria-expanded={isOpen}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-accent-foreground">
+              {s.label}
+              <ChevronDown className={cn("size-3.5 transition-transform", !isOpen && "-rotate-90")} />
+            </button>
+            {isOpen && <div className="space-y-1">{s.items.map((i) => <NavLink key={i.to} item={i} path={path} />)}</div>}
+          </div>
+        );
+      })}
+    </>
   );
 }
