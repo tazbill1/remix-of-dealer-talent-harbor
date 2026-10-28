@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
+  validateSearch: z.object({ store: z.string().optional(), status: z.string().optional() }),
   head: () => ({ meta: [{ title: "Jobs | WerkandMe Hiring" }, { name: "description", content: "Manage dealership job postings and hiring contact overrides in WerkandMe." }, { property: "og:title", content: "Jobs | WerkandMe Hiring" }, { property: "og:description", content: "Manage dealership job postings and hiring contact overrides." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Jobs,
 });
@@ -133,7 +135,11 @@ function Jobs() {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(empty);
   const [picked, setPicked] = useState<string[]>([]);
-  const [filter, setFilter] = useState("all");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const filter = search.store ?? "all";
+  const setFilter = (v: string) => navigate({ search: (prev) => ({ ...prev, store: v === "all" ? undefined : v }), replace: true });
+  const statusFilter = search.status ?? "all";
   const [division, setDivision] = useState("all");
   const hr = canPostJobs(org.role);
   const savedTemplates = data?.templates ?? [];
@@ -200,7 +206,7 @@ function Jobs() {
     refresh();
   }
   const feedUrl = typeof window !== "undefined" ? `${window.location.origin}/api/public/feed/${org.orgSlug}` : "";
-  const jobs = (data?.jobs ?? []).filter((j) => (filter === "all" || j.dealership_id === filter) && (division === "all" || j.division === division));
+  const jobs = (data?.jobs ?? []).filter((j) => (filter === "all" || j.dealership_id === filter) && (statusFilter === "all" || j.status === statusFilter) && (division === "all" || j.division === division));
   const openJobs = (data?.jobs ?? []).filter((j) => j.status === "open");
   const requests = (data?.jobs ?? []).filter((j) => j.status === "requested");
 
@@ -309,6 +315,18 @@ function Jobs() {
         <select className="h-9 rounded-md border bg-background px-2 text-sm" value={division} onChange={(e) => setDivision(e.target.value)}>
           <option value="all">All divisions</option>{DIVISIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
         </select>
+        {filter !== "all" && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
+            Store: {storeName(filter) || "Store"}
+            <button aria-label="Clear store filter" onClick={() => setFilter("all")} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+        {statusFilter !== "all" && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
+            Status: {statusFilter === "requested" ? "waiting on HR" : statusFilter}
+            <button aria-label="Clear status filter" onClick={() => navigate({ search: (prev) => ({ ...prev, status: undefined }), replace: true })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-background shadow-sm">
