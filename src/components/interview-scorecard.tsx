@@ -17,6 +17,7 @@ import {
   type ScoreAnswer,
 } from "@/lib/interview-kits";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -55,43 +56,33 @@ function useKit(appId: string) {
 function useScorecards(appId: string) {
   return useQuery({
     queryKey: cardsKey(appId),
-    queryFn: async () =>
-      (
-        await supabase
-          .from("interview_scorecards")
-          .select("*")
-          .eq("application_id", appId)
-          .order("created_at")
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("interview_scorecards").select("*").eq("application_id", appId).order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 }
 
 /** Submitted scorecards on the profile: overall average, hire/maybe/no, and each interviewer's notes. */
-export function ScorecardSummary({ appId }: { appId: string }) {
-  const { data: cards = [] } = useScorecards(appId);
+export function ScorecardSummary({ appId, interviewId }: { appId: string; interviewId: string }) {
+  const { data, isPending, isError } = useScorecards(appId);
+  if (isPending) return <p className="py-2 text-xs text-muted-foreground">Loading scorecards…</p>;
+  if (isError) return <p className="py-2 text-xs text-muted-foreground">Scorecards couldn’t be loaded.</p>;
+  const cards = (data ?? []).filter((c) => c.interview_id === interviewId);
   const s = summarizeScorecards(cards);
-  if (!s.submitted) return null;
+  if (!s.submitted) return <p className="py-2 text-xs text-muted-foreground">No submitted scorecards yet.</p>;
   const rec = (r: string | null) => RECOMMENDATIONS.find((x) => x.value === r)?.label ?? "No pick";
   return (
-    <div className="mt-2 rounded-lg border p-2 text-sm">
-      <p className="font-medium">
-        {s.submitted} scorecard{s.submitted > 1 ? "s" : ""}
-        {s.average != null ? ` · average ${s.average} of 5` : ""} · {s.hire} hire, {s.maybe} maybe,{" "}
-        {s.no} no
-      </p>
-      <ul className="mt-1 space-y-1">
-        {cards
-          .filter((c) => c.submitted_at)
-          .map((c) => (
-            <li key={c.id} className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{c.author_name || "Interviewer"}</span>:{" "}
-              {rec(c.recommendation)}
-              {averageScore(parseAnswers(c.answers)) != null &&
-                ` (${averageScore(parseAnswers(c.answers))} of 5)`}
-              {c.notes ? ` · ${c.notes}` : ""}
-            </li>
-          ))}
+    <div className="mt-2 border-t py-2 text-sm">
+      <ul className="space-y-1">
+        {cards.filter((c) => c.submitted_at).map((c) => (
+          <li key={c.id} className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{c.author_name || "Interviewer"}</span>: {averageScore(parseAnswers(c.answers))?.toFixed(1) ?? "—"} / 5 · {rec(c.recommendation)}
+          </li>
+        ))}
       </ul>
+      <p className="mt-1 text-xs font-medium">Overall average {s.average?.toFixed(1) ?? "—"} / 5</p>
     </div>
   );
 }
@@ -169,6 +160,8 @@ function ScorecardDialog({
   }, [kit]); // eslint-disable-line react-hooks/exhaustive-deps
   const patch = (id: string, p: Partial<ScoreAnswer>) =>
     setAnswers((cur) => cur.map((a) => (a.questionId === id ? { ...a, ...p } : a)));
+  const scored = answers.filter((a) => a.score != null).length;
+  const average = averageScore(answers)?.toFixed(1) ?? "—";
   const problem = submitProblem(questions, answers, recommendation);
 
   async function save(submit: boolean) {
@@ -208,6 +201,10 @@ function ScorecardDialog({
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="space-y-4">
+            <div className="sticky -top-6 z-10 space-y-2 border-b bg-background py-3" aria-live="polite">
+              <p className="text-sm font-medium">{scored} of {questions.length} scored · Average {average} / 5</p>
+              <Progress value={questions.length ? scored / questions.length * 100 : 0} aria-label="Scoring progress" />
+            </div>
             <p className="text-xs text-muted-foreground">
               {kit
                 ? `Questions from "${kit.name}".`
@@ -223,7 +220,7 @@ function ScorecardDialog({
                     {i + 1}. {q.text}
                   </p>
                   {q.lookFor && (
-                    <p className="text-xs text-muted-foreground">Look for: {q.lookFor}</p>
+                    <p className="text-xs text-muted-foreground">What a 5 looks like: {q.lookFor}</p>
                   )}
                   <div
                     className="flex flex-wrap gap-1"
@@ -260,7 +257,7 @@ function ScorecardDialog({
             })}
             <div className="space-y-2">
               <p className="text-sm font-semibold">Overall</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {RECOMMENDATIONS.map((r) => (
                   <Button
                     key={r.value}
@@ -272,6 +269,7 @@ function ScorecardDialog({
                     {r.label}
                   </Button>
                 ))}
+                <span className="text-sm text-muted-foreground">Average {average} / 5</span>
               </div>
               <Textarea
                 rows={3}
