@@ -34,6 +34,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOnboardingTemplatesRouteImport } from './routes/_authenticated/onboarding-templates'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
 import { Route as AuthenticatedTalentPoolRouteImport } from './routes/_authenticated/talent-pool'
@@ -197,6 +198,11 @@ const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
 const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatusRulesRoute =
@@ -408,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/talent-pool': typeof AuthenticatedTalentPoolRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
   '/talent-pool': typeof AuthenticatedTalentPoolRoute
@@ -531,6 +539,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
   '/_authenticated/talent-pool': typeof AuthenticatedTalentPoolRoute
@@ -594,6 +603,7 @@ export interface FileRouteTypes {
     | '/onboarding-templates'
     | '/platform'
     | '/referrals'
+    | '/settings'
     | '/status-rules'
     | '/stores'
     | '/talent-pool'
@@ -654,6 +664,7 @@ export interface FileRouteTypes {
     | '/onboarding-templates'
     | '/platform'
     | '/referrals'
+    | '/settings'
     | '/status-rules'
     | '/stores'
     | '/talent-pool'
@@ -716,6 +727,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding-templates'
     | '/_authenticated/platform'
     | '/_authenticated/referrals'
+    | '/_authenticated/settings'
     | '/_authenticated/status-rules'
     | '/_authenticated/stores'
     | '/_authenticated/talent-pool'
@@ -964,6 +976,13 @@ declare module '@tanstack/react-router' {
       path: '/referrals'
       fullPath: '/referrals'
       preLoaderRoute: typeof AuthenticatedReferralsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/status-rules': {
@@ -1233,6 +1252,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingTemplatesRoute: typeof AuthenticatedOnboardingTemplatesRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
   AuthenticatedTalentPoolRoute: typeof AuthenticatedTalentPoolRoute
@@ -1260,6 +1280,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingTemplatesRoute: AuthenticatedOnboardingTemplatesRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,
   AuthenticatedTalentPoolRoute: AuthenticatedTalentPoolRoute,
