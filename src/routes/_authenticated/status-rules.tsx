@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { StatusRemindersSettings } from "@/components/status-reminders-settings";
 
 export const Route = createFileRoute("/_authenticated/status-rules")({
   head: () => ({ meta: [{ title: "Status rules | WerkandMe Hiring" }] }),
@@ -129,6 +130,8 @@ function StatusRulesPage() {
           If more than one rule fits an applicant, the one higher on the list wins.
         </p>
       )}
+
+      <StatusRemindersSettings orgId={org.orgId} canEdit={canEdit} />
 
       {canEdit && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:left-64">

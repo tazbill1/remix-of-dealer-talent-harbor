@@ -38,9 +38,11 @@ import { z } from "zod";
 import { isTestName, plural, sourceLabel } from "@/lib/display";
 import { filterApplicants, SORT_MENU, SORTS, sortApplicants } from "@/lib/applicant-filters";
 import { LINKEDIN_ERROR, normalizeLinkedInUrl } from "@/lib/linkedin";
+import { useReminderRules } from "@/components/status-reminders-settings";
+import { overdueInfo, type Overdue } from "@/lib/status-reminders";
 import { ReferralBadge, ReferralPanelRow, useReferrerNames } from "@/components/referral-badge";
 
-type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests";
+type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests" | "overdue";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }, { name: "description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:title", content: "Applicants | WerkandMe Hiring" }, { property: "og:description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -57,6 +59,7 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     region: z.string().optional(),
     store: z.string().optional(),
     tests: z.string().optional(),
+    overdue: z.coerce.string().optional(),
     applicant: z.string().uuid().optional(),
     tab: z.enum(["overview", "messages", "interview", "offer", "notes"]).optional(),
     interview: z.string().uuid().optional(),
@@ -100,6 +103,9 @@ function Applicants() {
   const region = search.region ?? "all";
   const store = search.store ?? "all";
   const showTests = search.tests === "1";
+  const overdueOnly = search.overdue === "1";
+  const { data: reminderRules = [] } = useReminderRules(org.orgId);
+  const overdueOf = (a: { status: AppStatus; status_changed_at: string | null }) => overdueInfo(a, reminderRules);
 
   const [selectedLocal, setSelectedLocal] = useState<string | null>(null);
   const selected = search.applicant ?? selectedLocal;
@@ -154,11 +160,11 @@ function Applicants() {
     || (store === "shared" && a.open_to_other_stores))
     && (showTests || !isTestName(a.full_name))
     && (!statusFilter || a.status === statusFilter));
-  const apps = filterApplicants(base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
+  const apps = filterApplicants(overdueOnly ? base.filter((a) => overdueOf(a)) : base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
   const sortedApps = sortApplicants(apps, sort, job, storeName);
   const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
-  const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || region !== "all" || store !== "all";
-  const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, region: undefined, store: undefined });
+  const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || overdueOnly || region !== "all" || store !== "all";
+  const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, overdue: undefined, region: undefined, store: undefined });
 
   // Must come after job() and storeName(): they're used while rendering.
   const emailRecipients = (data?.apps ?? [])
@@ -254,6 +260,10 @@ function Applicants() {
           <Checkbox checked={attentionOnly} onCheckedChange={(c) => set({ attention: c === true ? "1" : undefined })} />
           Needs attention
         </label>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox checked={overdueOnly} onCheckedChange={(c) => set({ overdue: c === true ? "1" : undefined })} />
+          Overdue only
+        </label>
         <select aria-label="Sort" className={selectCls} value={sort} onChange={(e) => set({ sort: e.target.value === "newest" ? undefined : e.target.value })}>
           {SORT_MENU.map((s) => <option key={s} value={s}>{SORTS[s]?.label ?? s}</option>)}
           {!(SORT_MENU as readonly string[]).includes(sort) && <option value={sort}>{SORTS[sort]?.label ?? sort}</option>}
@@ -279,6 +289,12 @@ function Applicants() {
           <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
             Applied: Today
             <button aria-label="Clear applied filter" onClick={() => set({ applied: undefined, filter: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+        {overdueOnly && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
+            Overdue only
+            <button aria-label="Clear overdue filter" onClick={() => set({ overdue: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
           </span>
         )}
         {statusFilter && (
@@ -336,6 +352,7 @@ function Applicants() {
                       <BackgroundCheckBadge status={a.background_check_status} />
                       <ReferralBadge app={a} names={referrerNames} />
                       {dnhRepeats.has(a.id) && <DoNotHireBadge />}
+                      <OverdueTag overdue={overdueOf(a)} />
                       {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                       <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                         <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
@@ -370,7 +387,7 @@ function Applicants() {
                   <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
-                  <td className="px-3 py-2.5"><StatusPill status={a.status} />{dnhRepeats.has(a.id) && <> <DoNotHireBadge /></>}</td>
+                  <td className="px-3 py-2.5"><StatusPill status={a.status} />{dnhRepeats.has(a.id) && <> <DoNotHireBadge /></>}<OverdueTag overdue={overdueOf(a)} /></td>
                   <td className="px-3 py-2.5">{sourceLabel(a.source)}</td>
                   <td className="px-3 py-2.5">{new Date(a.created_at).toLocaleDateString()}</td>
                   <td className="px-3 py-2.5">{a.rating ?? "—"}</td>
@@ -405,7 +422,7 @@ function Applicants() {
   );
 }
 
-type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; resume_path: string | null;
+type App = { answers: unknown; profile: unknown; ai_summary: string | null; id: string; full_name: string; email: string; phone: string | null; linkedin_url: string | null; status: AppStatus; status_changed_at: string | null; resume_path: string | null;
   open_to_other_stores: boolean; rating: number | null; notes: string | null; source: string; created_at: string;
   hired_at: string | null; start_date: string | null; departed_at: string | null; departure_reason: string | null; ai_paused_at: string | null; needs_attention: string | null;
   background_check_status: string | null; background_check_note: string | null; background_check_updated_at: string | null;
@@ -430,6 +447,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
   // Transfers stay in the candidate's region by default: someone in Grand Rapids won't move to Detroit.
   const visibleTransfers = transferOptions.filter((o) => allRegions || o.sameRegion);
   const hiddenTransfers = transferOptions.length - visibleTransfers.length;
+  const { data: reminderRules = [] } = useReminderRules(orgId);
   const [departReason, setDepartReason] = useState(app.departure_reason ?? "");
   const [tab, setTab] = useState<PanelTab>(initialTab ?? lastPanelTab);
   const pickTab = (t: PanelTab) => { lastPanelTab = t; setTab(t); };
@@ -472,6 +490,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
           {doNotHireRepeat && <DoNotHireBadge />}
+          <OverdueTag overdue={overdueInfo(app, reminderRules)} />
           <div className="flex gap-0.5" aria-label="Rating">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} aria-label={`${n} stars`} onClick={() => onUpdate({ rating: n })}>
@@ -656,5 +675,13 @@ function DoNotHireBadge() {
   return (
     <span className="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ backgroundColor: STATUS_COLOR.do_not_hire, color: "#FFFFFF" }}
       title="This person is marked Do Not Hire on another application in your group.">⚠ Previously Do Not Hire</span>
+  );
+}
+
+function OverdueTag({ overdue }: { overdue: Overdue | null }) {
+  if (!overdue) return null;
+  return (
+    <span className="ml-1 mt-1 inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning-foreground"
+      title="Past this stage's reminder limit (set on Status rules).">Overdue · {overdue.label}</span>
   );
 }
