@@ -423,7 +423,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
         <div className="flex flex-wrap gap-x-1 gap-y-0.5 text-[13px]">
           {PANEL_TABS.map((t) => (
             <button key={t.id} onClick={() => pickTab(t.id)}
-              className={cn("whitespace-nowrap border-b-2 px-2 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
+              className={cn("whitespace-nowrap border-b-2 px-1.5 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
               {t.label}</button>
           ))}
         </div>
