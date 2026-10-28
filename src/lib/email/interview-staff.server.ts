@@ -7,6 +7,7 @@ import { appBaseUrl } from "@/lib/email/provider.server";
 import { isEmailOptedOut, loadEmailSettings } from "@/lib/email/outbox.server";
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import { slotLabel } from "@/lib/booking";
+import { calendarLinks } from "@/lib/calendar-links";
 
 type DB = SupabaseClient<Database>;
 
@@ -38,6 +39,7 @@ export async function emailInterviewStaff(db: DB, interviewId: string, moved = f
     const location = iv.location || [store?.name, store?.address, store?.city, store?.state].filter(Boolean).join(", ");
     const when = slotLabel(Date.parse(iv.starts_at), store?.timezone || "America/Chicago");
     const calendarUrl = `${base}/api/public/interview-invite/${interviewInviteToken(iv.id, recipient.id, iv.starts_at)}.ics`;
+    const links = calendarLinks({ title: `Interview: ${app.full_name}${store?.name ? ` (${store.name})` : ""}`, startsAt: iv.starts_at, minutes: iv.duration_min, location });
     let status: "sent" | "simulated" | "blocked" | "failed" = "simulated";
     let failure: string | null = null;
     if (await isEmailOptedOut(db, iv.org_id, recipient.email)) status = "blocked";
@@ -48,13 +50,13 @@ export async function emailInterviewStaff(db: DB, interviewId: string, moved = f
           idempotencyKey: key,
           fromAddress: settings.email_from_address,
           ...(settings.email_reply_to ? { replyTo: settings.email_reply_to } : {}),
-          templateData: { applicant: app.full_name, job: job?.title, store: store?.name, when, minutes: iv.duration_min, location, calendarUrl, appUrl: base, moved },
+          templateData: { applicant: app.full_name, job: job?.title, store: store?.name, when, minutes: iv.duration_min, location, calendarUrl, googleUrl: links.google, outlookUrl: links.outlook, appUrl: base, moved },
         });
         status = result.sent ? "sent" : "blocked";
       } catch (e) { status = "failed"; failure = (e as Error).message; }
     }
     // Audit only: synchronous managed delivery, no email queue or scheduler.
-    await db.from("messages").insert({ org_id: iv.org_id, application_id: app.id, channel: "email", party: "manager", direction: "out", purpose: key, to_email: recipient.email, subject, body: `${subject}\n${when} · ${iv.duration_min} minutes\n${location}\nAdd to calendar: ${calendarUrl}`, status, provider: status === "simulated" ? "practice" : "lovable", error: failure, sent_at: ["sent", "simulated"].includes(status) ? new Date().toISOString() : null });
+    await db.from("messages").insert({ org_id: iv.org_id, application_id: app.id, channel: "email", party: "manager", direction: "out", purpose: key, to_email: recipient.email, subject, body: `${subject}\n${when} · ${iv.duration_min} minutes\n${location}\nGoogle Calendar: ${links.google}\nOutlook: ${links.outlook}`, status, provider: status === "simulated" ? "practice" : "lovable", error: failure, sent_at: ["sent", "simulated"].includes(status) ? new Date().toISOString() : null });
     return { status, note: failure ?? (status === "blocked" ? "Staff email was not sent because this address unsubscribed." : undefined) };
   } catch (e) {
     console.error("staff interview email failed", interviewId, e);
