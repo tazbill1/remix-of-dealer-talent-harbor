@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Building2, Bot, Rss, Video, ShieldCheck, Mic } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Logo, GradientText } from "@/components/brand";
 import { Journey, FaqList, groupJourney, groupFaqs } from "@/components/journey-faq";
@@ -28,6 +30,13 @@ const features = [
 ];
 
 function Index() {
+  const navigate = useNavigate();
+  // Signed-in users go straight to the dashboard; everyone else sees the marketing page.
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) navigate({ to: "/dashboard" });
+    });
+  }, [navigate]);
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
