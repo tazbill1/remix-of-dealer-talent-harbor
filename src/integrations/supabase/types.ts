@@ -639,6 +639,7 @@ export type Database = {
           id: string
           interview_id: string
           org_id: string
+          processing_run_id: string | null
           processing_started_at: string | null
           retention_days: number
           status: string
@@ -664,6 +665,7 @@ export type Database = {
           id?: string
           interview_id: string
           org_id: string
+          processing_run_id?: string | null
           processing_started_at?: string | null
           retention_days?: number
           status?: string
@@ -689,6 +691,7 @@ export type Database = {
           id?: string
           interview_id?: string
           org_id?: string
+          processing_run_id?: string | null
           processing_started_at?: string | null
           retention_days?: number
           status?: string
@@ -1162,6 +1165,7 @@ export type Database = {
           nudge_after_hours: number
           offer_template_id: string | null
           org_id: string
+          recording_ai_paused_reason: string | null
           recording_retention_days: number
           send_days: number[]
           send_end: string
@@ -1182,6 +1186,7 @@ export type Database = {
           nudge_after_hours?: number
           offer_template_id?: string | null
           org_id: string
+          recording_ai_paused_reason?: string | null
           recording_retention_days?: number
           send_days?: number[]
           send_end?: string
@@ -1202,6 +1207,7 @@ export type Database = {
           nudge_after_hours?: number
           offer_template_id?: string | null
           org_id?: string
+          recording_ai_paused_reason?: string | null
           recording_retention_days?: number
           send_days?: number[]
           send_end?: string
