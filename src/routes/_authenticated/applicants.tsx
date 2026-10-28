@@ -161,11 +161,24 @@ function Applicants() {
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
         </div>
       )}
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox checked={showTests} onCheckedChange={(c) => setShowTests(c === true)} />
+          Show test applicants
+        </label>
+        {(search.filter === "today" || statusFilter) && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
+            Showing: {search.filter === "today" ? "Applied today" : STATUS_LABEL[statusFilter!]}
+            <button aria-label="Clear filter" onClick={() => navigate({ search: {} })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+      </div>
+      <div className="overflow-x-auto pb-4">
+      <div className="grid min-w-[900px] grid-cols-6 gap-2">
         {STATUSES.map((st) => {
           const col = apps.filter((a) => a.status === st);
           return (
-            <div key={st} className="w-72 shrink-0 rounded-2xl bg-secondary p-3"
+            <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
               <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
