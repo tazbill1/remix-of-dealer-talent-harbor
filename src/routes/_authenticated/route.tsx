@@ -80,9 +80,9 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
   const sidebar = <SidebarBody me={me} org={org} onPick={onPick} />;
   return (
     <div className="flex min-h-screen bg-muted">
-      <aside className="hidden w-64 shrink-0 bg-sidebar text-sidebar-foreground md:block">{sidebar}</aside>
+      <aside className="hidden w-64 shrink-0 bg-sidebar text-sidebar-foreground sm:block">{sidebar}</aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b bg-background px-4 py-3 sm:hidden">
           <Logo className="h-6" />
           <Sheet>
             <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
