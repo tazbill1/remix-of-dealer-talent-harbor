@@ -510,13 +510,13 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
             ))}
           </div>
         </div>
-        {/* Tabs always stay on one row; on narrow widths the row scrolls
-            sideways instead of wrapping, so the sticky header never overlaps content. */}
-        <div className="flex flex-nowrap gap-x-1 overflow-x-auto text-[13px]">
+        {/* Compact spacing keeps every full label visible on desktop;
+            narrow mobile widths can still scroll without wrapping. */}
+        <div className="flex flex-nowrap overflow-x-auto text-xs sm:overflow-x-visible" aria-label="Applicant tabs">
           {PANEL_TABS.filter((t) => t.id !== "onboarding" || app.status === "hired").map((t) => (
-            <button key={t.id} onClick={() => pickTab(t.id)}
-              className={cn("whitespace-nowrap border-b-2 px-1.5 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
-              {t.label}</button>
+            <Button variant="ghost" key={t.id} onClick={() => pickTab(t.id)}
+              className={cn("h-auto rounded-none whitespace-nowrap border-b-2 px-0.5 py-1.5 text-xs font-medium hover:bg-transparent", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
+              {t.label}</Button>
           ))}
         </div>
       </div>
