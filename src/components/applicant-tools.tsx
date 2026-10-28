@@ -166,7 +166,8 @@ function TextingOptOut({ appId, onChanged }: { appId: string; onChanged: () => v
   );
 }
 
-function ics(i: { id: string; starts_at: string; duration_min: number; location: string | null }, title: string) {
+/** .ics text for one interview, shared by the applicant panel and the Interviews page. */
+export function ics(i: { id: string; starts_at: string; duration_min: number; location: string | null }, title: string) {
   const f = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const s = new Date(i.starts_at); const e = new Date(s.getTime() + i.duration_min * 60000);
   return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//WerkandMe//Hiring//EN", "BEGIN:VEVENT", `UID:${i.id}@werkandme`, `DTSTAMP:${f(new Date())}`,
