@@ -132,6 +132,7 @@ function Applicants() {
     if (search.applicant) void navigate({ search: (prev) => ({ ...prev, applicant: undefined, tab: undefined, interview: undefined }), replace: true });
   };
   const [dragId, setDragId] = useState<string | null>(null);
+  const [showEmpty, setShowEmpty] = useState(false);
   const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [emailing, setEmailing] = useState<string[] | null>(null);
@@ -283,22 +284,22 @@ function Applicants() {
           </PopoverTrigger>
           <PopoverContent align="start" className="flex w-64 flex-col gap-3">
         {(data?.regions.length ?? 0) > 0 && (
-          <select aria-label="Region" className={selectCls} value={region}
+          <select aria-label="Region" className={cn(selectCls, "w-full")} value={region}
             onChange={(e) => set({ region: e.target.value === "all" ? undefined : e.target.value, ...(store !== "shared" ? { store: undefined } : {}) })}>
             <option value="all">All regions</option>
             {data?.regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             <option value="none">No region</option>
           </select>
         )}
-        <select aria-label="Job" className={selectCls} value={jobFilter} onChange={(e) => set({ job: e.target.value === "all" ? undefined : e.target.value })}>
+        <select aria-label="Job" className={cn(selectCls, "w-full")} value={jobFilter} onChange={(e) => set({ job: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All jobs</option>
           {(data?.jobs ?? []).map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
         </select>
-        <select aria-label="Source" className={selectCls} value={sourceFilter} onChange={(e) => set({ source: e.target.value === "all" ? undefined : e.target.value })}>
+        <select aria-label="Source" className={cn(selectCls, "w-full")} value={sourceFilter} onChange={(e) => set({ source: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All sources</option>
           {sourceOptions.map((s) => <option key={s} value={s}>{sourceLabel(s)}</option>)}
         </select>
-        <select aria-label="Applied" className={selectCls} value={applied} onChange={(e) => set({ applied: e.target.value === "any" ? undefined : e.target.value, filter: undefined })}>
+        <select aria-label="Applied" className={cn(selectCls, "w-full")} value={applied} onChange={(e) => set({ applied: e.target.value === "any" ? undefined : e.target.value, filter: undefined })}>
           <option value="any">Any time</option>
           <option value="today">Today</option>
           <option value="7">Last 7 days</option>
