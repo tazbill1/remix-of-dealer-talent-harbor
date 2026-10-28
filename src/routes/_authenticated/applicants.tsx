@@ -26,9 +26,15 @@ import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
 import { UserPlus } from "lucide-react";
+import { z } from "zod";
+import { isTestName, plural, sourceLabel } from "@/lib/display";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }] }),
+  validateSearch: z.object({
+    filter: z.enum(["today"]).optional(),
+    status: z.string().optional(),
+  }),
   component: Applicants,
 });
 
