@@ -23,7 +23,8 @@
 - [x] Texting engine: outbox with consent/STOP/texting-window checks, practice mode, Twilio adapter, inbound + delivery-receipt webhooks, assistant replies through the outbox, Claude switch (docs/texting-engine.md)
 - [ ] Live SMS delivery (blocked: Twilio account + carrier registration)
 - [x] Texting workflows: welcome on apply, manager summary with 1/2 replies, nudges, escalation contact, interview reminders, 30/60/90 check-ins (scheduled: /api/public/cron/workflows)
-- [ ] One-click Outlook/Google calendar sync + outside-booking detection (blocked: Microsoft/Google sign-in client setup was declined)
+- [x] Calendars without sign-in: subscribe link (interviews show in Outlook/Google) and busy times read from each person's iCal link, set on Team, My calendar or the invite
+- [ ] One-click Microsoft/Google calendar sign-in (needs an Azure/Google Cloud app registration)
 - [x] Track 2 analytics page: time to first contact, aging by stage, time to fill by role/rooftop, manager response, open roles (fixed ops vs variable, per store), applicant and contacted counts, breakdowns by location/role/hiring manager/source, CSV exports
 - [x] Stage changes logged to the timeline (powers first contact, aging, time to fill)
 - [x] Data model update applied (regions, candidates, consent, retention dates, check-ins, event actor)
@@ -31,7 +32,7 @@
 - [x] Region filters on Applicants and Analytics; transfers stay in-region by default
 - [x] "Also applied for" on the profile (one candidate, many applications)
 - [x] 30/60/90 check-ins recorded on each hire's profile
-- [ ] Store/region access rules + Team page: see docs/access-rules-update.md
+- [x] Store/region access rules + Team page (docs/access-rules-update.md)
 - [x] Enterprise templates (email + text), in-app email to one or many applicants with merge fields, unsubscribe links, Integrations page; practice mode until the sender domain is set up (docs/email-update.md)
 - [x] 3-business-day untouched escalation (code; schedule it in Lovable: docs/escalation-schedule.md)
 - [x] Team invites by email/link with role + store/region coverage; remove members; managers must be given coverage (docs/team-invites-update.md)
@@ -39,8 +40,21 @@
 - [ ] Video library + welcome/thank-you videos, applicant intro video recording
 - [x] Live email (notify.workwithwerk.com verified; sending address penny@notify.workwithwerk.com, mode live)
 - [ ] Live texts (blocked: Twilio)
-- [ ] Per-store AI HR assistant: applicant chat, check-ins, manager nudges, HR summaries
+- [~] Per-store AI HR assistant: texting, check-ins and nudges done; group settings (tone, facts, screening, hand-off) and take-over done; missing: weekly HR summary
 - [ ] Interviews: in-person recording, Zoom/Meet/Teams transcripts, AI grading, AI interview questions
-- [ ] Automated status moves from events
+- [~] Automated status moves from events (done: manager 1/2, candidate booking, offer sent, offer signed → Hired option; missing: HR-defined rules)
 
 - [x] Simplify BoldSign connection and setup into one section; verified connection checks, template save/reopen, copied production address and mobile layout.
+
+## Done (Oct 27)
+- [x] Job Share button: tagged links for free boards + QR code
+- [x] Offer letters + documents to sign (BoldSign), one texted signing link, signed copy download
+- [x] Interview self-scheduling with store interview hours; booking link in invite text and email
+- [x] Automatic texts page: every automatic text on/off, wording, timing; check-in days; booking window
+- [x] AI assistant settings: tone, facts it may share, screening topics, hand-off to a person, pause/take-over, books only real open times
+
+## Still to do
+- [ ] Background checks (partner TBD) — tracking on the profile first
+- [ ] Weekly HR summary per store
+- [ ] Interview intelligence: question kits, recording/transcripts, AI scorecards (needs consent handling)
+- [ ] Separate Twilio brand per client before go-live; bulk email via Resend/SES
