@@ -1,3 +1,4 @@
+import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -61,6 +62,7 @@ function TalentPool() {
         <h1 className="flex items-center gap-2 text-3xl"><Waves className="size-7 text-sapphire" />Talent pool</h1>
         <p className="text-muted-foreground">Candidates who stopped responding at one store. Any nearby store in the same region can claim them and start fresh.</p>
       </div>
+      <ApplicantViewTabs active="pool" />
       <div className="flex flex-wrap items-center gap-3">
         <select aria-label="Region" className={selectCls} value={region} onChange={(e) => nav({ search: { region: e.target.value === "all" ? undefined : e.target.value }, replace: true })}>
           <option value="all">All regions</option>

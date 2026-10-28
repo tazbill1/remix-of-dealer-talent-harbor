@@ -1,3 +1,4 @@
+import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { PossibleDuplicateTag } from "@/components/possible-duplicate-tag";
 import { OnboardingPanel } from "@/components/onboarding-panel";
 import { createFileRoute } from "@tanstack/react-router";
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     store: z.string().optional(),
     tests: z.string().optional(),
     overdue: z.coerce.string().optional(),
+    focus: z.string().optional(),
     applicant: z.string().uuid().optional(),
     tab: z.enum(["overview", "messages", "interview", "offer", "notes", "onboarding"]).optional(),
     interview: z.string().uuid().optional(),
@@ -161,7 +163,9 @@ function Applicants() {
     || (store === "shared" && a.open_to_other_stores))
     && (showTests || !isTestName(a.full_name))
     && (!statusFilter || a.status === statusFilter));
-  const apps = filterApplicants(overdueOnly ? base.filter((a) => overdueOf(a)) : base, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
+  const focusAttention = search.focus === "attention";
+  const focused = focusAttention ? base.filter((a) => !!a.needs_attention || !!overdueOf(a)) : base;
+  const apps = filterApplicants(overdueOnly ? focused.filter((a) => overdueOf(a)) : focused, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
   const sortedApps = sortApplicants(apps, sort, job, storeName);
   const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
   const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || overdueOnly || region !== "all" || store !== "all";
@@ -220,6 +224,8 @@ function Applicants() {
           {canAddCandidate(org.role, org.isPlatformAdmin) && <Button onClick={() => setAddingManual(true)}><UserPlus />Add candidate</Button>}
         </div>
       </div>
+
+      <ApplicantViewTabs active={focusAttention ? "attention" : "all"} />
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">

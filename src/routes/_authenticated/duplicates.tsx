@@ -1,3 +1,4 @@
+import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -98,6 +99,7 @@ function Duplicates() {
         <h1 className="flex items-center gap-2 text-3xl"><Copy className="size-7 text-sapphire" />Possible duplicates</h1>
         <p className="text-muted-foreground">Records in your group that share an email or phone. {canEdit ? "Merge them or mark them as not a duplicate." : "Only Recruiting/HR and group admins can merge."}</p>
       </div>
+      <ApplicantViewTabs active="duplicates" />
       <div className="space-y-3">
         {(data ?? []).map((d) => {
           const bothApps = d.a.type === "application" && d.b.type === "application" && d.a.visible && d.b.visible;
