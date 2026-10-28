@@ -42,6 +42,7 @@ import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
 import { Route as ECodeRouteImport } from './routes/e.$code'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as OnboardTokenRouteImport } from './routes/onboard.$token'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
@@ -235,6 +236,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardTokenRoute = OnboardTokenRouteImport.update({
+  id: '/onboard/$token',
+  path: '/onboard/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SCodeRoute = SCodeRouteImport.update({
   id: '/s/$code',
   path: '/s/$code',
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -446,6 +453,7 @@ export interface FileRoutesByTo {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -505,6 +513,7 @@ export interface FileRoutesById {
   '/careers/jobs': typeof CareersJobsRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/onboard/$token': typeof OnboardTokenRoute
   '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
@@ -564,6 +573,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -620,6 +630,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/careers/jobs'
     | '/e/$code'
     | '/invite/$token'
+    | '/onboard/$token'
     | '/s/$code'
     | '/status/$token'
     | '/u/$token'
@@ -715,6 +727,7 @@ export interface RootRouteChildren {
   BookTokenRoute: typeof BookTokenRoute
   ECodeRoute: typeof ECodeRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  OnboardTokenRoute: typeof OnboardTokenRoute
   SCodeRoute: typeof SCodeRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
@@ -972,6 +985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboard/$token': {
+      id: '/onboard/$token'
+      path: '/onboard/$token'
+      fullPath: '/onboard/$token'
+      preLoaderRoute: typeof OnboardTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$code': {
       id: '/s/$code'
       path: '/s/$code'
@@ -1213,6 +1233,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookTokenRoute: BookTokenRoute,
   ECodeRoute: ECodeRoute,
   InviteTokenRoute: InviteTokenRoute,
+  OnboardTokenRoute: OnboardTokenRoute,
   SCodeRoute: SCodeRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,
