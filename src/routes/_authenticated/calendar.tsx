@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RescheduleButton, isUpcoming } from "@/components/applicant-tools";
-import { CalendarDays } from "lucide-react";
+import { RescheduleButton, isUpcoming, ics } from "@/components/applicant-tools";
+import { CalendarDays, CalendarPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { CalendarSubscribe } from "@/components/calendar-subscribe";
@@ -33,7 +33,6 @@ function CalendarPage() {
   return (
     <div className="space-y-6">
       <div><h1 className="text-3xl">Interviews</h1><p className="text-muted-foreground">Every interview across your stores, whether booked by the assistant or added by a manager.</p></div>
-      <CalendarSubscribe orgId={org.orgId} />
       <MyCalendarCard orgId={org.orgId} />
       <ul className="space-y-2">
         {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
@@ -50,9 +49,21 @@ function CalendarPage() {
             {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
               <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
             )}
+            {i.status !== "cancelled" && (
+              <Button size="sm" variant="outline" className="shrink-0" aria-label="Add to calendar" onClick={() => {
+                const name = app(i.application_id)?.full_name ?? "Applicant";
+                const storeName = store(app(i.application_id)?.dealership_id);
+                const url = URL.createObjectURL(new Blob([ics(i, `Interview: ${name}${storeName ? ` (${storeName})` : ""}`)], { type: "text/calendar" }));
+                const a = document.createElement("a"); a.href = url; a.download = "interview.ics"; a.click(); URL.revokeObjectURL(url);
+              }}>
+                <CalendarPlus />
+                Add to calendar
+              </Button>
+            )}
           </li>
         ))}
       </ul>
+      <CalendarSubscribe orgId={org.orgId} />
     </div>
   );
 }
