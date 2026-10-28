@@ -26,7 +26,7 @@ async function loadTodo(orgId: string) {
         .from("applications")
         .select("id, full_name, status, created_at, needs_attention, dealership_id, job_id, jobs(title), dealerships(name)")
         .eq("org_id", orgId)
-        .in("status", ["new", "screening", "interview", "offer"])
+        .in("status", ["new", "screening", "interview", "offer", "other_location", "hiring_event"])
         .order("created_at")
         .range(f, t) as never,
     )
@@ -54,7 +54,7 @@ async function loadTodo(orgId: string) {
     cards.push(...(data ?? []));
   }
   const offers: TodoOffer[] = [];
-  for (const part of chunk(ids("offer"))) {
+  for (const part of chunk([...ids("interview"), ...ids("offer")])) {
     const { data } = await supabase
       .from("offers")
       .select("application_id, status, is_offer_letter, created_at")
