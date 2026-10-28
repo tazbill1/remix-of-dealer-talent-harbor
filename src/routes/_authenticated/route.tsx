@@ -38,6 +38,10 @@ const nav = [
   { to: "/integrations", label: "Integrations", icon: Plug },
 ] as const;
 
+/** GMs and hiring managers only work in their assigned stores. */
+const isStoreRole = (role?: string) => role === "dealer_manager" || role === "hiring_manager";
+const ADMIN_ONLY = new Set<string>(["/templates", "/automations", "/status-rules", "/integrations"]);
+
 function Layout() {
   const { data: me, isLoading } = useQuery(meQuery);
   const loc = useLocation();
@@ -58,6 +62,19 @@ function Layout() {
     if (needsOnboarding && loc.pathname !== "/onboarding") navigate({ to: "/onboarding" });
   }, [needsOnboarding, loc.pathname, navigate]);
 
+  const storeRole = !me?.isPlatformAdmin && isStoreRole(membership?.role);
+  const { data: scopeCount } = useQuery({
+    queryKey: ["my-scopes", membership?.org_id, me?.user.id],
+    enabled: !!storeRole && !!membership && !!me,
+    queryFn: async () => {
+      const { data: m } = await supabase.from("org_members").select("id").eq("org_id", membership!.org_id).eq("user_id", me!.user.id).maybeSingle();
+      if (!m) return 0;
+      const { count } = await supabase.from("org_member_scopes").select("id", { count: "exact", head: true }).eq("member_id", m.id);
+      return count ?? 0;
+    },
+  });
+  const unassigned = !!storeRole && scopeCount === 0;
+
   if (isLoading || !me) return <div className="p-10 text-muted-foreground">Loading...</div>;
 
   const ctx: OrgCtx | null = membership ? {
@@ -68,7 +85,9 @@ function Layout() {
   // Group pages only render once a dealer group exists; onboarding and the admin console never need one.
   const groupFree = leafId === "/_authenticated/onboarding" || leafId === "/_authenticated/platform";
   let body: React.ReactNode = <Outlet />;
-  if (!ctx && !groupFree) {
+  if (ctx && !groupFree && unassigned) {
+    body = <div className="p-8"><p>You're not assigned to a store yet. Ask your admin.</p></div>;
+  } else if (!ctx && !groupFree) {
     body = needsOnboarding
       ? <div className="p-10 text-muted-foreground">Setting things up...</div>
       : <div className="p-8"><p>Pick a dealer group from the WerkandMe Admin console.</p>
@@ -137,7 +156,8 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
       ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
       {org && <ModeBadge orgId={org.orgId} />}
       <nav className="space-y-1">
-        {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter").map((n) => (
+        {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter")
+          .filter(n => org.isPlatformAdmin || !isStoreRole(org.role) || !ADMIN_ONLY.has(n.to)).map((n) => (
           <Link key={n.to} to={n.to}
             className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",
               loc.pathname.startsWith(n.to) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
