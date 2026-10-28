@@ -265,6 +265,9 @@ export type Database = {
           phone: string | null
           profile: Json
           rating: number | null
+          referral_source: string | null
+          referred_by_text: string | null
+          referrer_id: string | null
           resume_path: string | null
           source: string
           start_date: string | null
@@ -298,6 +301,9 @@ export type Database = {
           phone?: string | null
           profile?: Json
           rating?: number | null
+          referral_source?: string | null
+          referred_by_text?: string | null
+          referrer_id?: string | null
           resume_path?: string | null
           source?: string
           start_date?: string | null
@@ -331,6 +337,9 @@ export type Database = {
           phone?: string | null
           profile?: Json
           rating?: number | null
+          referral_source?: string | null
+          referred_by_text?: string | null
+          referrer_id?: string | null
           resume_path?: string | null
           source?: string
           start_date?: string | null
@@ -365,6 +374,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referrers"
             referencedColumns: ["id"]
           },
         ]
@@ -1558,6 +1574,127 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_bonuses: {
+        Row: {
+          amount: number | null
+          applicant_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          org_id: string
+          paid_at: string | null
+          payout_stage: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          amount?: number | null
+          applicant_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          org_id: string
+          paid_at?: string | null
+          payout_stage: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number | null
+          applicant_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          paid_at?: string | null
+          payout_stage?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_bonuses_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_bonuses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_bonuses_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrers: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          department: string | null
+          email: string | null
+          employee_name: string
+          id: string
+          org_id: string
+          phone: string | null
+          referral_code: string
+          store_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          employee_name: string
+          id?: string
+          org_id: string
+          phone?: string | null
+          referral_code?: string
+          store_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          employee_name?: string
+          id?: string
+          org_id?: string
+          phone?: string | null
+          referral_code?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       regions: {
         Row: {
           created_at: string
@@ -1849,6 +1986,10 @@ export type Database = {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      can_manage_referrals: {
+        Args: { _org: string; _uid: string }
+        Returns: boolean
+      }
       can_post_jobs: { Args: { _org: string; _uid: string }; Returns: boolean }
       can_read_compliance_record: {
         Args: { _app: string; _org: string; _store: string; _uid: string }
@@ -1869,6 +2010,17 @@ export type Database = {
       }
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
+      is_store_staff_for: {
+        Args: { _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
+      referrer_by_code: {
+        Args: { _code: string; _org: string }
+        Returns: {
+          employee_name: string
+          id: string
+        }[]
+      }
       store_texting_status: {
         Args: { _org: string }
         Returns: {
