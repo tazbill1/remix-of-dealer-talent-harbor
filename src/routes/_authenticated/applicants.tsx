@@ -59,7 +59,7 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     region: z.string().optional(),
     store: z.string().optional(),
     tests: z.string().optional(),
-    overdue: z.string().optional(),
+    overdue: z.coerce.string().optional(),
     applicant: z.string().uuid().optional(),
     tab: z.enum(["overview", "messages", "interview", "offer", "notes"]).optional(),
     interview: z.string().uuid().optional(),
