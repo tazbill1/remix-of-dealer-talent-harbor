@@ -75,9 +75,13 @@ export async function sendLovableEmail({
     { apiKey, sendUrl: process.env["LOVABLE_SEND_URL"] },
   );
 
-  if (!response.success || !response.message_id) {
+  // The managed API accepts sends into its own delivery workflow and may return
+  // only a workflow_id (status "queued") without a message_id.
+  const r = response as { success?: boolean; message_id?: string; workflow_id?: string };
+  const id = r.message_id ?? r.workflow_id;
+  if (!r.success || !id) {
     throw new EmailAPIError(502, "Email send was not accepted", null, "send_not_accepted");
   }
 
-  return { id: response.message_id };
+  return { id };
 }
