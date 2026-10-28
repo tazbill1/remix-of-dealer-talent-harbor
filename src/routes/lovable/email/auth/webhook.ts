@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Remix of Dealer Talent Harbor"
+const SITE_NAME = "hireme by WerkandMe"
 const SENDER_DOMAIN = "notify.workwithwerk.com"
 const ROOT_DOMAIN = "workwithwerk.com"
 const FROM_DOMAIN = "notify.workwithwerk.com"
