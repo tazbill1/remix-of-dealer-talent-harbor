@@ -107,14 +107,18 @@ function Layout() {
 type Me = NonNullable<Awaited<ReturnType<NonNullable<typeof meQuery.queryFn>>>>;
 
 function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void; children: React.ReactNode }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const loc = useLocation();
+  // Close the mobile menu whenever navigation happens.
+  useEffect(() => { setMobileOpen(false); }, [loc.pathname]);
   const sidebar = <SidebarBody me={me} org={org} onPick={onPick} />;
   return (
     <div className="flex min-h-screen bg-muted">
       <aside className="hidden w-64 shrink-0 bg-sidebar text-sidebar-foreground sm:block">{sidebar}</aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b bg-background px-4 py-3 sm:hidden">
-          <Logo className="h-6" />
-          <Sheet>
+          <LogoLink className="h-6" />
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
             <SheetContent side="left" className="w-64 border-0 bg-sidebar p-0 text-sidebar-foreground">{sidebar}</SheetContent>
           </Sheet>
@@ -147,7 +151,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
   const loc = useLocation();
   return (
     <div className="flex h-full min-h-screen flex-col p-4">
-      <Logo light className="mb-6 h-7 self-start" />
+      <LogoLink light className="mb-6 h-7 self-start" />
       {me.memberships.length > 1 ? (
         <select className="mb-4 rounded-md bg-sidebar-accent px-2 py-2 text-sm text-sidebar-accent-foreground"
           value={org?.orgId ?? ""} onChange={(e) => { localStorage.setItem("wm_org", e.target.value); onPick(e.target.value); }}>
