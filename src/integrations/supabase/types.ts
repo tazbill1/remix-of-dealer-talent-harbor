@@ -259,6 +259,7 @@ export type Database = {
           id: string
           job_id: string
           knockout_failed: boolean
+          last_reminded_at: string | null
           linkedin_url: string | null
           needs_attention: string | null
           notes: string | null
@@ -271,6 +272,7 @@ export type Database = {
           referral_source: string | null
           referred_by_text: string | null
           referrer_id: string | null
+          reminder_count: number
           resume_file_name: string | null
           resume_path: string | null
           resume_url: string | null
@@ -279,6 +281,7 @@ export type Database = {
           source_detail: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["application_status"]
+          status_changed_at: string
           status_token: string
           updated_at: string
         }
@@ -302,6 +305,7 @@ export type Database = {
           id?: string
           job_id: string
           knockout_failed?: boolean
+          last_reminded_at?: string | null
           linkedin_url?: string | null
           needs_attention?: string | null
           notes?: string | null
@@ -314,6 +318,7 @@ export type Database = {
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
+          reminder_count?: number
           resume_file_name?: string | null
           resume_path?: string | null
           resume_url?: string | null
@@ -322,6 +327,7 @@ export type Database = {
           source_detail?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
+          status_changed_at?: string
           status_token?: string
           updated_at?: string
         }
@@ -345,6 +351,7 @@ export type Database = {
           id?: string
           job_id?: string
           knockout_failed?: boolean
+          last_reminded_at?: string | null
           linkedin_url?: string | null
           needs_attention?: string | null
           notes?: string | null
@@ -357,6 +364,7 @@ export type Database = {
           referral_source?: string | null
           referred_by_text?: string | null
           referrer_id?: string | null
+          reminder_count?: number
           resume_file_name?: string | null
           resume_path?: string | null
           resume_url?: string | null
@@ -365,6 +373,7 @@ export type Database = {
           source_detail?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["application_status"]
+          status_changed_at?: string
           status_token?: string
           updated_at?: string
         }
@@ -2138,6 +2147,44 @@ export type Database = {
           },
         ]
       }
+      status_reminder_rules: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          org_id: string
+          remind_after_days: number
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id: string
+          remind_after_days: number
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          remind_after_days?: number
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_reminder_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_calendars: {
         Row: {
           created_at: string
@@ -2468,7 +2515,10 @@ export type Database = {
           store_name: string
         }[]
       }
+      run_status_reminders: { Args: { _org?: string }; Returns: number }
+      run_status_reminders_now: { Args: { _org: string }; Returns: number }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
+      seed_status_reminder_rules: { Args: { _org: string }; Returns: undefined }
       store_texting_status: {
         Args: { _org: string }
         Returns: {
