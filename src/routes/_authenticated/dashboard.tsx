@@ -14,6 +14,7 @@ import {
   type Touch,
 } from "@/lib/escalation";
 import { GradientText } from "@/components/brand";
+import { ManagerTodo } from "@/components/manager-todo";
 import { Button } from "@/components/ui/button";
 import { isTestName, plural } from "@/lib/display";
 
@@ -124,6 +125,7 @@ function Dashboard() {
           </Button>
         </div>
       )}
+      {stores.length > 0 && <ManagerTodo orgId={org.orgId} />}
       {stalled.length > 0 && (
         <div className="rounded-2xl bg-accent p-4 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
