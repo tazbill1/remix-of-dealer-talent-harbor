@@ -197,6 +197,8 @@ export const automationsSchema = z.object({
       hour: z.number().int().min(0).max(23).optional(),
     })
     .optional(),
+  /** Email alert to managers when a candidate replies HUMAN. Off unless turned on. */
+  humanAlert: z.object({ email: z.boolean().optional() }).optional(),
   /** Saved from the Status rules page (saveStatusRules), never from Automatic texts. */
   statusRules: statusRulesSchema.optional(),
 });

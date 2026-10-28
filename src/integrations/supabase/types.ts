@@ -1230,6 +1230,64 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          id: string
+          message: string
+          org_id: string
+          read_at: string | null
+          recipient_id: string
+          store_id: string | null
+          type: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          org_id: string
+          read_at?: string | null
+          recipient_id: string
+          store_id?: string | null
+          type: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          org_id?: string
+          read_at?: string | null
+          recipient_id?: string
+          store_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
           application_id: string
