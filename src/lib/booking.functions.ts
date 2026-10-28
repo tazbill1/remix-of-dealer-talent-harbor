@@ -1,3 +1,4 @@
+import { isClosed } from "@/lib/jobs";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -83,7 +84,7 @@ export const getBooking = createServerFn({ method: "POST" })
       address: b.address,
       timeZone: b.timeZone,
       minutes: b.minutes,
-      closed: ["rejected", "hired"].includes(b.app.status),
+      closed: isClosed(b.app.status),
       upcoming: b.upcoming ? b.upcoming.starts_at : null,
       slots: b.slots.map((t) => new Date(t).toISOString()),
     };
@@ -101,7 +102,7 @@ export const bookInterview = createServerFn({ method: "POST" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const b = await loadBooking(db, appId);
     if (!b) throw new Error("This booking link isn't valid.");
-    if (["rejected", "hired"].includes(b.app.status)) throw new Error("This interview request is closed.");
+    if (isClosed(b.app.status)) throw new Error("This interview request is closed.");
     const start = Date.parse(data.startsAt);
     if (!b.slots.includes(start)) throw new Error("Sorry, that time was just taken. Please pick another.");
 

@@ -128,7 +128,7 @@ export function storeWeek(
     newApplicants: apps.filter((a) => lastWeek(a.created_at)).length,
     waitingOnManager: apps.filter((a) => a.status === "screening").length,
     needsAttention: apps.filter(
-      (a) => !!a.needs_attention && ["new", "screening", "interview", "offer"].includes(a.status),
+      (a) => !!a.needs_attention && ["new", "screening", "interview", "offer", "other_location", "hiring_event"].includes(a.status),
     ).length,
     interviewsHeld: interviews.filter((i) => lastWeek(i.starts_at)).length,
     interviewsAhead: interviews.filter((i) => i.status === "scheduled" && nextWeek(i.starts_at))

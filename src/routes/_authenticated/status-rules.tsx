@@ -284,7 +284,7 @@ function RuleCard({
       <div className="space-y-1 text-sm">
         <span className="text-xs text-muted-foreground">Only for applicants in</span>
         <div className="flex flex-wrap gap-2">
-          {FROM_STAGES.map((s) => (
+          {FROM_STAGES.filter((s) => s !== "offer").map((s) => (
             <button
               key={s}
               type="button"
@@ -312,7 +312,7 @@ function RuleCard({
           value={rule.to}
           onChange={(e) => onPatch({ to: e.target.value as StatusRule["to"] })}
         >
-          {TO_STAGES.map((s) => (
+          {TO_STAGES.filter((s) => s !== "offer" || rule.to === "offer").map((s) => (
             <option key={s} value={s}>
               {STATUS_LABEL[s]}
             </option>

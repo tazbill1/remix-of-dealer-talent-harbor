@@ -239,6 +239,13 @@
       "when": 1793207930071,
       "tag": "0033_referral_tiers_and_drawings",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793208699851,
+      "tag": "0034_client_applicant_statuses",
+      "breakpoints": true
     }
   ]
 }

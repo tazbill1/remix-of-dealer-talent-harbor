@@ -1,3 +1,4 @@
+import { STATUSES, STATUS_LABEL, isClosed } from "@/lib/jobs";
 // "Ask" assistant for managers: pure helpers (ranking, safe applicant summaries, prompt, links).
 // Data access lives in gm-assistant.functions.ts and always runs as the signed-in user.
 import { summarizeScorecards } from "@/lib/interview-kits";
@@ -62,7 +63,7 @@ export function rankCandidates(rows: ApplicantRow[], cards: ScorecardRow[], now 
     );
   };
   return rows
-    .filter((a) => a.status !== "hired" && a.status !== "rejected")
+    .filter((a) => !isClosed(a.status))
     .map((a) => ({ a, s: score(a) }))
     .sort((x, y) => y.s - x.s)
     .map((x) => x.a);
@@ -100,12 +101,7 @@ export function parseLinks(text: string): Segment[] {
 // ---------------------------------------------------------------------------
 
 export const REPORT_STAGES = [
-  ["new", "New"],
-  ["screening", "Screening"],
-  ["interview", "Interview"],
-  ["offer", "Offer"],
-  ["hired", "Hired"],
-  ["rejected", "Not selected"],
+  ...STATUSES.map((s) => [s, STATUS_LABEL[s]] as const),
 ] as const;
 
 export type ReportGroupBy = "store" | "region" | "role";
@@ -132,7 +128,7 @@ export function pipelineReport(
   input: PipelineRow[],
   opts: { title: string; subtitle: string; groupBy: ReportGroupBy; includeClosed: boolean; chart: boolean },
 ): Report {
-  const stages = REPORT_STAGES.filter(([k]) => opts.includeClosed || (k !== "hired" && k !== "rejected"));
+  const stages = REPORT_STAGES.filter(([k]) => opts.includeClosed || !isClosed(k));
   const keys = stages.map(([k]) => k as string);
   const groups = new Map<string, { href: string | null; cells: number[] }>();
   for (const r of input) {

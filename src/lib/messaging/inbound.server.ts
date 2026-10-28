@@ -1,3 +1,4 @@
+import { CLOSED_STATUSES } from "@/lib/jobs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { toE164 } from "@/lib/messaging/core";
@@ -14,7 +15,7 @@ export async function storeForNumber(admin: DB, to: string) {
   return (data ?? []).find((s) => toE164(s.sms_number) === to) ?? null;
 }
 
-const CLOSED = ["hired", "rejected"];
+const CLOSED: readonly string[] = CLOSED_STATUSES;
 
 /**
  * Who sent this text and which application it's about. First choice: whoever we last

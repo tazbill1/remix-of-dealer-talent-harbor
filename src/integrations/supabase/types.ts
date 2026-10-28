@@ -2285,6 +2285,10 @@ export type Database = {
         | "offer"
         | "hired"
         | "rejected"
+        | "unqualified"
+        | "other_location"
+        | "hiring_event"
+        | "do_not_hire"
       org_role:
         | "group_admin"
         | "dealer_manager"
@@ -2425,6 +2429,10 @@ export const Constants = {
         "offer",
         "hired",
         "rejected",
+        "unqualified",
+        "other_location",
+        "hiring_event",
+        "do_not_hire",
       ],
       org_role: [
         "group_admin",

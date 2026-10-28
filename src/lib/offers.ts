@@ -1,3 +1,4 @@
+import { isClosed } from "@/lib/jobs";
 /**
  * Offer letters signed through BoldSign. The dealer group's own letter lives in
  * BoldSign as a template; hireme fills in the candidate's details, texts them a
@@ -185,4 +186,4 @@ export function docsText(a: { first: string; store: string; count: number; link:
 
 /** Whether a signed document should move the applicant to Hired. */
 export const hireOnSign = (a: { status: OfferStatus; isOfferLetter: boolean; setting: boolean; appStatus: string }) =>
-  a.status === "signed" && a.isOfferLetter && a.setting && a.appStatus !== "hired" && a.appStatus !== "rejected";
+  a.status === "signed" && a.isOfferLetter && a.setting && !isClosed(a.appStatus);

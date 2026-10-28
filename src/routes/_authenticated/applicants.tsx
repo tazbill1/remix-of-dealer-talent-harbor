@@ -7,7 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { STATUSES, STATUS_LABEL, canPostJobs, type AppStatus } from "@/lib/jobs";
+import { STATUSES, STATUS_LABEL, STATUS_COLOR, canPostJobs, isRejection, type AppStatus } from "@/lib/jobs";
+import { StatusPill, statusSelectStyle } from "@/components/status-pill";
+import { doNotHireRepeats } from "@/lib/do-not-hire";
+
+const confirmRejection = (s: AppStatus, n: number) =>
+  !isRejection(s) || window.confirm(`Move ${n === 1 ? "this applicant" : `${n} applicants`} to "${STATUS_LABEL[s]}"?`);
 import { statusEventRows } from "@/lib/status-log";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -106,6 +111,7 @@ function Applicants() {
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
   const chosen = (data?.apps ?? []).filter((a) => checked.includes(a.id));
   async function bulkMove() {
+    if (!confirmRejection(bulkStatus, checked.length)) return;
     const moving = chosen.filter((a) => a.status !== bulkStatus).map((a) => a.id);
     const { error } = await supabase.from("applications").update({ status: bulkStatus }).in("id", checked);
     if (error) return toast.error(error.message);
@@ -154,6 +160,7 @@ function Applicants() {
     .filter((a) => emailing?.includes(a.id))
     .map((a) => ({ id: a.id, full_name: a.full_name, email: a.email, jobTitle: job(a.job_id), storeName: storeName(a.dealership_id) }));
   const current = data?.apps.find((a) => a.id === selected);
+  const dnhRepeats = doNotHireRepeats(data?.apps ?? []);
   // Every other application from the same person, across all stores in the group.
   const otherApps = current?.candidate_id
     ? (data?.apps ?? []).filter((a) => a.candidate_id === current.candidate_id && a.id !== current.id)
@@ -163,6 +170,7 @@ function Applicants() {
   const notify = useServerFn(notifyApplicants);
   async function update(id: string, patch: Database["public"]["Tables"]["applications"]["Update"]) {
     const before = data?.apps.find((a) => a.id === id)?.status;
+    if (patch.status && patch.status !== before && !confirmRejection(patch.status, 1)) return false;
     const { data: saved, error } = await supabase.from("applications").update(patch).eq("org_id", org.orgId).eq("id", id).select("id").maybeSingle();
     if (error || !saved) { toast.error(error?.message ?? "This applicant couldn’t be updated. Check your store access and try again."); return false; }
     if (patch.status && patch.status !== before) {
@@ -282,8 +290,8 @@ function Applicants() {
           <span className="text-sm font-semibold">{checked.length} selected</span>
           <Button size="sm" variant="secondary" onClick={bulkEmail}><Mail />Email them</Button>
           <span className="text-sm">Move to</span>
-          <select className="h-8 rounded-md border bg-background px-2 text-sm text-foreground" value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as AppStatus)}>
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          <select className="h-8 rounded-md border px-2 text-sm" style={statusSelectStyle(bulkStatus)} value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as AppStatus)}>
+            {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
           <Button size="sm" variant="secondary" onClick={bulkMove}>Update stage</Button>
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
@@ -292,15 +300,15 @@ function Applicants() {
 
       {view === "board" ? (
         <div className="overflow-x-auto pb-4">
-        <div className="grid min-w-[900px] grid-cols-6 gap-2">
+        <div className="grid min-w-[1980px] grid-cols-9 gap-2">
           {STATUSES.map((st) => {
             const col = sortedApps.filter((a) => a.status === st);
             return (
               <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
-                <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
-                  <span className={cn(st === "hired" && "text-lime")}>{STATUS_LABEL[st]}</span>
+                <div className="mb-3 flex items-center justify-between gap-2 px-1 text-sm font-semibold">
+                  <StatusPill status={st} className="min-w-0 text-sm leading-tight" />
                   <span className="flex items-center gap-2 text-muted-foreground">{col.length}
                     {col.length > 0 && <Checkbox aria-label={`Select all ${STATUS_LABEL[st]}`} checked={col.every((a) => checked.includes(a.id))}
                       onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...col.map((a) => a.id)])] : prev.filter((id) => !col.some((a) => a.id === id)))} />}</span>
@@ -318,6 +326,7 @@ function Applicants() {
                       )}
                       <BackgroundCheckBadge status={a.background_check_status} />
                       <ReferralBadge app={a} names={referrerNames} />
+                      {dnhRepeats.has(a.id) && <DoNotHireBadge />}
                       {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                       <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                         <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
@@ -352,7 +361,7 @@ function Applicants() {
                   <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
-                  <td className="px-3 py-2.5">{STATUS_LABEL[a.status]}</td>
+                  <td className="px-3 py-2.5"><StatusPill status={a.status} />{dnhRepeats.has(a.id) && <> <DoNotHireBadge /></>}</td>
                   <td className="px-3 py-2.5">{sourceLabel(a.source)}</td>
                   <td className="px-3 py-2.5">{new Date(a.created_at).toLocaleDateString()}</td>
                   <td className="px-3 py-2.5">{a.rating ?? "—"}</td>
@@ -373,7 +382,7 @@ function Applicants() {
           {current && <Profile key={current.id} app={current} questions={parseQuestions(data?.jobs.find((j) => j.id === current.job_id)?.questions)} jobTitle={job(current.job_id)} storeName={storeName(current.dealership_id)} onUpdate={(p) => update(current.id, p)}
             initialTab={search.tab} interviewId={search.interview}
             isHr={canPostJobs(org.role, org.isPlatformAdmin)}
-            otherApps={otherApps} onOpenApp={setSelected}
+            otherApps={otherApps} onOpenApp={setSelected} doNotHireRepeat={dnhRepeats.has(current.id)}
             regionName={regionName(current.dealership_id)}
             transferOptions={(data?.jobs ?? []).filter((j) => j.status === "open" && j.id !== current.job_id).map((j) => ({ id: j.id, label: `${storeName(j.dealership_id)} · ${j.title}`,
               sameRegion: regionOf(j.dealership_id) === regionOf(current.dealership_id) }))}
@@ -404,7 +413,7 @@ type PanelTab = (typeof PANEL_TABS)[number]["id"];
 // Remembered for the session so reopening the panel lands on the last tab used.
 let lastPanelTab: PanelTab = "overview";
 
-function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
+function Profile({ doNotHireRepeat, app, questions, jobTitle, storeName, onUpdate, transferOptions, onTransfer, orgId, assistantName, onRefresh, isHr, otherApps, onOpenApp, regionName, onEmail, initialTab, interviewId }: { doNotHireRepeat: boolean; initialTab?: PanelTab | undefined; interviewId?: string | undefined; questions: Question[]; onEmail: () => void; orgId: string; assistantName: string; onRefresh: () => void; app: App; jobTitle: string; storeName: string; isHr: boolean;
   otherApps: { id: string; label: string; status: AppStatus }[]; onOpenApp: (id: string) => void; regionName: string | null;
   onUpdate: (p: Database["public"]["Tables"]["applications"]["Update"]) => Promise<boolean>; transferOptions: { id: string; label: string; sameRegion: boolean }[]; onTransfer: (jobId: string) => void }) {
   const [target, setTarget] = useState("");
@@ -443,10 +452,11 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
           {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
           {app.linkedin_url && <Button size="sm" variant="outline" asChild><a href={app.linkedin_url} target="_blank" rel="noreferrer"><Linkedin />LinkedIn</a></Button>}
           {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
-          <select aria-label="Stage" className="h-9 rounded-md border bg-background px-2 text-sm" value={app.status}
+          <select aria-label="Stage" className="h-9 rounded-md border px-2 text-sm" style={statusSelectStyle(app.status)} value={app.status}
             onChange={(e) => onUpdate({ status: e.target.value as AppStatus })}>
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
+          {doNotHireRepeat && <DoNotHireBadge />}
           <div className="flex gap-0.5" aria-label="Rating">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} aria-label={`${n} stars`} onClick={() => onUpdate({ rating: n })}>
@@ -501,7 +511,7 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
                     <button key={o.id} onClick={() => onOpenApp(o.id)}
                       className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-secondary">
                       <span>{o.label}</span>
-                      <span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LABEL[o.status]}</span>
+                      <StatusPill status={o.status} />
                     </button>
                   ))}
                 </div>
@@ -614,5 +624,12 @@ function ProfileFacts({ profile }: { profile: Record<string, unknown> }) {
           <dd>{Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}</dd></div>
       ))}
     </dl>
+  );
+}
+
+function DoNotHireBadge() {
+  return (
+    <span className="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ backgroundColor: STATUS_COLOR.do_not_hire, color: "#FFFFFF" }}
+      title="This person is marked Do Not Hire on another application in your group.">⚠ Previously Do Not Hire</span>
   );
 }

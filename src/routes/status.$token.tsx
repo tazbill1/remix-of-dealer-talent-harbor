@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { z } from "zod";
 import { CheckCircle2, Circle } from "lucide-react";
 import { getApplicationStatus } from "@/lib/public.functions";
-import { APPLICANT_STATUS_COPY, type AppStatus } from "@/lib/jobs";
+import { isRejection, APPLICANT_STATUS_COPY, type AppStatus } from "@/lib/jobs";
 import { Logo, GradientText } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ function Status() {
             <b>{d.assistantName} from {d.storeName}:</b> {APPLICANT_STATUS_COPY[d.status]} Bookmark this page. It always shows your latest status.
           </div>
         </div>
-        {d.status !== "rejected" && (
+        {!isRejection(d.status) && (
           <div className="rounded-2xl bg-background p-6 shadow-sm">
             <ol className="space-y-4">
               {steps.map((s, i) => (
