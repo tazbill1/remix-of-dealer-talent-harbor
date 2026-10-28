@@ -58,6 +58,7 @@ const applySchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
+  linkedinUrl: z.string().trim().max(300).optional().or(z.literal("")),
   source: z.string().trim().max(40).optional(),
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),

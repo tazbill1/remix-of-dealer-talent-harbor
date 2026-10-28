@@ -257,6 +257,7 @@ export type Database = {
           id: string
           job_id: string
           knockout_failed: boolean
+          linkedin_url: string | null
           needs_attention: string | null
           notes: string | null
           open_to_other_stores: boolean
@@ -289,6 +290,7 @@ export type Database = {
           id?: string
           job_id: string
           knockout_failed?: boolean
+          linkedin_url?: string | null
           needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
@@ -321,6 +323,7 @@ export type Database = {
           id?: string
           job_id?: string
           knockout_failed?: boolean
+          linkedin_url?: string | null
           needs_attention?: string | null
           notes?: string | null
           open_to_other_stores?: boolean
