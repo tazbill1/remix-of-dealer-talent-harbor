@@ -18,6 +18,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAdverseActionsRouteImport } from './routes/_authenticated/adverse-actions'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedApplicantsRouteImport } from './routes/_authenticated/applicants'
+import { Route as AuthenticatedAskRouteImport } from './routes/_authenticated/ask'
 import { Route as AuthenticatedAutomationsRouteImport } from './routes/_authenticated/automations'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedConsentsRouteImport } from './routes/_authenticated/consents'
@@ -100,6 +101,11 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
 const AuthenticatedApplicantsRoute = AuthenticatedApplicantsRouteImport.update({
   id: '/applicants',
   path: '/applicants',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAskRoute = AuthenticatedAskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAutomationsRoute =
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/applicants': typeof AuthenticatedApplicantsRoute
+  '/ask': typeof AuthenticatedAskRoute
   '/automations': typeof AuthenticatedAutomationsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/consents': typeof AuthenticatedConsentsRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/applicants': typeof AuthenticatedApplicantsRoute
+  '/ask': typeof AuthenticatedAskRoute
   '/automations': typeof AuthenticatedAutomationsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/consents': typeof AuthenticatedConsentsRoute
@@ -410,6 +418,7 @@ export interface FileRoutesById {
   '/_authenticated/adverse-actions': typeof AuthenticatedAdverseActionsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/applicants': typeof AuthenticatedApplicantsRoute
+  '/_authenticated/ask': typeof AuthenticatedAskRoute
   '/_authenticated/automations': typeof AuthenticatedAutomationsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/consents': typeof AuthenticatedConsentsRoute
@@ -460,6 +469,7 @@ export interface FileRouteTypes {
     | '/adverse-actions'
     | '/analytics'
     | '/applicants'
+    | '/ask'
     | '/automations'
     | '/calendar'
     | '/consents'
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/adverse-actions'
     | '/analytics'
     | '/applicants'
+    | '/ask'
     | '/automations'
     | '/calendar'
     | '/consents'
@@ -556,6 +567,7 @@ export interface FileRouteTypes {
     | '/_authenticated/adverse-actions'
     | '/_authenticated/analytics'
     | '/_authenticated/applicants'
+    | '/_authenticated/ask'
     | '/_authenticated/automations'
     | '/_authenticated/calendar'
     | '/_authenticated/consents'
@@ -689,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/applicants'
       fullPath: '/applicants'
       preLoaderRoute: typeof AuthenticatedApplicantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ask': {
+      id: '/_authenticated/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AuthenticatedAskRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/automations': {
@@ -964,6 +983,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdverseActionsRoute: typeof AuthenticatedAdverseActionsRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedApplicantsRoute: typeof AuthenticatedApplicantsRoute
+  AuthenticatedAskRoute: typeof AuthenticatedAskRoute
   AuthenticatedAutomationsRoute: typeof AuthenticatedAutomationsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedConsentsRoute: typeof AuthenticatedConsentsRoute
@@ -984,6 +1004,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdverseActionsRoute: AuthenticatedAdverseActionsRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedApplicantsRoute: AuthenticatedApplicantsRoute,
+  AuthenticatedAskRoute: AuthenticatedAskRoute,
   AuthenticatedAutomationsRoute: AuthenticatedAutomationsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedConsentsRoute: AuthenticatedConsentsRoute,
