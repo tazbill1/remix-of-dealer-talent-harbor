@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { AddCandidateDialog } from "@/components/add-candidate-dialog";
 import { canAddCandidate } from "@/lib/manual-candidate";
 import { SOURCE_CHANNELS } from "@/lib/sources";
-import { AssistantThreads, InterviewsPanel } from "@/components/applicant-tools";
+import { AssistantThreads, InterviewsPanel, TextCompose } from "@/components/applicant-tools";
 import { RetentionCheckins } from "@/components/retention-checkins";
 import { EmailCompose } from "@/components/email-compose";
 import { KnockoutBadge, ScreeningAnswers } from "@/components/screening-answers";
@@ -522,6 +522,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
   const { data: dup } = useOpenDuplicate(app.id);
   const overdueNow = overdueInfo(app, reminderRules);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [texting, setTexting] = useState(false);
   useEffect(() => { setDetailsOpen(localStorage.getItem("wm_panel_details") === "1"); }, []);
   const toggleDetails = () => setDetailsOpen((o) => { localStorage.setItem("wm_panel_details", o ? "0" : "1"); return !o; });
   // Top shows just the single most important flag; Details lists all of them.
@@ -540,7 +541,8 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
 </SheetHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onEmail}><Mail />Email</Button>
-          {app.phone && <Button size="sm" variant="outline" asChild><a href={`sms:${app.phone}`}><Phone />Text</a></Button>}
+          {app.phone && <Button size="sm" variant="outline" onClick={() => setTexting(true)}><Phone />Text</Button>}
+          {app.phone && <TextCompose open={texting} onOpenChange={setTexting} appId={app.id} name={app.full_name} onSent={onRefresh} />}
           {app.linkedin_url && <Button size="sm" variant="outline" asChild><a href={app.linkedin_url} target="_blank" rel="noreferrer"><Linkedin />LinkedIn</a></Button>}
           {app.resume_path && <Button size="sm" variant="outline" onClick={openResume}><FileText />Resume</Button>}
           <select aria-label="Stage" className="h-9 rounded-md border px-2 text-sm" style={statusSelectStyle(app.status)} value={app.status}
