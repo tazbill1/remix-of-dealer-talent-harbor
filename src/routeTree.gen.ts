@@ -24,6 +24,7 @@ import { Route as AuthenticatedAutomationsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedConsentsRouteImport } from './routes/_authenticated/consents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewKitsRouteImport } from './routes/_authenticated/interview-kits'
 import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
@@ -38,7 +39,9 @@ import { Route as BookTokenRouteImport } from './routes/book.$token'
 import { Route as CareersIndexRouteImport } from './routes/careers.index'
 import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
+import { Route as ECodeRouteImport } from './routes/e.$code'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as StatusTokenRouteImport } from './routes/status.$token'
 import { Route as UTokenRouteImport } from './routes/u.$token'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores_.$storeId'
@@ -138,6 +141,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedIntegrationsRoute =
   AuthenticatedIntegrationsRouteImport.update({
     id: '/integrations',
@@ -211,9 +219,19 @@ const CareersJobsRoute = CareersJobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => CareersRoute,
 } as any)
+const ECodeRoute = ECodeRouteImport.update({
+  id: '/e/$code',
+  path: '/e/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SCodeRoute = SCodeRouteImport.update({
+  id: '/s/$code',
+  path: '/s/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusTokenRoute = StatusTokenRouteImport.update({
@@ -349,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/consents': typeof AuthenticatedConsentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/events': typeof AuthenticatedEventsRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
@@ -362,7 +381,9 @@ export interface FileRoutesByFullPath {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers/': typeof CareersIndexRoute
@@ -401,6 +422,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/consents': typeof AuthenticatedConsentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/events': typeof AuthenticatedEventsRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/jobs': typeof AuthenticatedJobsRoute
@@ -414,7 +436,9 @@ export interface FileRoutesByTo {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers': typeof CareersIndexRoute
@@ -456,6 +480,7 @@ export interface FileRoutesById {
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/consents': typeof AuthenticatedConsentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/events': typeof AuthenticatedEventsRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interview-kits': typeof AuthenticatedInterviewKitsRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
@@ -469,7 +494,9 @@ export interface FileRoutesById {
   '/book/$token': typeof BookTokenRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$code': typeof SCodeRoute
   '/status/$token': typeof StatusTokenRoute
   '/u/$token': typeof UTokenRoute
   '/careers/': typeof CareersIndexRoute
@@ -511,6 +538,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/consents'
     | '/dashboard'
+    | '/events'
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
@@ -524,7 +552,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers/'
@@ -563,6 +593,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/consents'
     | '/dashboard'
+    | '/events'
     | '/integrations'
     | '/interview-kits'
     | '/jobs'
@@ -576,7 +607,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers'
@@ -617,6 +650,7 @@ export interface FileRouteTypes {
     | '/_authenticated/calendar'
     | '/_authenticated/consents'
     | '/_authenticated/dashboard'
+    | '/_authenticated/events'
     | '/_authenticated/integrations'
     | '/_authenticated/interview-kits'
     | '/_authenticated/jobs'
@@ -630,7 +664,9 @@ export interface FileRouteTypes {
     | '/book/$token'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/e/$code'
     | '/invite/$token'
+    | '/s/$code'
     | '/status/$token'
     | '/u/$token'
     | '/careers/'
@@ -665,7 +701,9 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   BookTokenRoute: typeof BookTokenRoute
+  ECodeRoute: typeof ECodeRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  SCodeRoute: typeof SCodeRoute
   StatusTokenRoute: typeof StatusTokenRoute
   UTokenRoute: typeof UTokenRoute
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
@@ -796,6 +834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/events': {
+      id: '/_authenticated/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof AuthenticatedEventsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/integrations': {
       id: '/_authenticated/integrations'
       path: '/integrations'
@@ -894,11 +939,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CareersJobsRouteImport
       parentRoute: typeof CareersRoute
     }
+    '/e/$code': {
+      id: '/e/$code'
+      path: '/e/$code'
+      fullPath: '/e/$code'
+      preLoaderRoute: typeof ECodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$code': {
+      id: '/s/$code'
+      path: '/s/$code'
+      fullPath: '/s/$code'
+      preLoaderRoute: typeof SCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status/$token': {
@@ -1067,6 +1126,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedConsentsRoute: typeof AuthenticatedConsentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewKitsRoute: typeof AuthenticatedInterviewKitsRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
@@ -1089,6 +1149,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedConsentsRoute: AuthenticatedConsentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEventsRoute: AuthenticatedEventsRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewKitsRoute: AuthenticatedInterviewKitsRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
@@ -1129,7 +1190,9 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   BookTokenRoute: BookTokenRoute,
+  ECodeRoute: ECodeRoute,
   InviteTokenRoute: InviteTokenRoute,
+  SCodeRoute: SCodeRoute,
   StatusTokenRoute: StatusTokenRoute,
   UTokenRoute: UTokenRoute,
   ApiSmsInboundRoute: ApiSmsInboundRoute,

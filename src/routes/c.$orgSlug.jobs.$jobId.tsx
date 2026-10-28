@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { rememberScan, recallScan } from "@/lib/scan";
 import { rememberReferral, recallReferral } from "@/lib/referral-capture";
 import { toast } from "sonner";
 import { ArrowLeft, MapPin } from "lucide-react";
@@ -20,7 +21,7 @@ const SMS_TERMS_URL = "/terms";
 const SMS_PRIVACY_URL = "/privacy";
 
 export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
-  validateSearch: z.object({ source: z.string().max(40).optional(), source_detail: z.string().max(120).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
+  validateSearch: z.object({ source: z.string().max(40).optional(), source_detail: z.string().max(120).optional(), scan: z.string().max(16).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
   loader: async ({ params }) => {
     const d = await getPublicJob({ data: { jobId: params.jobId } });
     if (!d || !d.org || d.org.slug !== params.orgSlug) throw notFound();
@@ -38,7 +39,8 @@ export const Route = createFileRoute("/c/$orgSlug/jobs/$jobId")({
 function JobPage() {
   const { job, store, org, questions } = Route.useLoaderData();
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const { source, source_detail, ref, via } = Route.useSearch();
+  const { source, source_detail, ref, via, scan } = Route.useSearch();
+  useEffect(() => { rememberScan(org!.slug, scan); }, [org, scan]);
   const [referral, setReferral] = useState<{ code: string; via: "link" | "qr"; name: string } | null>(null);
   const [referredBy, setReferredBy] = useState("");
   useEffect(() => {
@@ -71,7 +73,7 @@ function JobPage() {
     if (f.linkedinUrl.trim() && !normalizeLinkedInUrl(f.linkedinUrl)) return toast.error(LINKEDIN_ERROR);
     setBusy(true);
     try {
-      const r = await submitApplication({ data: { jobId: job.id, ...f, source, ...(source_detail ? { sourceDetail: source_detail } : {}), ref: referral?.code, refVia: referral?.via, referredBy: referral ? undefined : referredBy, resumeFileName: file?.name, smsConsent, answers } });
+      const r = await submitApplication({ data: { jobId: job.id, ...f, source, ...(source_detail ? { sourceDetail: source_detail } : {}), scan: recallScan(org!.slug) ?? undefined, ref: referral?.code, refVia: referral?.via, referredBy: referral ? undefined : referredBy, resumeFileName: file?.name, smsConsent, answers } });
       if (file && r.resumePath && r.uploadToken) {
         await supabase.storage.from("resumes").uploadToSignedUrl(r.resumePath, r.uploadToken, file);
       }

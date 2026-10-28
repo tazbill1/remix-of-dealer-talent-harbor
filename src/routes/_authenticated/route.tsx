@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText, Workflow, ClipboardList, Sparkles, UserPlus } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, MessageSquareText, Workflow, ClipboardList, Sparkles, UserPlus, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const nav = [
   { to: "/jobs", label: "Jobs", icon: Briefcase },
   { to: "/interview-kits", label: "Interview kits", icon: ClipboardList },
   { to: "/referrals", label: "Referrals", icon: UserPlus },
+  { to: "/events", label: "Recruiting events", icon: QrCode },
   { to: "/consents", label: "Applicant consents", icon: Shield },
   { to: "/adverse-actions", label: "Adverse-action notices", icon: FileText },
   { to: "/stores", label: "Stores", icon: Building2 },
@@ -178,6 +179,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
       {org && <ModeBadge orgId={org.orgId} />}
       <nav className="space-y-1">
         {org && nav.filter(n => (n.to !== "/consents" && n.to !== "/adverse-actions" && n.to !== "/referrals") || org.isPlatformAdmin || org.role === "group_admin" || org.role === "recruiter" || (n.to === "/referrals" && org.role === "regional_leader"))
+          .filter(n => n.to !== "/events" || org.isPlatformAdmin || ["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(org.role))
           .filter(n => org.isPlatformAdmin || !isStoreRole(org.role) || !ADMIN_ONLY.has(n.to)).map((n) => (
           <Link key={n.to} to={n.to}
             className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent",

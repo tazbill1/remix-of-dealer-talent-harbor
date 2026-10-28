@@ -61,6 +61,7 @@ const applySchema = z.object({
   linkedinUrl: z.string().trim().max(300).optional().or(z.literal("")),
   source: z.string().trim().max(40).optional(),
   sourceDetail: z.string().trim().max(120).optional(),
+  scan: z.string().trim().max(16).optional(),
   resumeFileName: z.string().max(200).optional(),
   smsConsent: z.boolean().optional(),
   answers: z.record(z.string().max(40), z.union([z.string().max(500), z.number(), z.boolean()])).optional(),
@@ -144,13 +145,30 @@ export const submitApplication = createServerFn({ method: "POST" })
         referrerId = matchTypedReferrer(referredByText, refs ?? [])?.id ?? null;
       }
     }
+    // Event / store QR scan: an active event in this group tags the applicant (the database sets source + detail).
+    let recruitingEventId: string | null = null;
+    let scanSource: string | null = null;
+    {
+      const { cleanScanCode } = await import("@/lib/scan");
+      const code = cleanScanCode(data.scan);
+      if (code) {
+        const { data: ev } = await supabaseAdmin.from("recruiting_events").select("id")
+          .eq("org_id", job.org_id).eq("code", code).eq("is_active", true).maybeSingle();
+        if (ev) recruitingEventId = ev.id;
+        else {
+          const { data: st } = await supabaseAdmin.from("dealerships").select("id").eq("org_id", job.org_id).eq("qr_code", code).maybeSingle();
+          if (st) scanSource = "store_qr";
+        }
+      }
+    }
     const { data: app, error } = await supabaseAdmin.from("applications").insert({
+      recruiting_event_id: recruitingEventId,
       referrer_id: referrerId, referral_source: referralSource, referred_by_text: referredByText,
       org_id: job.org_id, job_id: job.id, dealership_id: job.dealership_id,
       full_name: data.fullName, email, phone,
       linkedin_url: linkedinUrl,
-      source: (data.source || "careers").toLowerCase(),
-      source_detail: data.sourceDetail || null, // source_channel is derived from source by a database trigger
+      source: (scanSource ?? (data.source || "careers")).toLowerCase(),
+      source_detail: scanSource ? null : data.sourceDetail || null, // source_channel is derived from source by a database trigger
       candidate_id: candidateId,
       answers,
       knockout_failed: knockoutFailed,
@@ -259,4 +277,34 @@ export const submitContact = createServerFn({ method: "POST" })
     const { emailApplicant } = await import("@/lib/email/applicant.server");
     await emailApplicant(supabaseAdmin, app.id, { kind: "confirmation" });
     return { ok: true };
+  });
+
+/** Looks up an event (/e/CODE) or store (/s/CODE) QR code. Returns only where to send the visitor. */
+export const resolveScanCode = createServerFn({ method: "GET" })
+  .inputValidator((d: { code: string; kind: "event" | "store" }) => z.object({ code: z.string().max(40), kind: z.enum(["event", "store"]) }).parse(d))
+  .handler(async ({ data }) => {
+    const { cleanScanCode } = await import("@/lib/scan");
+    const { CAREERS_ORG_SLUG } = await import("@/lib/site");
+    const code = cleanScanCode(data.code);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const slugOf = async (orgId: string) => (await supabaseAdmin.from("organizations").select("slug").eq("id", orgId).maybeSingle()).data?.slug ?? null;
+    const openJob = async (jobId: string | null) => {
+      if (!jobId) return null;
+      const { data: j } = await supabaseAdmin.from("jobs").select("id").eq("id", jobId).eq("status", "open").maybeSingle();
+      return j?.id ?? null;
+    };
+    if (code && data.kind === "event") {
+      const { data: ev } = await supabaseAdmin.from("recruiting_events").select("org_id, store_id, job_id, is_active").eq("code", code).maybeSingle();
+      if (ev) {
+        const orgSlug = await slugOf(ev.org_id);
+        if (ev.is_active && orgSlug) return { active: true as const, code, scan: { kind: "event" as const, orgSlug, storeId: ev.store_id, jobId: await openJob(ev.job_id) } };
+        return { active: false as const, orgSlug: orgSlug ?? CAREERS_ORG_SLUG };
+      }
+    }
+    if (code && data.kind === "store") {
+      const { data: st } = await supabaseAdmin.from("dealerships").select("id, org_id").eq("qr_code", code).maybeSingle();
+      const orgSlug = st ? await slugOf(st.org_id) : null;
+      if (st && orgSlug) return { active: true as const, code, scan: { kind: "store" as const, orgSlug, storeId: st.id, jobId: null } };
+    }
+    return { active: false as const, orgSlug: CAREERS_ORG_SLUG };
   });
