@@ -88,7 +88,7 @@ function StoreDashboard() {
       <StoreInterviewersCard orgId={org.orgId} storeId={store.id} />
       <div className="rounded-2xl bg-background p-5 shadow-sm">
         <h2 className="mb-4 text-lg">Pipeline</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-9">
           {STATUSES.map((st) => (
             <div key={st} className="rounded-xl bg-muted p-3 text-center">
               <div className="text-2xl font-extrabold">{apps.filter((a) => a.status === st).length}</div>

@@ -58,7 +58,7 @@ export type RetentionRow = { label: string; hires: number } & Record<RetentionMa
 
 const HOUR = 3600e3;
 const DAY = 24 * HOUR;
-const ACTIVE: AppStatus[] = ["new", "screening", "interview", "offer", "other_location", "hiring_event"];
+const ACTIVE: AppStatus[] = ["new", "screening", "interview", "other_location", "hiring_event"];
 const NO_REGION = "No region";
 
 const t = (iso: string) => new Date(iso).getTime();
