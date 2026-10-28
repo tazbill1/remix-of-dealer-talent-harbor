@@ -21,7 +21,7 @@ export function StoreVideosCard({ orgId, storeId, canEdit }: { orgId: string; st
       const { data, error } = await q;
       if (error) throw error;
       const urls = await Promise.all(
-        (data ?? []).map(async (r) => (await supabase.storage.from(BUCKET).createSignedUrl(r.storage_path, 3600)).data?.signedUrl ?? null) as string | null,
+        (data ?? []).map(async (r) => (await supabase.storage.from(BUCKET).createSignedUrl(r.storage_path, 3600)).data?.signedUrl ?? null),
       );
       return (data ?? []).map((r, i) => ({ ...r, url: urls[i] ?? null }));
     },
