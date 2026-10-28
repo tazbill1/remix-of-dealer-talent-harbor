@@ -8,6 +8,8 @@ import { WANTS_PERSON } from "@/lib/ai-notice";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { chunk, fetchAll } from "@/lib/fetch-all";
+import { appBaseUrl } from "@/lib/email/provider.server";
+import { SITE_URL } from "@/lib/site";
 import type { SendWindow } from "@/lib/messaging/core";
 import {
   deliverDue,
@@ -118,7 +120,7 @@ export async function welcomeOnApply(admin: DB, applicationId: string, now = Dat
   try {
     const { data: app } = await admin
       .from("applications")
-      .select("id, full_name, dealership_id, job_id")
+      .select("id, full_name, dealership_id, job_id, status_token")
       .eq("id", applicationId)
       .single();
     if (!app) return null;
@@ -133,6 +135,7 @@ export async function welcomeOnApply(admin: DB, applicationId: string, now = Dat
       store: store?.name ?? "our store",
       assistant: store?.assistant_name ?? "the hiring assistant",
       job: job?.title ?? "the role",
+      status: app.status_token ? `${appBaseUrl() || SITE_URL}/status/${app.status_token}` : null,
     });
     if (!body) return null;
     return await sendText(admin, admin, {

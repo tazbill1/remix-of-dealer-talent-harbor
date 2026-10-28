@@ -19,6 +19,14 @@ describe("automatic text wording", () => {
       "Great news, Jane! The team at ABC would like to interview you. What days and times work best for you this week?",
     );
   });
+  it("puts the status page link in the welcome text when there is one", () => {
+    const vars = { first: "Jane", store: "ABC", job: "Porter", assistant: "Ava" };
+    const withLink = textFor(parseAutomations({}), "welcome", { ...vars, status: "https://x/status/1" })!;
+    expect(withLink).toContain("Thanks for applying for Porter! Check your status anytime: https://x/status/1 A few quick questions");
+    const without = textFor(parseAutomations({}), "welcome", { ...vars, status: null })!;
+    expect(without).toContain("Thanks for applying for Porter! A few quick questions");
+    expect(without).not.toContain("status");
+  });
   it("keeps carrier wording even if an edit removes it", () => {
     expect(compliant("nudge", "Ping about Jane")).toBe("hireme by WerkandMe: Ping about Jane");
     expect(compliant("welcome", "Hi Jane!")).toBe("Hi Jane! Reply STOP to opt out.");

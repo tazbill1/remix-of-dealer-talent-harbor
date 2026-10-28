@@ -30,8 +30,8 @@ export const AUTOMATIONS = {
     label: "Welcome",
     who: "candidate",
     when: "Right after someone applies",
-    fields: ["first", "store", "job", "assistant"],
-    text: "Hi {first}! This is {assistant}, the hiring assistant for {store} (hireme by WerkandMe). Thanks for applying for {job}! A few quick questions so we can get you in front of the team. First: how many years of experience do you have? Reply STOP to opt out.",
+    fields: ["first", "store", "job", "assistant", "status"],
+    text: "Hi {first}! This is {assistant}, the hiring assistant for {store} (hireme by WerkandMe). Thanks for applying for {job}![ Check your status anytime: {status} ] A few quick questions so we can get you in front of the team. First: how many years of experience do you have? Reply STOP to opt out.",
     canTurnOff: true,
   },
   summary: {
@@ -171,6 +171,7 @@ export const FIELD_HELP: Record<string, string> = {
   manager: "hiring manager's name",
   hours: "hours waited",
   link: "the link (booking, offer or documents)",
+  status: "the applicant's status page link",
   when: "interview day and time",
   address: "store address",
   change: '"booked an interview for" or "moved their interview to"',
