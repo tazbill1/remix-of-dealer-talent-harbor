@@ -30,6 +30,7 @@ export function OfferPanel({
   jobTitle,
   defaultPay,
   hasPhone,
+  applicantName,
   onChanged,
 }: {
   orgId: string;
@@ -37,6 +38,7 @@ export function OfferPanel({
   jobTitle: string;
   defaultPay: string | null;
   hasPhone: boolean;
+  applicantName?: string;
   onChanged: () => void;
 }) {
   const qc = useQueryClient();
@@ -68,6 +70,7 @@ export function OfferPanel({
   const [note, setNote] = useState("");
   const [textLink, setTextLink] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const ready = !!env?.boldsign && !!env?.offerTemplateId;
   const pending = offers.some((o) => isOpen(o.status));
