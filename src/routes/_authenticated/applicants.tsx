@@ -54,8 +54,11 @@ function Applicants() {
       return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
     },
   });
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [store, setStore] = useState("all");
   const [region, setRegion] = useState("all");
+  const [showTests, setShowTests] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -93,8 +96,13 @@ function Applicants() {
   const regionName = (storeId: string) => data?.regions.find((r) => r.id === regionOf(storeId))?.name ?? null;
   const inRegion = (storeId: string) => region === "all" || (region === "none" ? !regionOf(storeId) : regionOf(storeId) === region);
   const storeOptions = (data?.stores ?? []).filter((s) => inRegion(s.id));
+  const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
+  const todayStr = new Date().toDateString();
   const apps = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
-    || (store === "shared" && a.open_to_other_stores)));
+    || (store === "shared" && a.open_to_other_stores))
+    && (showTests || !isTestName(a.full_name))
+    && (search.filter !== "today" || new Date(a.created_at).toDateString() === todayStr)
+    && (!statusFilter || a.status === statusFilter));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
   // Must come after job() and storeName(): they're used while rendering.
