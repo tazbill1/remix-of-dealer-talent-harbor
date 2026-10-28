@@ -209,8 +209,6 @@ export async function deliverDue(
       }
     }
 
-    if (!settingsByOrg.has(m.org_id)) settingsByOrg.set(m.org_id, await loadSettings(sb, m.org_id));
-    const settings = settingsByOrg.get(m.org_id)!;
     const sentAt = new Date().toISOString();
 
     if (!(await storeIsLive(sb, m.application_id, liveByApp))) {
