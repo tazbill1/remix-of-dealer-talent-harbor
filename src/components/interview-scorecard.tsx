@@ -217,7 +217,7 @@ function ScorecardDialog({
               Score what you heard about the job only. Your scorecard is shared with others who can
               see this applicant.
             </p>
-            <InterviewRecording orgId={orgId} interviewId={interviewId} />
+            {/* Recording hidden for now */}
             {questions.map((q, i) => {
               const a = answers.find((x) => x.questionId === q.id);
               return (
@@ -228,7 +228,7 @@ function ScorecardDialog({
                   {q.lookFor && (
                     <p className="text-xs text-muted-foreground">What a 5 looks like: {q.lookFor}</p>
                   )}
-                  <RecordingSuggestion suggestion={suggestions.find(s => s.questionId === q.id)} onAccept={score => patch(q.id, { score })} />
+                  {/* recording suggestions hidden */}
                   <div
                     className="flex flex-wrap gap-1"
                     role="radiogroup"

@@ -94,7 +94,7 @@ function Integrations() {
         </p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        <InterviewRecordingSettings orgId={org.orgId} canEdit={canEdit} />
+        {/* Interview recording hidden for now */}
         <Card
           icon={MessageSquare}
           title="Texting (Twilio)"
