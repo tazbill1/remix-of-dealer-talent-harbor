@@ -36,3 +36,40 @@ describe("automatic text wording", () => {
     expect(segments("Hi 😀")).toBe(1);
   });
 });
+
+describe("assistant settings", () => {
+  it("uses safe defaults", async () => {
+    const { assistantRules, parseAutomations } = await import("@/lib/automations");
+    const r = assistantRules(parseAutomations({}), "candidate");
+    expect(r).toContain("Bubbly");
+    expect(r).toContain("never state or guess them");
+    expect(r).toContain("Valid driver's license");
+    expect(r).toContain("Negotiating pay");
+    expect(r).toContain("protected traits");
+  });
+  it("uses the group's tone, facts, topics and instructions", async () => {
+    const { assistantRules, parseAutomations } = await import("@/lib/automations");
+    const a = parseAutomations({
+      assistant: {
+        tone: "professional",
+        facts: "Techs earn $25-$40/hr flat rate. Medical after 60 days.",
+        screening: "- Own tools?\n- Diesel experience",
+        handoff: "Relocation",
+        instructions: "Mention the $1,000 sign-on bonus.",
+      },
+    });
+    const r = assistantRules(a, "candidate");
+    expect(r).toContain("No emoji");
+    expect(r).toContain("$25-$40/hr");
+    expect(r).toContain("- Own tools?");
+    expect(r).toContain("- Relocation");
+    expect(r).toContain("sign-on bonus");
+    const m = assistantRules(a, "manager");
+    expect(m).not.toContain("$25-$40/hr");
+    expect(m).toContain("sign-on bonus");
+  });
+  it("keeps assistant settings when texts are saved", async () => {
+    const { parseAutomations } = await import("@/lib/automations");
+    expect(parseAutomations({ texts: {}, assistant: { tone: "friendly" } }).assistant?.tone).toBe("friendly");
+  });
+});

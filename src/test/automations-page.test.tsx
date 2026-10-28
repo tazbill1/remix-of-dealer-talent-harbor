@@ -45,10 +45,12 @@ describe("Automatic texts page", () => {
     expect(text).toContain("Welcome");
     expect(text).toContain("Day-of reminder");
     expect(text).toContain("Check-in days");
+    expect(text).toContain("AI assistant");
+    expect(text).toContain("Facts it can share");
     // Custom invite wording shows in its preview with sample data.
     expect(text).toContain("Hey Jordan, book: workwithwerk.com/book/x7k2");
     // Turned-off text shows as Off and hides its editor.
     expect(el.querySelectorAll('[aria-label="Not moving forward wording"]').length).toBe(0);
-    expect(el.querySelectorAll("textarea").length).toBe(13);
+    expect(el.querySelectorAll("textarea").length).toBe(17);
   });
 });
