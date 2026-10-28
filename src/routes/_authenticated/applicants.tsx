@@ -26,9 +26,15 @@ import { parseQuestions, type Answers, type Question } from "@/lib/questions";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyApplicants } from "@/lib/email.functions";
 import { UserPlus } from "lucide-react";
+import { z } from "zod";
+import { isTestName, plural, sourceLabel } from "@/lib/display";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }] }),
+  validateSearch: z.object({
+    filter: z.enum(["today"]).optional(),
+    status: z.string().optional(),
+  }),
   component: Applicants,
 });
 
@@ -48,8 +54,11 @@ function Applicants() {
       return { apps: apps.data ?? [], jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
     },
   });
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [store, setStore] = useState("all");
   const [region, setRegion] = useState("all");
+  const [showTests, setShowTests] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -87,8 +96,13 @@ function Applicants() {
   const regionName = (storeId: string) => data?.regions.find((r) => r.id === regionOf(storeId))?.name ?? null;
   const inRegion = (storeId: string) => region === "all" || (region === "none" ? !regionOf(storeId) : regionOf(storeId) === region);
   const storeOptions = (data?.stores ?? []).filter((s) => inRegion(s.id));
+  const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
+  const todayStr = new Date().toDateString();
   const apps = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
-    || (store === "shared" && a.open_to_other_stores)));
+    || (store === "shared" && a.open_to_other_stores))
+    && (showTests || !isTestName(a.full_name))
+    && (search.filter !== "today" || new Date(a.created_at).toDateString() === todayStr)
+    && (!statusFilter || a.status === statusFilter));
   const job = (id: string) => data?.jobs.find((j) => j.id === id)?.title ?? "";
   const storeName = (id: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
   // Must come after job() and storeName(): they're used while rendering.
@@ -147,11 +161,24 @@ function Applicants() {
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
         </div>
       )}
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox checked={showTests} onCheckedChange={(c) => setShowTests(c === true)} />
+          Show test applicants
+        </label>
+        {(search.filter === "today" || statusFilter) && (
+          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
+            Showing: {search.filter === "today" ? "Applied today" : STATUS_LABEL[statusFilter!]}
+            <button aria-label="Clear filter" onClick={() => navigate({ search: {} })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+          </span>
+        )}
+      </div>
+      <div className="overflow-x-auto pb-4">
+      <div className="grid min-w-[900px] grid-cols-6 gap-2">
         {STATUSES.map((st) => {
           const col = apps.filter((a) => a.status === st);
           return (
-            <div key={st} className="w-72 shrink-0 rounded-2xl bg-secondary p-3"
+            <div key={st} className="min-w-0 rounded-2xl bg-secondary p-2"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => { if (dragId) update(dragId, { status: st }); setDragId(null); }}>
               <div className="mb-3 flex items-center justify-between px-1 text-sm font-semibold">
@@ -164,17 +191,17 @@ function Applicants() {
                 {col.map((a) => (
                   <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
                     onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
-                    className={cn("w-full cursor-pointer rounded-xl bg-background p-3 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
-                    <div className="flex items-start justify-between gap-2"><div className="font-semibold">{a.full_name}</div>
+                    className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
+                    <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
                       <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
-                    <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
+                    <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                     {a.knockout_failed && (
                       <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
                     )}
                     <BackgroundCheckBadge status={a.background_check_status} />
                     {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
+                      <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
                       <span>{new Date(a.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -183,6 +210,7 @@ function Applicants() {
             </div>
           );
         })}
+      </div>
       </div>
 
       <EmailCompose open={!!emailing} onOpenChange={(o) => !o && setEmailing(null)} orgId={org.orgId}

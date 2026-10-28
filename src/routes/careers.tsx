@@ -1,7 +1,6 @@
 import { createFileRoute, Link, Outlet, notFound } from "@tanstack/react-router";
 import { getCareers } from "@/lib/public.functions";
 import { CAREERS_ORG_SLUG } from "@/lib/site";
-import { Logo } from "@/components/brand";
 
 export const Route = createFileRoute("/careers")({
   loader: async () => {
@@ -37,7 +36,7 @@ function CareersLayout() {
         </div>
       </header>
       <main className="flex-1"><Outlet /></main>
-      <footer className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>
+      <footer className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">Powered by hireme by WerkandMe</footer>
     </div>
   );
 }

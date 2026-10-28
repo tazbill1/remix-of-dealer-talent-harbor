@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
 import { StoreTextingContact } from "@/components/store-texting-contact";
+import { plural } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,7 +77,7 @@ function Stores() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-3xl">Stores</h1><p className="text-muted-foreground">{stores.length} dealerships in {org.orgName}</p></div>
+        <div><h1 className="text-3xl">Stores</h1><p className="text-muted-foreground">{plural(stores.length, "dealership")} in {org.orgName}</p></div>
         <div className="flex gap-2">
           {isHr && (
             <Dialog open={regionOpen} onOpenChange={setRegionOpen}>
@@ -114,7 +115,7 @@ function Stores() {
           {regions.map((r) => (
             <span key={r.id} className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm">
               <MapPinned className="size-3.5 text-sapphire" />{r.name}
-              <span className="text-muted-foreground">· {stores.filter((s) => s.region_id === r.id).length} stores</span>
+              <span className="text-muted-foreground">· {plural(stores.filter((s) => s.region_id === r.id).length, "store")}</span>
               {isHr && <button aria-label={`Remove ${r.name}`} onClick={() => removeRegion(r.id)} className="ml-1 text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /></button>}
             </span>
           ))}

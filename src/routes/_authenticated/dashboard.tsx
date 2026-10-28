@@ -15,6 +15,7 @@ import {
 } from "@/lib/escalation";
 import { GradientText } from "@/components/brand";
 import { Button } from "@/components/ui/button";
+import { isTestName, plural } from "@/lib/display";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | WerkandMe Hiring" }] }),
@@ -66,7 +67,7 @@ function Dashboard() {
     },
   });
   const stores = data?.stores ?? [];
-  const apps = data?.apps ?? [];
+  const apps = (data?.apps ?? []).filter((a) => !isTestName(a.full_name));
   const openJobs = (data?.jobs ?? []).filter((j) => j.status === "open").length;
   const today = new Date().toDateString();
   const newToday = apps.filter((a) => new Date(a.created_at).toDateString() === today).length;
@@ -99,10 +100,10 @@ function Dashboard() {
     .sort((a, b) => b.total - a.total);
 
   const stats = [
-    { label: "Open jobs", value: openJobs, icon: Briefcase },
-    { label: "New today", value: newToday, icon: Sparkles },
-    { label: "Total applicants", value: apps.length, icon: Users },
-    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy },
+    { label: "Open jobs", value: openJobs, icon: Briefcase, to: "/jobs" as const, search: {} },
+    { label: "New today", value: newToday, icon: Sparkles, to: "/applicants" as const, search: { filter: "today" as const } },
+    { label: "Total applicants", value: apps.length, icon: Users, to: "/applicants" as const, search: {} },
+    { label: "Hired", value: apps.filter((a) => a.status === "hired").length, icon: Trophy, to: "/applicants" as const, search: { status: "hired" } },
   ];
 
   return (
@@ -112,7 +113,7 @@ function Dashboard() {
           Good to see you! <GradientText>Here's the group.</GradientText>
         </h1>
         <p className="text-muted-foreground">
-          {org.orgName} · {stores.length} stores
+          {org.orgName} · {plural(stores.length, "store")}
         </p>
       </div>
       {stores.length === 0 && (
@@ -166,11 +167,12 @@ function Dashboard() {
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl bg-background p-5 shadow-sm">
+          <Link key={s.label} to={s.to} search={s.search}
+            className="rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-sapphire">
             <s.icon className="size-5 text-sapphire" />
             <div className="mt-3 text-3xl font-extrabold">{s.value}</div>
             <div className="text-sm text-muted-foreground">{s.label}</div>
-          </div>
+          </Link>
         ))}
       </div>
       <div className="rounded-2xl bg-background p-5 shadow-sm">
@@ -188,7 +190,7 @@ function Dashboard() {
                 {s.name}
               </span>
               <span className="text-muted-foreground">
-                {s.total} applicants ·{" "}
+                {plural(s.total, "applicant")} ·{" "}
                 <span className="font-semibold text-foreground">{s.hired} hired</span>
               </span>
             </Link>

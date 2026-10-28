@@ -11,6 +11,7 @@ import type { AiJobDraft } from "@/lib/ai-job.functions";
 import { parseQuestions, questionSchema, type Question } from "@/lib/questions";
 import { JobQuestions } from "@/components/job-questions";
 import { JobShare } from "@/components/job-share";
+import { plural } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -306,7 +307,7 @@ function Jobs() {
             <button type="button" className="text-left hover:text-sapphire" onClick={() => openJob(j)}>
               <div className="font-semibold">{j.title}</div>
               <div className="text-sm text-muted-foreground">
-                {storeName(j.dealership_id)} · {divisionLabel(j.division)} · {j.req_type === "growth" ? "Growth" : "Replacement"}{j.hiring_manager ? ` · ${j.hiring_manager}` : ""} · {formatPay(j.pay_min, j.pay_max, j.pay_period) ?? "Pay not listed"} · {(data?.apps ?? []).filter((a) => a.job_id === j.id).length} applicants
+                {storeName(j.dealership_id)} · {divisionLabel(j.division)} · {j.req_type === "growth" ? "Growth" : "Replacement"}{j.hiring_manager ? ` · ${j.hiring_manager}` : ""} · {formatPay(j.pay_min, j.pay_max, j.pay_period) ?? "Pay not listed"} · {plural((data?.apps ?? []).filter((a) => a.job_id === j.id).length, "applicant")}
               </div>
             </button>
             <div className="flex items-center gap-2">

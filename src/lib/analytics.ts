@@ -8,6 +8,7 @@ export type AApp = {
   dealership_id: string;
   status: AppStatus;
   source: string;
+  full_name?: string;
   created_at: string;
   updated_at: string;
   hired_at?: string | null;

@@ -21,6 +21,7 @@ import {
   type RetentionRow,
 } from "@/lib/analytics";
 import { fetchAll } from "@/lib/fetch-all";
+import { isTestName, sourceLabel } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +83,7 @@ function AnalyticsPage() {
           supabase
             .from("applications")
             .select(
-              "id, job_id, dealership_id, status, source, created_at, updated_at, hired_at, start_date, departed_at",
+              "id, job_id, dealership_id, status, source, full_name, created_at, updated_at, hired_at, start_date, departed_at",
             )
             .eq("org_id", org.orgId)
             .order("created_at")
@@ -133,7 +134,7 @@ function AnalyticsPage() {
             .range(f, t),
         ),
       ]);
-      return { apps, jobs, stores, regions, events, messages };
+      return { apps: apps.filter((x) => !isTestName(x.full_name)), jobs, stores, regions, events, messages };
     },
   });
 
@@ -172,7 +173,7 @@ function AnalyticsPage() {
         "Open roles",
       ],
       rows.map((r) => [
-        r.label,
+        groupBy === "source" ? sourceLabel(r.label) : r.label,
         r.applicants,
         r.contacted,
         r.hired,
@@ -204,7 +205,7 @@ function AnalyticsPage() {
             j?.title ?? "",
             DIVISIONS.find((d) => d.value === j?.division)?.label ?? "General & Admin",
             j?.hiring_manager ?? "",
-            x.source,
+            sourceLabel(x.source),
             STATUS_LABEL[x.status],
           ];
         }),
@@ -490,7 +491,7 @@ function AnalyticsPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.label} className="border-b last:border-0">
-                  <td className="py-2">{r.label}</td>
+                  <td className="py-2">{groupBy === "source" ? sourceLabel(r.label) : r.label}</td>
                   <td className="py-2 text-right tabular-nums">{r.applicants}</td>
                   <td className="py-2 text-right tabular-nums">{r.contacted}</td>
                   <td className="py-2 text-right tabular-nums">{r.hired}</td>
