@@ -191,17 +191,17 @@ function Applicants() {
                 {col.map((a) => (
                   <div key={a.id} role="button" tabIndex={0} draggable onDragStart={() => setDragId(a.id)} onClick={() => setSelected(a.id)}
                     onKeyDown={(e) => e.key === "Enter" && setSelected(a.id)}
-                    className={cn("w-full cursor-pointer rounded-xl bg-background p-3 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
-                    <div className="flex items-start justify-between gap-2"><div className="font-semibold">{a.full_name}</div>
+                    className={cn("w-full cursor-pointer rounded-xl bg-background p-2 text-left shadow-sm transition hover:shadow-md", checked.includes(a.id) && "ring-2 ring-sapphire")}>
+                    <div className="flex items-start justify-between gap-1"><div className="truncate text-sm font-semibold">{a.full_name}</div>
                       <span onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></span></div>
-                    <div className="text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
+                    <div className="truncate text-xs text-muted-foreground">{job(a.job_id)} · {storeName(a.dealership_id)}</div>
                     {a.knockout_failed && (
                       <KnockoutBadge questions={parseQuestions(data?.jobs.find((j) => j.id === a.job_id)?.questions)} answers={(a.answers ?? {}) as Answers} />
                     )}
                     <BackgroundCheckBadge status={a.background_check_status} />
                     {a.needs_attention && <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive" title={a.needs_attention}>Needs you</span>}
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="rounded-full bg-accent px-2 py-0.5">{a.source}</span>
+                      <span className="rounded-full bg-accent px-2 py-0.5">{sourceLabel(a.source)}</span>
                       <span>{new Date(a.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
