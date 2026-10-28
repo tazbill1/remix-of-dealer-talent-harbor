@@ -57,7 +57,7 @@ function Applicants() {
   const org = useOrg();
   const qc = useQueryClient();
   const key = ["applicants", org.orgId];
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const [apps, jobs, stores, regions] = await Promise.all([
@@ -234,7 +234,9 @@ function Applicants() {
       </div>
 
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-        <span>Showing {apps.length} of {plural(base.length, "applicant")}</span>
+        {isPending
+          ? <span aria-live="polite">Loading applicants…</span>
+          : <span>Showing {apps.length} of {plural(base.length, "applicant")}</span>}
         <label className="flex items-center gap-2">
           <Checkbox checked={showTests} onCheckedChange={(c) => set({ tests: c === true ? "1" : undefined })} />
           Show test applicants
@@ -416,10 +418,12 @@ function Profile({ app, questions, jobTitle, storeName, onUpdate, transferOption
             ))}
           </div>
         </div>
-        <div className="flex gap-1 overflow-x-auto text-sm">
+        {/* Tabs are sized so all five fit one row inside the panel; on very narrow
+            widths they wrap to a second line instead of scrolling sideways. */}
+        <div className="flex flex-wrap gap-x-1 gap-y-0.5 text-[13px]">
           {PANEL_TABS.map((t) => (
             <button key={t.id} onClick={() => pickTab(t.id)}
-              className={cn("whitespace-nowrap border-b-2 px-3 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
+              className={cn("whitespace-nowrap border-b-2 px-1.5 py-1.5 font-medium", tab === t.id ? "border-sapphire text-sapphire" : "border-transparent text-muted-foreground")}>
               {t.label}</button>
           ))}
         </div>
