@@ -16,6 +16,16 @@ import {
 } from "@/lib/messaging/outbox.server";
 
 import { assistantRules, assistantSettings, parseAutomations } from "@/lib/automations";
+import {
+  CANDIDATE_STYLE,
+  firstName,
+  managerPrivacy,
+  profileUrl,
+  scrubPii,
+  threadHistory,
+  withInbound,
+  type ChatMsg,
+} from "@/lib/assistant-style";
 type DB = SupabaseClient<Database>;
 
 // ---------------------------------------------------------------------------
@@ -57,8 +67,6 @@ export async function lovableProvider() {
   });
 }
 export { LOVABLE_MODEL, LOVABLE_OPTS };
-
-type ChatMsg = { role: "user" | "assistant"; content: string };
 
 /** Structured reply from Claude via the Messages API, forcing a single tool call. */
 async function claudeStructured<T>(
@@ -224,8 +232,8 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
         .from("messages")
         .select("party, direction, body, created_at, status")
         .eq("application_id", app.id)
-        .order("created_at")
-        .limit(60),
+        .order("created_at", { ascending: false })
+        .limit(80),
       sb
         .from("interviews")
         .select("starts_at, status")
@@ -342,8 +350,13 @@ export async function runAssistant(sb: DB, admin: DB, data: AssistantInput) {
     ? answersForAi(questions, (app.answers ?? {}) as Record<string, string>)
     : "";
   const now = new Date().toISOString();
+  const { appBaseUrl } = await import("@/lib/email/provider.server");
+  const { SITE_URL } = await import("@/lib/site");
+  const profileLink = profileUrl(appBaseUrl() || SITE_URL, app.id);
   const system = `You are ${assistant}, the AI HR assistant for ${store?.name ?? "the dealership"}. You text by SMS, so keep replies under 320 characters.
 ${assistantRules(auto, data.party)}
+
+${data.party === "candidate" ? CANDIDATE_STYLE : managerPrivacy(firstName(app.full_name), profileLink)}
 You are talking ONLY about this one applicant: ${app.full_name} (application ${app.id}) for ${job?.title ?? "an open role"}. Never mention or confuse any other applicant.
 Right now you are texting with the ${data.party === "candidate" ? `CANDIDATE (${app.full_name})` : `HIRING MANAGER (${manager.name})`}.
 ${
@@ -359,7 +372,7 @@ Interviews: ${
     : 'Keep the manager accountable: summarize where the candidate stands, ask for decisions (interview? move forward? pass?), and offer specific interview times. Follow their instructions about stage changes and scheduling. A reply of "1" means interview, "2" means pass.'
 }
 Current time (UTC): ${now}. Store time zone: ${tz}.
-Current stage: ${app.status}. Profile so far: ${JSON.stringify(app.profile)}. Notes: ${app.notes ?? ""}.${screening ? `\nThe applicant already answered these on the application (don't ask them again; if a requirement wasn't met, don't argue it, just pass it on to the hiring team):\n${screening}` : ""}
+Current stage: ${app.status}.${app.ai_summary ? ` Summary so far (covers both the candidate and manager conversations): ${app.ai_summary}` : ""} Profile so far: ${JSON.stringify(app.profile)}. Notes: ${app.notes ?? ""}.${screening ? `\nThe applicant already answered these on the application (don't ask them again; if a requirement wasn't met, don't argue it, just pass it on to the hiring team):\n${screening}` : ""}
 Scheduled interviews: ${JSON.stringify(interviews ?? [])}.
 Job description: ${(job?.description ?? "").slice(0, 2000)}
 
@@ -372,16 +385,8 @@ Return:
 - summary: one-paragraph running summary of this applicant for the hiring team.
 - timeline_note: a short note for the timeline if something important happened, else null.
 - handoff_reason: ${data.party === "candidate" ? "a short reason (under 80 characters) when this needs a person per the hand-off rules, else null" : "always null"}.`;
-  const msgs: ChatMsg[] = (history ?? [])
-    .filter((m) => m.status !== "blocked")
-    .map((m) => ({
-      role: (m.direction === "in" ? "user" : "assistant") as ChatMsg["role"],
-      content: `[${m.party === "candidate" ? "candidate thread" : "manager thread"}] ${m.body}`,
-    }));
-  msgs.push({
-    role: "user",
-    content: `[${data.party === "candidate" ? "candidate thread" : "manager thread"}] ${data.body}`,
-  });
+  // Only this person's conversation; the summary above carries what happened in the other one.
+  const msgs: ChatMsg[] = withInbound(threadHistory([...(history ?? [])].reverse(), data.party), data.body);
 
   let out: Reply;
   try {
@@ -483,6 +488,11 @@ Return:
     }
   }
 
+  // Texts to managers never carry an applicant's contact details, whatever the AI wrote.
+  if (data.party === "manager") {
+    const safe = scrubPii(out.reply);
+    if (safe.removed) out.reply = safe.text.includes(profileLink) ? safe.text : `${safe.text} ${profileLink}`;
+  }
   const row = await queueText(sb, {
     applicationId: app.id,
     party: data.party,
