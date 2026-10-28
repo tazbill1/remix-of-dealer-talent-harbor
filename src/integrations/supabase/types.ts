@@ -1261,6 +1261,63 @@ export type Database = {
           },
         ]
       }
+      weekly_summaries: {
+        Row: {
+          body: string | null
+          created_at: string
+          error: string | null
+          id: string
+          member_id: string
+          org_id: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          to_email: string | null
+          week_of: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          member_id: string
+          org_id: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          to_email?: string | null
+          week_of: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          member_id?: string
+          org_id?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          to_email?: string | null
+          week_of?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_summaries_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "org_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_summaries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

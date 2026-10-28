@@ -134,6 +134,13 @@
       "when": 1793148343970,
       "tag": "0018_applications_ai_paused_at_needs_attention",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793151394986,
+      "tag": "0019_weekly_summaries",
+      "breakpoints": true
     }
   ]
 }
