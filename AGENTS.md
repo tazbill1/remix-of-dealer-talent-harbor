@@ -11,7 +11,7 @@
 
 ## Architecture rules
 - Notes explicitly save per applicant and verify a returned row. Why: prevent silent losses.
-- Calendar links open the existing applicant Interview tab; summaries use per-interview RLS reads. Why: reuse the panel and access rules.
+- Calendar links open the applicant Interview tab; summaries use per-interview RLS reads. Why: reuse panel and access rules.
 - Reports use separate authenticated RLS reads, RPC-verified roles and explicit manager assignments; math is in reports.ts and PDF capture uses semantic blocks. Why: preserve Analytics, deny unassigned managers, avoid chart splits.
 - Multi-tenant: every tenant table has `org_id`; RLS uses `is_org_member` / `has_org_role` / `is_platform_admin`. Why: dealer groups' data must never mix.
 - Roles live in `org_members` and `platform_admins`, never on profiles. Why: prevents privilege escalation.
