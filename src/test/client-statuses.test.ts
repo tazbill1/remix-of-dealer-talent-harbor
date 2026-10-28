@@ -5,11 +5,11 @@ import { doNotHireRepeats } from "@/lib/do-not-hire";
 describe("client stage list", () => {
   it("is in the client's order with their colors", () => {
     expect(STATUSES.map((s) => STATUS_LABEL[s])).toEqual([
-      "Not Contacted Yet", "Does Not Meet Basic Qualifications", "Contacted", "Interviewing",
+      "Not Contacted Yet", "Does Not Meet Basic Qualifications", "Contacted", "Interviewing", "Offer",
       "Consider for Another Location or Position", "Not Selected", "Hired", "Contacted for Hiring Event", "Do Not Hire",
     ]);
     expect(STATUSES.map((s) => STATUS_COLOR[s])).toEqual([
-      "#4B4B4B", "#C8762A", "#93199A", "#4A4AE8", "#C2B93A", "#3C8AA0", "#4A9A3E", "#E687BE", "#E0373A",
+      "#4B4B4B", "#C8762A", "#93199A", "#4A4AE8", "#1F3A93", "#C2B93A", "#3C8AA0", "#4A9A3E", "#E687BE", "#E0373A",
     ]);
   });
   it("treats only the three rejection-type stages as needing confirmation", () => {

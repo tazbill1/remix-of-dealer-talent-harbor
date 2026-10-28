@@ -1,11 +1,11 @@
-/** Every stage the database knows. "offer" is retired (merged into Interviewing) and hidden. */
+/** Every stage the database knows. */
 export const ALL_STATUSES = [
   "new", "unqualified", "screening", "interview", "other_location", "rejected", "hired", "hiring_event", "do_not_hire", "offer",
 ] as const;
 export type AppStatus = (typeof ALL_STATUSES)[number];
 /** The client's stage list, in their order. Used for pills, board columns, filters and pickers. */
 export const STATUSES = [
-  "new", "unqualified", "screening", "interview", "other_location", "rejected", "hired", "hiring_event", "do_not_hire",
+  "new", "unqualified", "screening", "interview", "offer", "other_location", "rejected", "hired", "hiring_event", "do_not_hire",
 ] as const satisfies readonly AppStatus[];
 
 export const STATUS_LABEL: Record<AppStatus, string> = {
@@ -18,7 +18,7 @@ export const STATUS_LABEL: Record<AppStatus, string> = {
   hired: "Hired",
   hiring_event: "Contacted for Hiring Event",
   do_not_hire: "Do Not Hire",
-  offer: "Interviewing",
+  offer: "Offer",
 };
 
 /** Pill / column colors (white text on each). */
@@ -32,7 +32,7 @@ export const STATUS_COLOR: Record<AppStatus, string> = {
   hired: "#4A9A3E",
   hiring_event: "#E687BE",
   do_not_hire: "#E0373A",
-  offer: "#4A4AE8",
+  offer: "#1F3A93",
 };
 
 /** Rejection-type stages: a person must confirm before moving someone here. */
