@@ -24,7 +24,7 @@ export function employeeDuplicate(row: EmployeeInput, existing: ExistingEmployee
   return existing.some((e) => (e.store_id === row.store_id && norm(e.employee_name) === norm(row.name))
     || (!!row.email && norm(e.email) === norm(row.email)) || (!!row.phone && phone(e.phone) === phone(row.phone)));
 }
-export type CsvPreviewRow = { row: number; input: EmployeeInput | null; name: string; store: string; status: "ready" | "duplicate" | "error"; errors: string[] };
+export type CsvPreviewRow = { row: number; input: EmployeeInput | null; name: string; store: string; status: "ready" | "added" | "duplicate" | "error"; errors: string[] };
 export function previewEmployees(csv: string, stores: { id: string; name: string }[], existing: ExistingEmployee[]): CsvPreviewRow[] {
   if (csv.length > 2_000_000) throw new Error("CSV must be under 2 MB.");
   const parsed = Papa.parse<Record<string,string>>(csv, { header: true, skipEmptyLines: "greedy", transformHeader: (s) => s.replace(/^\uFEFF/, "").trim().toLowerCase() });

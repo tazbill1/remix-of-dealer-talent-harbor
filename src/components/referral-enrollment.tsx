@@ -42,7 +42,7 @@ export function ReferralCsvUpload({ orgId, onSaved }: { orgId: string; onSaved:(
         const batch=ready.slice(i,i+250);
         const result=await commit({data:{orgId,rows:batch.flatMap(r=>r.input?[r.input]:[])}});
         added+=result.inserted;skipped+=result.skipped;failed+=result.failed;
-        for(const outcome of result.rows){const original=batch[outcome.row-1];if(!original)continue;const index=updated.findIndex(r=>r.row===original.row);if(index<0)continue;updated[index]={...original,status:outcome.status==="error"?"error":"duplicate",errors:outcome.error?[outcome.error]:[]};}
+        for(const outcome of result.rows){const original=batch[outcome.row-1];if(!original)continue;const index=updated.findIndex(r=>r.row===original.row);if(index<0)continue;updated[index]={...original,status:outcome.status==="error"?"error":outcome.status==="added"?"added":"duplicate",errors:outcome.error?[outcome.error]:[]};}
         setRows([...updated]);onSaved();
       }
       setSummary(`${added} added · ${skipped} duplicates skipped · ${failed} failed`);
