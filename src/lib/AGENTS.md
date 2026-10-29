@@ -1,4 +1,5 @@
 ## src/lib rules
+- Bulk confirmation uses fresh eligibility/channel/store counts and bulkConfirmationAllowed for typed counts at 25+ actual recipients. Why: skips and dual-channel deliveries must not confuse recipient confirmation.
 - Applicant select-all uses selectAllShown over the filtered/tab-visible IDs only. Why: hidden applicants must not enter a newly built message list.
 - Apply forms use tested applicationScan in scan.ts to prefer current QR codes and omit remembered scans when the URL has an explicit source; referral capture remains separate. Why: browser history cannot override a new source-tagged link.
 - Texting workflows (welcome, manager summary/nudge/escalation, reminders, check-ins) live in src/lib/workflows: rules in rules.ts (pure, tested), the scheduled runner in run.server.ts, fixed-meaning manager replies in replies.server.ts.
