@@ -6,15 +6,15 @@ const db = url ? postgres(url, { max: 1 }) : undefined;
 afterAll(async () => { if (db) await db.end(); });
 beforeAll(async () => {
   if (!db) return;
-  await db`create temporary table job_contact_test_session (id integer)`;
+  await db`create temporary table if not exists job_contact_test_session (id integer)`;
   const [fn] = await db`select pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname='job_manager_is_eligible'`;
   if (!fn) throw new Error("Missing job manager validation");
   await db.unsafe(String(fn["definition"]).replace("FUNCTION public.", "FUNCTION pg_temp.").replace("SECURITY DEFINER", "SECURITY INVOKER"));
   const [guard] = await db`select pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname='guard_job_contacts'`;
   if (!guard) throw new Error("Missing job contact guard");
   await db.unsafe(String(guard["definition"]).replace("FUNCTION public.", "FUNCTION pg_temp.").replace("SECURITY DEFINER", "SECURITY INVOKER").replaceAll("public.job_manager_is_eligible(", "pg_temp.job_manager_is_eligible("));
-  await db`create temporary table job_contact_guard_test (like public.jobs including defaults)`;
-  await db`create trigger job_contact_guard_test before insert or update on job_contact_guard_test for each row execute function pg_temp.guard_job_contacts()`;
+  await db`create temporary table if not exists job_contact_guard_test (like public.jobs including defaults)`;
+  await db`create or replace trigger job_contact_guard_test before insert or update on job_contact_guard_test for each row execute function pg_temp.guard_job_contacts()`;
 });
 
 describe.skipIf(!db)("job manager database scoping", () => {
