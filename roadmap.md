@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Job manager accounts and escalation defaults
+- [ ] Add store-scoped manager user IDs and clearly matched legacy backfill before screen changes.
+- [ ] Replace typed manager with account dropdown and existing invitation flow; default escalation to store HR/recruiter, then group HR/admin, preserving overrides.
+- [ ] Verify saved assignments, authorization and forms; report matched/unmatched jobs; do not publish.
+
 ## Pre-demo cleanup
 - [x] ABC email/text both practice; signed-in Demo reschedule notice and Both bulk send verified in Messages/timeline. Alicia original time restored; existing applicant unsubscribe retained. Automatic Demo delivery mock proves no provider call and timeline insert. Verification added 3 simulated notices and 1 blocked notice, no live delivery.
 - [x] Messages simulated label is Sent (demo). Exactly one Add candidate button already exists; no Add applicant control. Previously Do Not Hire red warning unchanged; attention/errors also remain red, so it is not the only red element.
