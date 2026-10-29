@@ -18,12 +18,19 @@ beforeAll(async () => {
   }
 });
 describe.skipIf(!db)('Bulk messaging database safeguards', () => {
-  it('keeps every existing group disabled and the new setting defaults to false', async () => {
+  it('keeps the new setting off by default', async () => {
     if (!db) return;
-    const [row] = await db`select count(*) filter(where bulk_messaging_enabled) as enabled from public.messaging_settings`;
-    expect(Number(row?.['enabled'])).toBe(0);
     const [column] = await db`select column_default from information_schema.columns where table_schema='public' and table_name='messaging_settings' and column_name='bulk_messaging_enabled'`;
     expect(column?.['column_default']).toBe('false');
+  });
+  it('enables ABC Dealer Group only for the demo without changing channel modes', async () => {
+    if (!db) return;
+    const [abc] = await db`select m.bulk_messaging_enabled,m.mode,m.email_mode from public.messaging_settings m join public.organizations o on o.id=m.org_id where o.name='ABC Dealer Group'`;
+    expect(abc?.['bulk_messaging_enabled']).toBe(true);
+    expect(abc?.['mode']).toBe('practice');
+    expect(abc?.['email_mode']).toBe('live');
+    const [others] = await db`select count(*) as enabled from public.messaging_settings m join public.organizations o on o.id=m.org_id where o.name<>'ABC Dealer Group' and m.bulk_messaging_enabled`;
+    expect(Number(others?.['enabled'])).toBe(0);
   });
 
   async function rollbackScenario(role: string, assigned: boolean, expected: boolean) {

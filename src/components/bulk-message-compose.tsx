@@ -80,7 +80,7 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
         <p>{result.sent} sent · {result.skipped} skipped · {result.queued} queued</p>
         {channel === "both" && <p className="text-sm text-muted-foreground">{modes} · Counts are individual email/text deliveries.</p>}
         <Button onClick={onClose}>Done</Button>
-      </div> : <div className="space-y-4">
+      </div> : <fieldset className="space-y-4" disabled={busy || previewing}>
         <div className="flex gap-1" role="group" aria-label="Message channel">
           {(["email", "text", "both"] as const).map((c) => <Button key={c} size="sm" variant={channel === c ? "default" : "outline"} aria-pressed={channel === c} onClick={() => { setChannel(c); setTemplate(""); }}>{c === "email" ? <Mail /> : c === "text" ? <MessageSquare /> : <Send />}{c === "email" ? "Email" : c === "text" ? "Text" : "Both"}</Button>)}
         </div>
@@ -101,7 +101,7 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
           </>}
         </div>
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={send} disabled={!valid || !ready?.eligible || eligibility.isFetching || busy}>{busy ? <Loader2 className="animate-spin" /> : <Send />}Send message</Button></div>
-      </div>}
+      </fieldset>}
     </DialogContent>
   </Dialog>;
 }
