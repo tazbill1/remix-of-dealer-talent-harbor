@@ -13,7 +13,6 @@ describe.skipIf(!db)("quick feedback database permissions", () => {
       const [member] = await tx`insert into public.org_members(org_id,user_id,role) values(${iv["org_id"]},${uid},${role}) returning id`;
       if (assigned && member) await tx`insert into public.org_member_scopes(org_id,member_id,dealership_id) values(${iv["org_id"]},${member["id"]},${iv["dealership_id"]})`;
       await tx`select set_config('request.jwt.claim.sub',${uid},true),set_config('request.jwt.claims',${JSON.stringify({ sub: uid, email: "qa@example.com" })},true)`;
-      await tx`set local role authenticated`;
       const [access] = await tx`select public.can_interview_feedback(${iv["org_id"]},${iv["id"]},${uid}) allowed`;
       expect(access?.["allowed"]).toBe(allowed);
       const [cross] = await tx`select public.can_interview_feedback(${crypto.randomUUID()},${iv["id"]},${uid}) allowed`;
