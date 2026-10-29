@@ -225,8 +225,8 @@ export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterview
           </li>
         ))}
       </ul>
-      <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
-        <Button size="sm" onClick={add} disabled={!when || scheduleBusy}>{scheduleBusy ? "Saving…" : "Schedule"}</Button></div>
+      <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"><Input className="min-w-0 w-full" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+        <Button size="sm" className="min-h-11 sm:min-h-9" onClick={add} disabled={!when || scheduleBusy}>{scheduleBusy ? "Saving…" : "Schedule"}</Button></div>
       {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}
       <Button size="sm" variant="outline" className="mt-2" disabled={linkBusy} onClick={async () => {
         setLinkBusy(true);
@@ -311,8 +311,8 @@ export function RescheduleButton({ interviewId, startsAt, onDone }: { interviewI
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader><DialogTitle>Reschedule interview</DialogTitle></DialogHeader>
           <p className="text-xs text-muted-foreground">Currently {new Date(startsAt).toLocaleString()}</p>
-          <div className="flex gap-2"><Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
-            <Button size="sm" onClick={save} disabled={!when || busy}>{busy ? "Saving…" : "Reschedule"}</Button></div>
+          <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"><Input className="min-w-0 w-full" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+            <Button size="sm" className="min-h-11 sm:min-h-9" onClick={save} disabled={!when || busy}>{busy ? "Saving…" : "Reschedule"}</Button></div>
           {!when && <p className="mt-1 text-xs text-muted-foreground">Pick a date and time to schedule.</p>}
         </DialogContent>
       </Dialog>
