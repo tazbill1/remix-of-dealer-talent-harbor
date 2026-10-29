@@ -57,7 +57,7 @@ export function friendlyAiError(e: any) {
     : `The AI couldn't finish that (${status ?? "error"}). Please try again.`;
 }
 
-export async function lovableProvider() {
+export async function lovableProvider(requestFetch?: typeof fetch) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured.");
   const { createOpenAI } = await import("@ai-sdk/openai");
@@ -65,6 +65,7 @@ export async function lovableProvider() {
     baseURL: `${GATEWAY}/v1`,
     apiKey: key,
     headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    ...(requestFetch ? { fetch: requestFetch } : {}),
   });
 }
 export { LOVABLE_MODEL, LOVABLE_OPTS };

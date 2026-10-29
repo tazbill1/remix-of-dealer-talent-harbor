@@ -1,5 +1,11 @@
 # WerkandMe Hiring roadmap
 
+## Applicant follow-up
+- [x] Verified Ask answered authenticated Dallas interview question (4 Interviewing).
+- [x] Quick chips and last-contacted filters; tested sent/demo versus queued/failed, unanswered contacts, calendar week and month boundaries.
+- [x] Filter-only Ask reuses existing provider/model/options; only scoped catalogs, validated removable URL filters, no applicant records/actions; partial-match feedback verified.
+- [x] Verified ABC requests: Dallas Interviewing/no reply 5 days (0), techs this month (5; Subaru unavailable explained), Dallas never contacted (12). Quick week shows 2; last-contacted and mobile/list verified. Select all shown selects 12 and opens existing composer. 28 tests pass, build OK; no sends or data/settings changes.
+
 ## Bulk messaging screens
 - [x] Final bulk confirmation shows channel deliveries/stores/skips/Demo; requires typed actual-recipient count at 25+, rechecks changes before sending. Verified 3 recipients and 30 selected (25 eligible), Cancel preserves draft, wrong/right count disables/enables; 11 tests pass. No send clicked; messages 40, bulk sends 0.
 - [x] Select all shown beside applicant counts on board/list; filtered Marcus selects 2, Needs attention selects 8, Clear verified; 7 selection/bulk tests pass.

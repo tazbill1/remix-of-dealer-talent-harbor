@@ -1,3 +1,6 @@
+import { AskApplicantList } from "@/components/ask-applicant-list";
+import { followUpIndex, matchesFollowUp, type ContactMessage } from "@/lib/applicant-follow-up";
+import { listFilterPatch } from "@/lib/applicant-list-filters";
 import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { BulkMessageCompose, useBulkSettings } from "@/components/bulk-message-compose";
 import { canSendBulk, selectAllShown } from "@/lib/bulk-messaging";
@@ -51,7 +54,7 @@ import { useReminderRules } from "@/components/status-reminders-settings";
 import { overdueInfo, type Overdue } from "@/lib/status-reminders";
 import { ReferralBadge, ReferralPanelRow, useReferrerNames } from "@/components/referral-badge";
 
-type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests" | "overdue";
+type SearchKey = "q" | "job" | "source" | "applied" | "attention" | "sort" | "view" | "status" | "filter" | "region" | "store" | "tests" | "overdue" | "contacted" | "noReply" | "interviewWeek";
 
 export const Route = createFileRoute("/_authenticated/applicants")({
   head: () => ({ meta: [{ title: "Applicants | WerkandMe Hiring" }, { name: "description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:title", content: "Applicants | WerkandMe Hiring" }, { property: "og:description", content: "Manage applicants and interview scorecards across your stores." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -69,6 +72,9 @@ export const Route = createFileRoute("/_authenticated/applicants")({
     store: z.string().optional(),
     tests: z.string().optional(),
     overdue: z.coerce.string().optional(),
+    contacted: z.string().optional(),
+    noReply: z.string().optional(),
+    interviewWeek: z.string().optional(),
     focus: z.string().optional(),
     applicant: z.string().uuid().optional(),
     tab: z.enum(["overview", "messages", "interview", "offer", "notes", "onboarding"]).optional(),
@@ -94,6 +100,27 @@ function Applicants() {
       ]);
       // Filters, sort and tags use the standardized source; the raw tag stays in raw_source.
       return { apps: (apps.data ?? []).map((a) => ({ ...a, raw_source: a.source, source: a.source_channel })), jobs: jobs.data ?? [], stores: stores.data ?? [], regions: regions.data ?? [] };
+    },
+  });
+  const { data: followUpData, isPending: followUpPending, error: followUpError } = useQuery({
+    queryKey: ["applicant-follow-up", org.orgId],
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const messages: ContactMessage[] = [];
+      const interviews: { application_id: string; starts_at: string; status: string }[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data: rows, error } = await supabase.from("messages").select("application_id, direction, status, created_at, sent_at")
+          .eq("org_id", org.orgId).eq("party", "candidate").order("id").range(offset, offset + 999);
+        if (error) throw new Error(error.message);
+        messages.push(...(rows ?? [])); if ((rows?.length ?? 0) < 1000) break;
+      }
+      for (let offset = 0; ; offset += 1000) {
+        const { data: rows, error } = await supabase.from("interviews").select("application_id, starts_at, status")
+          .eq("org_id", org.orgId).order("id").range(offset, offset + 999);
+        if (error) throw new Error(error.message);
+        interviews.push(...(rows ?? [])); if ((rows?.length ?? 0) < 1000) break;
+      }
+      return { messages, interviews };
     },
   });
   const { data: referrerRows = [] } = useReferrerNames(org.orgId);
@@ -124,6 +151,10 @@ function Applicants() {
   const store = search.store ?? "all";
   const showTests = search.tests === "1";
   const overdueOnly = search.overdue === "1";
+  const contacted = search.contacted;
+  const noReply = search.noReply;
+  const interviewWeek = search.interviewWeek === "1";
+  const followUpActive = !!contacted || !!noReply || interviewWeek;
   const { data: reminderRules = [] } = useReminderRules(org.orgId);
   const overdueOf = (a: { status: AppStatus; status_changed_at: string | null }) => overdueInfo(a, reminderRules);
 
@@ -178,18 +209,23 @@ function Applicants() {
 
   const storeTz = store !== "all" ? data?.stores.find((s) => s.id === store)?.timezone || undefined : undefined;
   const statusFilter = (STATUSES as readonly string[]).includes(search.status ?? "") ? (search.status as AppStatus) : null;
-  const base = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || a.dealership_id === store
+  const base = (data?.apps ?? []).filter((a) => inRegion(a.dealership_id) && (store === "all" || store.split(",").includes(a.dealership_id)
     || (store === "shared" && a.open_to_other_stores))
     && (showTests || !isTestName(a.full_name))
     && (!statusFilter || a.status === statusFilter));
   const focusAttention = search.focus === "attention";
   const focused = focusAttention ? base.filter((a) => !!a.needs_attention || !!overdueOf(a)) : base;
-  const apps = filterApplicants(overdueOnly ? focused.filter((a) => overdueOf(a)) : focused, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
+  const followUps = followUpIndex(followUpData?.messages ?? [], followUpData?.interviews ?? [], Date.now(), (id) => {
+    const app = data?.apps.find((a) => a.id === id);
+    return data?.stores.find((s) => s.id === app?.dealership_id)?.timezone ?? undefined;
+  });
+  const readyFocused = followUpActive ? (followUpPending || followUpError ? [] : focused.filter((a) => matchesFollowUp(followUps[a.id], { contacted, noReply, interviewWeek }))) : focused;
+  const apps = filterApplicants(overdueOnly ? readyFocused.filter((a) => overdueOf(a)) : readyFocused, { q, jobId: jobFilter, source: sourceFilter, applied, attentionOnly, ...(storeTz ? { timeZone: storeTz } : {}) }, job);
   const sortedApps = sortApplicants(apps, sort, job, storeName);
   const sourceOptions = [...new Set(base.map((a) => a.source).filter(Boolean))].sort((a, b) => sourceLabel(a).localeCompare(sourceLabel(b)));
-  const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || overdueOnly || region !== "all" || store !== "all";
-  const activeFilterCount = [region !== "all", jobFilter !== "all", sourceFilter !== "all", applied !== "any", attentionOnly, overdueOnly].filter(Boolean).length;
-  const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, overdue: undefined, region: undefined, store: undefined });
+  const filtersActive = !!q.trim() || jobFilter !== "all" || sourceFilter !== "all" || applied !== "any" || attentionOnly || overdueOnly || region !== "all" || store !== "all" || !!statusFilter || followUpActive;
+  const activeFilterCount = [region !== "all", jobFilter !== "all", sourceFilter !== "all", applied !== "any", attentionOnly, overdueOnly, !!contacted, !!noReply, interviewWeek].filter(Boolean).length;
+  const clearFilters = () => set({ q: undefined, job: undefined, source: undefined, applied: undefined, filter: undefined, attention: undefined, overdue: undefined, region: undefined, store: undefined, status: undefined, contacted: undefined, noReply: undefined, interviewWeek: undefined });
 
   // Must come after job() and storeName(): they're used while rendering.
   const emailRecipients = (data?.apps ?? [])
@@ -248,6 +284,21 @@ function Applicants() {
     return <span className="inline-flex flex-wrap items-center gap-1">{top && nodes[top]}<TagOverflow tags={rest.map((k) => nodes[k])} /></span>;
   };
 
+  const appliedLabels: Record<string, string> = { today: "Applied today", "7": "Applied in last 7 days", "30": "Applied in last 30 days", month: "Applied this month" };
+  const filterChips: { key: SearchKey; label: string }[] = [
+    ...(q ? [{ key: "q" as const, label: `Search: ${q}` }] : []),
+    ...(statusFilter ? [{ key: "status" as const, label: STATUS_LABEL[statusFilter] }] : []),
+    ...(store !== "all" ? [{ key: "store" as const, label: store === "shared" ? "Open to other stores" : store.split(",").map(storeName).join(", ") }] : []),
+    ...(region !== "all" ? [{ key: "region" as const, label: data?.regions.find((r) => r.id === region)?.name ?? "No region" }] : []),
+    ...(jobFilter !== "all" ? [{ key: "job" as const, label: [...new Set(jobFilter.split(",").map(job))].join(", ") }] : []),
+    ...(sourceFilter !== "all" ? [{ key: "source" as const, label: sourceLabel(sourceFilter) }] : []),
+    ...(applied !== "any" ? [{ key: "applied" as const, label: appliedLabels[applied] ?? applied }] : []),
+    ...(contacted ? [{ key: "contacted" as const, label: contacted === "never" ? "Never contacted" : `Last contacted ${contacted}+ days ago` }] : []),
+    ...(noReply ? [{ key: "noReply" as const, label: `No reply in ${noReply}+ days` }] : []),
+    ...(interviewWeek ? [{ key: "interviewWeek" as const, label: "Interview this week" }] : []),
+    ...(attentionOnly ? [{ key: "attention" as const, label: "Needs attention" }] : []),
+    ...(overdueOnly ? [{ key: "overdue" as const, label: "Overdue" }] : []),
+  ];
   const boardStatuses = showEmpty ? STATUSES : STATUSES.filter((st) => sortedApps.some((a) => a.status === st));
 
   return (
@@ -267,7 +318,15 @@ function Applicants() {
         </div>
       </div>
 
-      <ApplicantViewTabs active={focusAttention ? "attention" : "all"} />
+      <div className="space-y-3">
+        <ApplicantViewTabs active={focusAttention ? "attention" : "all"} />
+        <div className="flex flex-wrap items-center gap-2" aria-label="Quick filters">
+          <Button variant={noReply === "3" ? "secondary" : "outline"} size="sm" className="h-8 rounded-full text-xs" aria-pressed={noReply === "3"} onClick={() => set({ noReply: noReply === "3" ? undefined : "3" })}>No reply in 3+ days</Button>
+          <Button variant={interviewWeek ? "secondary" : "outline"} size="sm" className="h-8 rounded-full text-xs" aria-pressed={interviewWeek} onClick={() => set({ interviewWeek: interviewWeek ? undefined : "1" })}>Interview this week</Button>
+          <Button variant={overdueOnly ? "secondary" : "outline"} size="sm" className="h-8 rounded-full text-xs" aria-pressed={overdueOnly} onClick={() => set({ overdue: overdueOnly ? undefined : "1" })}>Overdue</Button>
+        </div>
+        <AskApplicantList key={org.orgId} orgId={org.orgId} onApply={(result) => { void set(listFilterPatch(result)); }} />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
@@ -280,6 +339,7 @@ function Applicants() {
         <select aria-label="Store" className={selectCls} value={store} onChange={(e) => set({ store: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All stores</option>
           <option value="shared">Open to other stores</option>
+          {store.includes(",") && <option value={store}>{store.split(",").map(storeName).join(", ")}</option>}
           {storeOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <Popover>
@@ -297,6 +357,7 @@ function Applicants() {
         )}
         <select aria-label="Job" className={cn(selectCls, "w-full")} value={jobFilter} onChange={(e) => set({ job: e.target.value === "all" ? undefined : e.target.value })}>
           <option value="all">All jobs</option>
+          {jobFilter.includes(",") && <option value={jobFilter}>{[...new Set(jobFilter.split(",").map(job))].join(", ")}</option>}
           {(data?.jobs ?? []).map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
         </select>
         <select aria-label="Source" className={cn(selectCls, "w-full")} value={sourceFilter} onChange={(e) => set({ source: e.target.value === "all" ? undefined : e.target.value })}>
@@ -308,7 +369,14 @@ function Applicants() {
           <option value="today">Today</option>
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
+          <option value="month">This month</option>
         </select>
+        <label className="space-y-1 text-sm text-muted-foreground">Last contacted
+          <select aria-label="Last contacted" className={cn(selectCls, "w-full")} value={contacted ?? "any"} onChange={(e) => set({ contacted: e.target.value === "any" ? undefined : e.target.value })}>
+            <option value="any">Any time</option><option value="3">3+ days ago</option><option value="7">7+ days ago</option><option value="14">14+ days ago</option><option value="never">Never</option>
+            {contacted && !["3", "7", "14", "never"].includes(contacted) && <option value={contacted}>{contacted}+ days ago</option>}
+          </select>
+        </label>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox checked={attentionOnly} onCheckedChange={(c) => set({ attention: c === true ? "1" : undefined })} />
           Needs attention
@@ -326,6 +394,13 @@ function Applicants() {
         {filtersActive && <button className="text-sm text-sapphire underline" onClick={clearFilters}>Clear filters</button>}
       </div>
 
+      {followUpActive && followUpError && <p role="alert" className="text-sm text-destructive">Couldn't load contact history. <Button variant="link" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["applicant-follow-up", org.orgId] })}>Try again</Button></p>}
+      <div className="flex flex-wrap items-center gap-2">
+        {filterChips.map((chip) => <span key={chip.key} className="inline-flex max-w-full items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-foreground">
+          <span className="min-w-0 break-words">{chip.label}</span><Button variant="ghost" size="icon" className="size-5 shrink-0" aria-label={`Remove ${chip.label} filter`} onClick={() => set({ [chip.key]: undefined, ...(chip.key === "applied" ? { filter: undefined } : {}) })}><X className="size-3" /></Button>
+        </span>)}
+      </div>
+      {filterChips.length > 0 && <p role="status" className="text-sm text-muted-foreground">{followUpActive && followUpPending ? "Loading contact history…" : `Showing ${apps.length} applicants: ${filterChips.map((c) => c.label).join(", ")}`}</p>}
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         {isPending
           ? <span aria-live="polite">Loading applicants…</span>
@@ -340,30 +415,7 @@ function Applicants() {
             onCheckedChange={(c) => setChecked(selectAllShown(sortedApps.map((a) => a.id), c === true))} />
           Select all shown
         </label>
-        {store !== "all" && store !== "shared" && (
-          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
-            Store: {storeName(store) || "Store"}
-            <button aria-label="Clear store filter" onClick={() => set({ store: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
-          </span>
-        )}
-        {applied === "today" && (
-          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
-            Applied: Today
-            <button aria-label="Clear applied filter" onClick={() => set({ applied: undefined, filter: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
-          </span>
-        )}
-        {overdueOnly && (
-          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
-            Overdue only
-            <button aria-label="Clear overdue filter" onClick={() => set({ overdue: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
-          </span>
-        )}
-        {statusFilter && (
-          <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
-            Showing: {STATUS_LABEL[statusFilter]}
-            <button aria-label="Clear filter" onClick={() => set({ status: undefined })} className="text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
-          </span>
-        )}
+
       </div>
 
       <AddCandidateDialog open={addingManual} onOpenChange={setAddingManual} orgId={org.orgId} onCreated={() => qc.invalidateQueries({ queryKey: key })}

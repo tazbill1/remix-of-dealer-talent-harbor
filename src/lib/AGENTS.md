@@ -1,4 +1,5 @@
 ## src/lib rules
+- Applicant lists reuse Ask's provider/model/options via an authenticated filter-only function; AI sees RLS-scoped catalogs, never applicant rows, and validated output only sets URL filters. Contact/week math is pure and tested. Why: no selection, messaging, data or access changes.
 - Bulk confirmation uses fresh eligibility/channel/store counts and bulkConfirmationAllowed for typed counts at 25+ actual recipients. Why: skips and dual-channel deliveries must not confuse recipient confirmation.
 - Applicant select-all uses selectAllShown over the filtered/tab-visible IDs only. Why: hidden applicants must not enter a newly built message list.
 - Apply forms use tested applicationScan in scan.ts to prefer current QR codes and omit remembered scans when the URL has an explicit source; referral capture remains separate. Why: browser history cannot override a new source-tagged link.
