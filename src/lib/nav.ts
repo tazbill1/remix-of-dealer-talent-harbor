@@ -12,7 +12,7 @@ export function canSeeNav(path: string, r: NavRole): boolean {
   if (path === "/sent-messages") return isHr(r) || isStoreRole(r.role);
   if (path === "/team") return r.role === "group_admin";
   if (HR_ONLY.has(path)) return isHr(r);
-  if (path === "/referrals") return isHr(r) || r.role === "regional_leader";
+  if (path === "/referrals") return isHr(r) || isStoreRole(r.role) || r.role === "regional_leader";
   if (path === "/events") return isHr(r) || isStoreRole(r.role);
   if (path === "/new-hires") return r.role !== "regional_leader";
   return true;
