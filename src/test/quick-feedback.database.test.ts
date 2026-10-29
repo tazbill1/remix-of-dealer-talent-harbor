@@ -48,4 +48,15 @@ describe.skipIf(!db)("quick feedback database permissions", () => {
     const [allowed] = await db`select pg_temp.can_interview_feedback(${iv["org_id"]},${iv["id"]},${admin["user_id"]}) allowed`;
     expect(allowed?.["allowed"]).toBe(true);
   });
+  it("ABC's actual Arlington manager cannot access Dallas or Fort Worth feedback", async () => {
+    if (!db) return;
+    const [manager] = await db`select m.user_id from public.org_members m join public.org_member_scopes s on s.member_id=m.id join public.dealerships d on d.id=s.dealership_id where d.name='ABC Motors Arlington' and m.role='dealer_manager' limit 1`;
+    if (!manager) throw new Error("Missing ABC manager fixture");
+    const interviews = await db`select i.id,i.org_id from public.interviews i join public.applications a on a.id=i.application_id join public.dealerships d on d.id=a.dealership_id where d.name in ('ABC Motors Dallas','ABC Motors Fort Worth')`;
+    expect(interviews.length).toBeGreaterThan(0);
+    for (const iv of interviews) {
+      const [allowed] = await db`select pg_temp.can_interview_feedback(${iv["org_id"]},${iv["id"]},${manager["user_id"]}) allowed`;
+      expect(allowed?.["allowed"]).toBe(false);
+    }
+  });
 });
