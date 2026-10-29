@@ -1,7 +1,7 @@
 # WerkandMe Hiring roadmap
 
 ## Penny settings access
-- [ ] Restore Penny card entry point to existing assistant controls and remove its forced blank height; verify HR/admin access and unchanged settings.
+- [x] Penny card now links to existing AI assistant controls in Settings > Automatic texts; compact sizing removes forced blank height for every role without changing other cards. Signed-in admin clicked through and saw enabled tone/facts/screening/handoff/pause/instructions controls; desktop/mobile card height 166px, no page errors. Eleven access/menu tests pass; no settings saved or messages sent.
 
 ## Recruiting event coverage
 - [x] Finished screen pass: role-gated create/edit and legacy edit checks; All jobs preserves event scan. Signed-in create/edit and public Dallas+Plano scan verified (4 roles/2 stores), including mobile and return navigation; existing LG link unchanged. Actual GM scope RPC allows Dallas+Plano and denies whole group. Source report loads; per-event/per-store math and Analytics tests pass (35 targeted tests). Temporary events removed; no applicants submitted or messages sent. GM screen was not signed into; its options are backed by the existing authorization RPC and tested helpers.
