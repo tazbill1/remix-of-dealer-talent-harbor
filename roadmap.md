@@ -1,9 +1,9 @@
 # WerkandMe Hiring roadmap
 
 ## Bulk messaging screens
-- [ ] Selection-only composer with eligibility, templates, preview and send counts
-- [ ] HR/admin switch and store-scoped Sent messages history
-- [ ] Enable ABC Dealer Group only, preserve channel modes, verify without sending
+- [x] Selection-only composer with eligibility, existing templates, self-only preview and send counts; uses existing bulk RPC.
+- [x] HR/admin switch in Settings > Templates and RLS-scoped Sent messages history in Insights.
+- [x] ABC Dealer Group enabled only; email Live/text Demo unchanged. Authenticated board/list, three-person eligibility, merge insertion, switch/history and mobile verified; 23 tests pass, no sends/previews triggered (bulk history/message counts remain zero).
 
 ## Done (phase 1 foundation)
 - [x] Multi-group accounts, private data per group, WerkandMe Admin console
