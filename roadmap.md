@@ -1,10 +1,10 @@
 # WerkandMe Hiring roadmap
 
 ## Applicant follow-up
-- [ ] Verify existing Ask AI with an authenticated read-only request.
-- [ ] Add quick chips and last-contacted filters with tested date/reply rules.
-- [ ] Add scoped filter-only Ask for a list, removable chips and partial-match feedback.
-- [ ] Verify three ABC requests and desktop/mobile; no sends or data/settings changes.
+- [x] Verified Ask answered authenticated Dallas interview question (4 Interviewing).
+- [x] Quick chips and last-contacted filters; tested sent/demo versus queued/failed, unanswered contacts, calendar week and month boundaries.
+- [x] Filter-only Ask reuses existing provider/model/options; only scoped catalogs, validated removable URL filters, no applicant records/actions; partial-match feedback verified.
+- [x] Verified ABC requests: Dallas Interviewing/no reply 5 days (0), techs this month (5; Subaru unavailable explained), Dallas never contacted (12). Quick week shows 2; last-contacted and mobile/list verified. Select all shown selects 12 and opens existing composer. 28 tests pass, build OK; no sends or data/settings changes.
 
 ## Bulk messaging screens
 - [x] Final bulk confirmation shows channel deliveries/stores/skips/Demo; requires typed actual-recipient count at 25+, rechecks changes before sending. Verified 3 recipients and 30 selected (25 eligible), Cancel preserves draft, wrong/right count disables/enables; 11 tests pass. No send clicked; messages 40, bulk sends 0.
