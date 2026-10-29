@@ -1,7 +1,7 @@
 # WerkandMe Hiring roadmap
 
 ## Recruiting event coverage
-- [ ] Finish screen verification: role-scoped create/edit, preserve event on All jobs, and verify multi-store scan and per-store Analytics without applicant submissions or messages.
+- [x] Finished screen pass: role-gated create/edit and legacy edit checks; All jobs preserves event scan. Signed-in create/edit and public Dallas+Plano scan verified (4 roles/2 stores), including mobile and return navigation; existing LG link unchanged. Actual GM scope RPC allows Dallas+Plano and denies whole group. Source report loads; per-event/per-store math and Analytics tests pass (35 targeted tests). Temporary events removed; no applicants submitted or messages sent. GM screen was not signed into; its options are backed by the existing authorization RPC and tested helpers.
 - [x] Applied additive coverage schema, legacy backfill and scoped authorization (stores/region/group modes, per-store applicant guard).
 - [x] Event picker (admin: stores/region/group; GM: assigned stores only) and public QR jobs list scoped to covered stores; event attribution preserved and validated.
 - [x] Verified: admin picker options, two-store event scan shows only those stores' jobs (3 roles/2 stores), legacy LG event link unchanged, per-store counts; 424 tests pass. Temporary demo events removed.
