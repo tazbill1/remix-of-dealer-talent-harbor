@@ -14,10 +14,10 @@ export function IntegrationBadge({ state }: { state: IntegrationState }) {
   return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-medium", styles[state])}>{labels[state]}</span>;
 }
 
-export function IntegrationCard({ icon: Icon, title, state, what, note, children }: {
-  icon: LucideIcon; title: string; state: IntegrationState; what?: string; note?: string; children?: ReactNode;
+export function IntegrationCard({ icon: Icon, title, state, what, note, children, compact = false }: {
+  icon: LucideIcon; title: string; state: IntegrationState; what?: string; note?: string; children?: ReactNode; compact?: boolean;
 }) {
-  return <section aria-label={title} className="integration-card flex min-w-0 flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
+  return <section aria-label={title} className={cn("flex min-w-0 flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm", compact ? "h-auto self-start" : "integration-card")}>
     <div className="flex flex-wrap items-start justify-between gap-3">
       <h2 className="flex min-w-0 items-center gap-2 text-base font-semibold"><Icon className="size-5 shrink-0 text-sapphire" />{title}</h2>
       <IntegrationBadge state={state} />

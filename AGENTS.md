@@ -31,7 +31,7 @@
 - All outgoing texts go through queueText in src/lib/messaging/outbox.server.ts (consent, STOP opt-outs, texting window); never insert outbound messages directly. deliverDue sends them (practice = simulated, live = Twilio). Why: compliance rules can't be skipped by any feature.
 - Store/region scoping: RLS uses can_access_store / can_access_application (also on stores, regions, jobs and resumes); GMs and hiring managers see only assigned stores (none if unassigned), regional leaders without assignments see the group. Why: store-level staff must never see other stores.
 - Group texting configuration uses messaging_settings with RLS-backed browser editing; TextingSettings is embedded only in Integrations, and store contacts remain on Stores, while sms_opt_outs writes are service-role-only. Why: one config place.
-- Integrations share IntegrationCard/Badge; canEditIntegrationSettings gates UI only, never replaces RLS. Why: consistency.
+- IntegrationCard/Badge UI gates preserve RLS; compact Penny links to Settings' texts tab. Why: one save path, no blank card.
 - Email uses queueEmail and deliverDue (channel email), via managed sendLovable; sender is messaging_settings.email_from_address. Why: no extra provider; footer and signed unsubscribe are mandatory.
 - Scheduled jobs live under /api/public/cron/* (Lovable's scheduler only calls /api/public/ paths) and must call authenticateCronRequest first.
 - Automatic applicant emails (confirmation, interview invite, status updates) go through emailApplicant in src/lib/email/applicant.server.ts, wording in applicant-copy.ts; one purpose per event dedupes. Why: one path that never repeats an email or breaks the triggering action.
