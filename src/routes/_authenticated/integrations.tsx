@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -188,7 +188,12 @@ function Integrations() {
           title="AI assistant (Penny)"
           state="connected"
           what="Screens candidates by text, updates profiles and books interviews."
-        />
+          compact
+        >
+          {canEdit && <Button size="sm" variant="outline" className="mt-4" asChild>
+            <Link to="/settings" search={{ tab: "texts" }}><Bot />AI assistant</Link>
+          </Button>}
+        </Card>
 
         <Card
           icon={CalendarDays}

@@ -1,5 +1,8 @@
 # WerkandMe Hiring roadmap
 
+## Penny settings access
+- [ ] Restore Penny card entry point to existing assistant controls and remove its forced blank height; verify HR/admin access and unchanged settings.
+
 ## Recruiting event coverage
 - [x] Finished screen pass: role-gated create/edit and legacy edit checks; All jobs preserves event scan. Signed-in create/edit and public Dallas+Plano scan verified (4 roles/2 stores), including mobile and return navigation; existing LG link unchanged. Actual GM scope RPC allows Dallas+Plano and denies whole group. Source report loads; per-event/per-store math and Analytics tests pass (35 targeted tests). Temporary events removed; no applicants submitted or messages sent. GM screen was not signed into; its options are backed by the existing authorization RPC and tested helpers.
 - [x] Applied additive coverage schema, legacy backfill and scoped authorization (stores/region/group modes, per-store applicant guard).
