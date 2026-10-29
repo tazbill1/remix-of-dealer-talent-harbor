@@ -44,6 +44,7 @@ const sections: { id: string; label: string; items: NavItem[] }[] = [
   { id: "insights", label: "Insights", items: [
     { to: "/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/ask", label: "Ask", icon: Sparkles },
+    { to: "/sent-messages", label: "Sent messages", icon: Mail },
   ] },
   { id: "settings", label: "Settings", items: [
     { to: "/stores", label: "Stores", icon: Building2 },

@@ -1,4 +1,6 @@
 import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
+import { BulkMessageCompose, useBulkSettings } from "@/components/bulk-message-compose";
+import { canSendBulk } from "@/lib/bulk-messaging";
 import { PossibleDuplicateTag, useOpenDuplicate } from "@/components/possible-duplicate-tag";
 import { TagOverflow } from "@/components/tag-overflow";
 import { orderCardFlags, type CardFlag } from "@/lib/card-tags";
@@ -135,6 +137,8 @@ function Applicants() {
   const [showEmpty, setShowEmpty] = useState(false);
   const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
+  const [bulkMessaging, setBulkMessaging] = useState(false);
+  const { data: bulkSettings } = useBulkSettings(org.orgId);
   const [emailing, setEmailing] = useState<string[] | null>(null);
   const [bulkStatus, setBulkStatus] = useState<AppStatus>("screening");
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
@@ -368,9 +372,12 @@ function Applicants() {
             {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
           <Button size="sm" variant="secondary" onClick={bulkMove}>Update stage</Button>
+          {canSendBulk(org, bulkSettings?.bulk_messaging_enabled ?? false) && <Button size="sm" variant="secondary" onClick={() => setBulkMessaging(true)}><Mail />Send message</Button>}
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
         </div>
       )}
+
+      {bulkMessaging && canSendBulk(org, bulkSettings?.bulk_messaging_enabled ?? false) && <BulkMessageCompose orgId={org.orgId} applicationIds={checked} onClose={() => { setBulkMessaging(false); }} onSent={() => {}} />}
 
       {view === "board" ? (
         <div className="overflow-x-auto pb-4">

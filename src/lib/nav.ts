@@ -9,6 +9,7 @@ const HR_ONLY = new Set(["/consents", "/adverse-actions", "/templates", "/automa
 
 export function canSeeNav(path: string, r: NavRole): boolean {
   if (r.isPlatformAdmin) return true;
+  if (path === "/sent-messages") return isHr(r) || isStoreRole(r.role);
   if (path === "/team") return r.role === "group_admin";
   if (HR_ONLY.has(path)) return isHr(r);
   if (path === "/referrals") return isHr(r) || r.role === "regional_leader";
