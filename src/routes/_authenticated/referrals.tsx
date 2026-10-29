@@ -62,16 +62,14 @@ function ReferralsPage() {
       for(let offset=0;;offset+=1000){const result=await supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id",org.orgId).is("archived_at",null).order("id").range(offset,offset+999);if(result.error)throw result.error;allApps.push(...result.data);if(result.data.length<1000)break;}
       const allBonuses=[];
       for(let offset=0;;offset+=1000){const result=await supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id",org.orgId).order("id").range(offset,offset+999);if(result.error)throw result.error;allBonuses.push(...result.data);if(result.data.length<1000)break;}
-      const [stores, apps, bonuses, settings, entries, drawings, members] = await Promise.all([
+      const [stores, settings, entries, drawings, members] = await Promise.all([
         supabase.from("dealerships").select("id, name, referral_signup_token").eq("org_id", org.orgId).order("name"),
-        supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id", org.orgId),
-        supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id", org.orgId).order("due_date"),
         supabase.from("referral_settings").select("payout_days, full_time_only, require_before_hire, excluded_roles, drawing_enabled, drawing_amount, self_signup_enabled").eq("org_id", org.orgId).maybeSingle(),
         supabase.from("referral_drawing_entries").select("id, quarter, applicant_id, referrer_id").eq("org_id", org.orgId).order("created_at"),
         supabase.from("referral_drawings").select("quarter, amount, winner_entry_id, entry_count, picked_by, picked_at").eq("org_id", org.orgId),
         supabase.from("org_members").select("user_id, email").eq("org_id", org.orgId),
       ]);
-      if(stores.error||apps.error||bonuses.error||settings.error)throw new Error("Could not load referrals");
+      if(stores.error||settings.error)throw new Error("Could not load referrals");
       return { refs: allRefs, stores: stores.data ?? [], apps: allApps, bonuses: allBonuses,
         settings: settings.data ?? {...DEFAULT_SETTINGS,self_signup_enabled:false}, entries: entries.data ?? [], drawings: drawings.data ?? [], members: members.data ?? [] };
     },
