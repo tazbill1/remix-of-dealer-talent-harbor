@@ -1,4 +1,5 @@
 ## src/lib rules
+- Applicant select-all uses selectAllShown over the filtered/tab-visible IDs only. Why: hidden applicants must not enter a newly built message list.
 - Apply forms use tested applicationScan in scan.ts to prefer current QR codes and omit remembered scans when the URL has an explicit source; referral capture remains separate. Why: browser history cannot override a new source-tagged link.
 - Texting workflows (welcome, manager summary/nudge/escalation, reminders, check-ins) live in src/lib/workflows: rules in rules.ts (pure, tested), the scheduled runner in run.server.ts, fixed-meaning manager replies in replies.server.ts.
 - Weekly summaries use tested weekly-summary.ts and weekly-summary.server.ts via workflows cron, unique weekly_summaries member/week; automations.weeklySummary settings. Why: staff emails follow practice/opt-out/footer rules without applicant queues.
