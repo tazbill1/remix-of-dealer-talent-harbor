@@ -253,7 +253,7 @@ export function AskBubble() {
   ) : (
     <Button
       onClick={() => setOpen(true)}
-      className="fixed bottom-4 right-4 z-40 h-12 rounded-full px-5 shadow-lg"
+      className="ask-launcher fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-4 z-40 h-12 rounded-full px-5 shadow-lg"
       aria-label="Open Ask"
     >
       <Sparkles /> Ask

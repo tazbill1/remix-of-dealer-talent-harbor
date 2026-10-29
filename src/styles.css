@@ -135,3 +135,10 @@
 }
 
 .integration-card { height: 30rem; }
+
+/* All sticky save bars share this marker, including when Save is disabled. */
+@media (max-width: 767px) {
+  body:has([data-sticky-save-bar]) .ask-launcher {
+    display: none;
+  }
+}

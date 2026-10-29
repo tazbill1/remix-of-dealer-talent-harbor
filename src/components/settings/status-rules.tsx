@@ -129,13 +129,13 @@ export function StatusRulesSettings() {
       <StatusRemindersSettings orgId={org.orgId} canEdit={canEdit} />
 
       {canEdit && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:left-64">
-          <div className="mx-auto flex max-w-4xl items-center justify-end gap-3">
-            {dirty && <span className="text-sm text-muted-foreground">Unsaved changes</span>}
-            <Button variant="ghost" disabled={!dirty || busy} onClick={() => setRules(data.rules)}>
+        <div data-sticky-save-bar className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] backdrop-blur md:left-64">
+          <div className="mx-auto grid max-w-4xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 sm:gap-3">
+            <span className="min-w-0 text-sm text-muted-foreground">{dirty ? "Unsaved changes" : ""}</span>
+            <Button className="shrink-0" variant="ghost" disabled={!dirty || busy} onClick={() => setRules(data.rules)}>
               Discard
             </Button>
-            <Button disabled={!dirty || busy || problems.some(Boolean)} onClick={onSave}>
+            <Button className="shrink-0" disabled={!dirty || busy || problems.some(Boolean)} onClick={onSave}>
               {busy ? "Saving…" : "Save changes"}
             </Button>
           </div>

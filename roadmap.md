@@ -1,5 +1,9 @@
 # WerkandMe Hiring roadmap
 
+## Mobile sticky save bars
+- [x] Global mobile rule hides Ask whenever a marked sticky save bar is present; both existing bars and Ask respect bottom safe-area spacing. Save controls stay fixed-size while Unsaved changes can wrap.
+- [x] Automatic texts and Status rules tested at 360px/390px: dirty Save enabled, unobstructed hit-test, no bar overflow; Discard restores unchanged settings and Ask returns off save-bar pages. No settings saved or publishing; build OK.
+
 ## End-to-end notes/interviews/feedback QA
 - [x] Admin desktop/360/390: notes saved/cleared/listed, store/status filters worked, feedback Saved/reloaded and one timeline summary verified. Real Demo reschedule updated the same interview and was restored; no real messages.
 - [ ] Store-manager browser checks blocked: minting a different user's session requires unavailable approval. Permission tests pass for assigned/unassigned managers and actual ABC account; its existing assignments include Arlington AND Dallas region, so Dallas-region access is expected and unchanged.
