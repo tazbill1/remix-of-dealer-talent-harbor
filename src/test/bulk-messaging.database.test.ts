@@ -23,12 +23,12 @@ describe.skipIf(!db)('Bulk messaging database safeguards', () => {
     const [column] = await db`select column_default from information_schema.columns where table_schema='public' and table_name='messaging_settings' and column_name='bulk_messaging_enabled'`;
     expect(column?.['column_default']).toBe('false');
   });
-  it('enables ABC Dealer Group only for the demo without changing channel modes', async () => {
+  it('enables ABC Dealer Group only for the demo with both channels in Demo', async () => {
     if (!db) return;
     const [abc] = await db`select m.bulk_messaging_enabled,m.mode,m.email_mode from public.messaging_settings m join public.organizations o on o.id=m.org_id where o.name='ABC Dealer Group'`;
     expect(abc?.['bulk_messaging_enabled']).toBe(true);
     expect(abc?.['mode']).toBe('practice');
-    expect(abc?.['email_mode']).toBe('live');
+    expect(abc?.['email_mode']).toBe('practice');
     const [others] = await db`select count(*) as enabled from public.messaging_settings m join public.organizations o on o.id=m.org_id where o.name<>'ABC Dealer Group' and m.bulk_messaging_enabled`;
     expect(Number(others?.['enabled'])).toBe(0);
   });
