@@ -53,7 +53,7 @@ function Jobs() {
               className="block rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div><h2 className="text-lg">{j.title}</h2><p className="text-sm text-muted-foreground">{st?.name}</p></div>
-                {pay && <span className="rounded-full bg-accent px-3 py-1 text-sm font-semibold text-sapphire">{pay}</span>}
+                {pay && <span className="rounded-full bg-accent px-3 py-1 text-sm font-semibold text-abc-red">{pay}</span>}
               </div>
               {st?.city && <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-3.5" />{st.city}{st.state ? `, ${st.state}` : ""}</p>}
             </Link>
@@ -61,7 +61,7 @@ function Jobs() {
         })}
         {!list.length && (
           <p className="rounded-2xl bg-background p-6 text-center text-muted-foreground">
-            No matching jobs right now. <Link to="/careers/contact" className="text-sapphire underline">Tell us what you're looking for</Link>.
+            No matching jobs right now. <Link to="/careers/contact" className="text-abc-red underline">Tell us what you're looking for</Link>.
           </p>
         )}
       </div>

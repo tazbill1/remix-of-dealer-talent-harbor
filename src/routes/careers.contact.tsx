@@ -51,7 +51,7 @@ function Contact() {
   if (done)
     return (
       <div className="mx-auto max-w-xl px-5 py-16 text-center">
-        <CheckCircle2 className="mx-auto size-12 text-sapphire" />
+        <CheckCircle2 className="mx-auto size-12 text-abc-red" />
         <h1 className="mt-4 text-3xl">Thanks, we got your message!</h1>
         <p className="mt-2 text-muted-foreground">Our hiring team will reach out soon. Check your email for a confirmation.</p>
         <Button asChild className="mt-6"><Link to="/careers/jobs">Browse open jobs</Link></Button>
