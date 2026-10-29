@@ -10,7 +10,7 @@ afterAll(async () => { if (db) await db.end(); });
 beforeAll(async () => {
   if (!db) return;
   await db`create temporary table bulk_test_session (id integer)`;
-  const functions = await db`select proname, pg_get_functiondef(oid) as definition from pg_proc where pronamespace='public'::regnamespace and proname in ('can_bulk_message','has_org_role','is_platform_admin','bulk_render','bulk_next_text_time')`;
+  const functions = await db`select proname, pg_get_functiondef(oid) as definition from pg_proc where pronamespace='public'::regnamespace and proname in ('can_bulk_message','has_org_role','is_platform_admin','bulk_render','bulk_next_text_time') order by case proname when 'is_platform_admin' then 0 when 'has_org_role' then 1 else 2 end`;
   for (const fn of functions) {
     let definition = String(fn.definition).replace(/FUNCTION public\./, 'FUNCTION pg_temp.').replace('SECURITY DEFINER', 'SECURITY INVOKER');
     definition = definition.replaceAll('public.has_org_role(', 'pg_temp.has_org_role(').replaceAll('public.is_platform_admin(', 'pg_temp.is_platform_admin(');
