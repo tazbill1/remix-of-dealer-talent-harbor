@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AbcLogo } from "@/components/abc-logo";
 import { useOrg } from "@/lib/org";
 import { CAREERS_ORG_SLUG, SITE_URL } from "@/lib/site";
+import { CareersVideoSettings, NewsletterList } from "@/components/careers-video-settings";
 
 const swatches = [
   { name: "Red", cls: "bg-abc-red" }, { name: "Black", cls: "bg-abc-black" },
@@ -47,6 +48,8 @@ export function CareerSiteSettings() {
                 ))}
               </div>
             </div>
+            <CareersVideoSettings />
+            <NewsletterList />
           </>
         )}
       </CardContent>

@@ -35,8 +35,14 @@ function Index() {
   // Signed-in users go straight to the dashboard; everyone else sees the marketing page.
   const [redirecting, setRedirecting] = useState(false);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (data.session) {
+        // Careers-site applicant accounts aren't staff: keep them on the marketing page.
+        const [{ count }, { data: pa }] = await Promise.all([
+          supabase.from("org_members").select("id", { count: "exact", head: true }).eq("user_id", data.session.user.id),
+          supabase.from("platform_admins").select("user_id").eq("user_id", data.session.user.id).maybeSingle(),
+        ]);
+        if (!count && !pa) return;
         setRedirecting(true); // hide the marketing page right away, then move to the dashboard
         navigate({ to: "/dashboard" });
       }

@@ -43,8 +43,10 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as BookTokenRouteImport } from './routes/book.$token'
 import { Route as CareersIndexRouteImport } from './routes/careers.index'
+import { Route as CareersAccountRouteImport } from './routes/careers.account'
 import { Route as CareersContactRouteImport } from './routes/careers.contact'
 import { Route as CareersJobsRouteImport } from './routes/careers.jobs'
+import { Route as CareersLoginRouteImport } from './routes/careers.login'
 import { Route as ECodeRouteImport } from './routes/e.$code'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OnboardTokenRouteImport } from './routes/onboard.$token'
@@ -249,6 +251,11 @@ const CareersIndexRoute = CareersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CareersRoute,
 } as any)
+const CareersAccountRoute = CareersAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => CareersRoute,
+} as any)
 const CareersContactRoute = CareersContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -257,6 +264,11 @@ const CareersContactRoute = CareersContactRouteImport.update({
 const CareersJobsRoute = CareersJobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => CareersRoute,
+} as any)
+const CareersLoginRoute = CareersLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => CareersRoute,
 } as any)
 const ECodeRoute = ECodeRouteImport.update({
@@ -435,8 +447,10 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
+  '/careers/account': typeof CareersAccountRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/careers/login': typeof CareersLoginRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/onboard/$token': typeof OnboardTokenRoute
@@ -498,8 +512,10 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
+  '/careers/account': typeof CareersAccountRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/careers/login': typeof CareersLoginRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/onboard/$token': typeof OnboardTokenRoute
@@ -564,8 +580,10 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/book/$token': typeof BookTokenRoute
+  '/careers/account': typeof CareersAccountRoute
   '/careers/contact': typeof CareersContactRoute
   '/careers/jobs': typeof CareersJobsRoute
+  '/careers/login': typeof CareersLoginRoute
   '/e/$code': typeof ECodeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/onboard/$token': typeof OnboardTokenRoute
@@ -630,8 +648,10 @@ export interface FileRouteTypes {
     | '/team'
     | '/templates'
     | '/book/$token'
+    | '/careers/account'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/careers/login'
     | '/e/$code'
     | '/invite/$token'
     | '/onboard/$token'
@@ -693,8 +713,10 @@ export interface FileRouteTypes {
     | '/team'
     | '/templates'
     | '/book/$token'
+    | '/careers/account'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/careers/login'
     | '/e/$code'
     | '/invite/$token'
     | '/onboard/$token'
@@ -758,8 +780,10 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/_authenticated/templates'
     | '/book/$token'
+    | '/careers/account'
     | '/careers/contact'
     | '/careers/jobs'
+    | '/careers/login'
     | '/e/$code'
     | '/invite/$token'
     | '/onboard/$token'
@@ -1067,6 +1091,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CareersIndexRouteImport
       parentRoute: typeof CareersRoute
     }
+    '/careers/account': {
+      id: '/careers/account'
+      path: '/account'
+      fullPath: '/careers/account'
+      preLoaderRoute: typeof CareersAccountRouteImport
+      parentRoute: typeof CareersRoute
+    }
     '/careers/contact': {
       id: '/careers/contact'
       path: '/contact'
@@ -1079,6 +1110,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/careers/jobs'
       preLoaderRoute: typeof CareersJobsRouteImport
+      parentRoute: typeof CareersRoute
+    }
+    '/careers/login': {
+      id: '/careers/login'
+      path: '/login'
+      fullPath: '/careers/login'
+      preLoaderRoute: typeof CareersLoginRouteImport
       parentRoute: typeof CareersRoute
     }
     '/e/$code': {
@@ -1335,14 +1373,18 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface CareersRouteChildren {
+  CareersAccountRoute: typeof CareersAccountRoute
   CareersContactRoute: typeof CareersContactRoute
   CareersJobsRoute: typeof CareersJobsRoute
+  CareersLoginRoute: typeof CareersLoginRoute
   CareersIndexRoute: typeof CareersIndexRoute
 }
 
 const CareersRouteChildren: CareersRouteChildren = {
+  CareersAccountRoute: CareersAccountRoute,
   CareersContactRoute: CareersContactRoute,
   CareersJobsRoute: CareersJobsRoute,
+  CareersLoginRoute: CareersLoginRoute,
   CareersIndexRoute: CareersIndexRoute,
 }
 
