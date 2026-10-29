@@ -1,9 +1,9 @@
 # WerkandMe Hiring roadmap
 
 ## End-to-end notes/interviews/feedback QA
-- [ ] Admin desktop/360/390: notes save/list, filters/no overflow, Reschedule and feedback save/summary/timeline.
-- [ ] Store-manager desktop/360/390: same flows for assigned stores and deny other-store feedback.
-- [ ] Fix only verified regressions; no real messages or publishing.
+- [x] Admin desktop/360/390: notes saved/cleared/listed, store/status filters worked, feedback Saved/reloaded and one timeline summary verified. Real Demo reschedule updated the same interview and was restored; no real messages.
+- [ ] Store-manager browser checks blocked: minting a different user's session requires unavailable approval. Permission tests pass for assigned/unassigned managers and actual ABC account; its existing assignments include Arlington AND Dallas region, so Dallas-region access is expected and unchanged.
+- [x] Fixed only two 360px overflows: Reschedule date picker and applicant Interview tab Schedule row now stack on phones. Retested all widths with no overflow; no runtime errors or publishing. Nine labeled QA notes retained on fake Alicia plus existing QA feedback; interview original time restored.
 
 ## Quick interview feedback
 - [x] Extended scorecards first with independent quick-feedback fields, authenticated author/store-scoped save and one atomically maintained timeline summary; existing kit scores/submission preserved.
