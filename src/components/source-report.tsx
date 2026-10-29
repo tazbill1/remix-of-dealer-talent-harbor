@@ -16,12 +16,13 @@ export function SourceReport({ orgId, stores }: { orgId: string; stores: { id: s
     queryFn: async () => (await supabase.from("applicant_scan_counts").select("kind, event_id, event_name, store_id, applicants, hires").eq("org_id", orgId)).data ?? [],
   });
   const scanRows = (() => {
-    const m = new Map<string, { label: string; applicants: number; hires: number }>();
+    const m = new Map<string, { id: string; label: string; applicants: number; hires: number; stores: { id: string; name: string; applicants: number; hires: number }[] }>();
     for (const r of scans) {
       if (storeId !== "all" && r.store_id !== storeId) continue;
       const k = r.kind === "event" ? `e:${r.event_id}` : `s:${r.store_id}`;
       const label = r.kind === "event" ? `Event: ${r.event_name ?? ""}` : `Store QR: ${stores.find((s) => s.id === r.store_id)?.name ?? "Store"}`;
-      const x = m.get(k) ?? { label, applicants: 0, hires: 0 };
+      const x = m.get(k) ?? { id: k, label, applicants: 0, hires: 0, stores: [] };
+      if (r.kind === "event" && r.store_id) x.stores.push({ id: r.store_id, name: stores.find((s) => s.id === r.store_id)?.name ?? "Store", applicants: r.applicants ?? 0, hires: r.hires ?? 0 });
       x.applicants += r.applicants ?? 0; x.hires += r.hires ?? 0; m.set(k, x);
     }
     return [...m.values()].sort((a, b) => a.label.localeCompare(b.label));
@@ -47,7 +48,7 @@ export function SourceReport({ orgId, stores }: { orgId: string; stores: { id: s
         <table className="mt-5 w-full text-sm">
           <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Event or store QR code</th><th className="py-2 text-right">Applicants</th><th className="py-2 text-right">Hires</th><th className="py-2 text-right">Hire rate</th></tr></thead>
           <tbody>{scanRows.map((r) => (
-            <tr key={r.label} className="border-b last:border-0"><td className="py-2">{r.label}</td><td className="py-2 text-right">{r.applicants}</td><td className="py-2 text-right">{r.hires}</td><td className="py-2 text-right">{r.applicants ? Math.round((r.hires / r.applicants) * 100) : 0}%</td></tr>
+            <tr key={r.id} className="border-b last:border-0"><td className="py-2">{r.label}{r.stores.length > 0 && <details className="mt-1 text-xs text-muted-foreground"><summary className="cursor-pointer">By store</summary>{r.stores.map((s) => <div key={s.id}>{s.name}: {s.applicants} applicants · {s.hires} hires</div>)}</details>}</td><td className="py-2 text-right">{r.applicants}</td><td className="py-2 text-right">{r.hires}</td><td className="py-2 text-right">{r.applicants ? Math.round((r.hires / r.applicants) * 100) : 0}%</td></tr>
           ))}</tbody>
         </table>
       )}
