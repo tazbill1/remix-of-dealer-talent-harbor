@@ -3,7 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RescheduleButton, isUpcoming } from "@/components/applicant-tools";
 import { calendarLinks } from "@/lib/calendar-links";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarDays, CalendarPlus } from "lucide-react";
+import { CalendarDays, CalendarPlus, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { CalendarSubscribe } from "@/components/calendar-subscribe";
@@ -19,35 +21,66 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 function CalendarPage() {
   const org = useOrg();
   const qc = useQueryClient();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [storeFilter, setStoreFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { data } = useQuery({
     queryKey: ["interviews-all", org.orgId],
     queryFn: async () => {
-      const [iv, apps, stores] = await Promise.all([
+      const [iv, apps, stores, jobs] = await Promise.all([
         supabase.from("interviews").select("*").eq("org_id", org.orgId).gte("starts_at", new Date(Date.now() - 86400000).toISOString()).order("starts_at"),
-        supabase.from("applications").select("id, full_name, dealership_id").eq("org_id", org.orgId),
+        supabase.from("applications").select("id, full_name, dealership_id,job_id").eq("org_id", org.orgId),
         supabase.from("dealerships").select("id, name").eq("org_id", org.orgId),
+        supabase.from("jobs").select("id,title,hiring_manager").eq("org_id", org.orgId),
       ]);
-      return { iv: iv.data ?? [], apps: apps.data ?? [], stores: stores.data ?? [] };
+      return { iv: iv.data ?? [], apps: apps.data ?? [], stores: stores.data ?? [], jobs: jobs.data ?? [] };
     },
   });
   const app = (id: string) => data?.apps.find((a) => a.id === id);
   const store = (id?: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
+  const today = new Date().toDateString();
+  const visible = (data?.iv ?? []).filter((i) => (storeFilter === "all" || app(i.application_id)?.dealership_id === storeFilter) && (statusFilter === "all" || i.status === statusFilter));
+  const groups = ["Today", "Upcoming", "Past"].map((label) => ({ label, interviews: visible.filter((i) => {
+    const date = new Date(i.starts_at);
+    const group = date.toDateString() === today ? "Today" : date.getTime() > Date.now() ? "Upcoming" : "Past";
+    return group === label;
+  }) }));
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-5">
       <div><h1 className="text-3xl">Interviews</h1><p className="text-muted-foreground">Every interview across your stores, whether booked by the assistant or added by a manager.</p></div>
-      <MyCalendarCard orgId={org.orgId} />
-      <ul className="space-y-2">
+      <div className="space-y-3">
+        <Button variant="outline" className="h-11 sm:h-9" onClick={() => setFiltersOpen((open) => !open)} aria-expanded={filtersOpen}><SlidersHorizontal />Filters{(storeFilter !== "all" || statusFilter !== "all") && ` (${Number(storeFilter !== "all") + Number(statusFilter !== "all")})`}</Button>
+        {filtersOpen && <div className="grid min-w-0 gap-2 sm:grid-cols-2 sm:max-w-lg">
+          <select aria-label="Store" className="h-11 min-w-0 rounded-md border bg-background px-3 text-sm sm:h-9" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}><option value="all">All stores</option>{data?.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+          <select aria-label="Status" className="h-11 min-w-0 rounded-md border bg-background px-3 text-sm sm:h-9" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">All statuses</option>{[...new Set(data?.iv.map((i) => i.status))].map((status) => <option key={status} value={status}>{status}</option>)}</select>
+        </div>}
+      </div>
+      <div className="space-y-5">
         {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
-        {data?.iv.map((i) => (
-          <li key={i.id} className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="h-auto w-full cursor-pointer justify-start gap-3 whitespace-normal rounded-2xl border p-4 text-left hover:bg-secondary">
+        {groups.filter((group) => group.interviews.length).map((group) => <section key={group.label} className="space-y-2">
+          <h2 className="text-sm font-semibold text-muted-foreground">{group.label}</h2>
+          <ul className="space-y-2">
+        {group.interviews.map((i) => {
+          const candidate = app(i.application_id);
+          const job = data?.jobs.find((j) => j.id === candidate?.job_id);
+          return (
+          <li key={i.id} className="grid min-w-0 gap-3 rounded-md border bg-background p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-4">
+            <Button asChild variant="ghost" className="h-auto min-w-0 w-full cursor-pointer justify-start whitespace-normal p-0 text-left hover:bg-secondary">
               <Link to="/applicants" search={{ applicant: i.application_id, tab: "interview", interview: i.id }}>
-            <CalendarDays className="size-5 text-sapphire" />
-            <div className="flex-1"><div className="font-semibold">{app(i.application_id)?.full_name ?? "Applicant"}</div>
-              <div className="text-sm text-muted-foreground">{store(app(i.application_id)?.dealership_id)} · {i.duration_min} min</div></div>
-            <div className="text-right text-sm font-medium">{new Date(i.starts_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                <div className="grid min-w-0 w-full gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-4">
+                  <div className="min-w-0"><div className="break-words font-semibold">{candidate?.full_name ?? "Applicant"}</div>
+                    <div className="mt-0.5 break-words text-sm font-normal text-muted-foreground">{job?.title}</div>
+                    <div className="break-words text-xs font-normal text-muted-foreground">{store(candidate?.dealership_id)}</div>
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-start gap-2 text-sm font-medium"><CalendarDays className="mt-0.5 size-4 shrink-0 text-sapphire" /><span className="min-w-0">{new Date(i.starts_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · {i.duration_min} min</span></div>
+                    <div className="break-words text-xs font-normal text-muted-foreground">Interviewer: {job?.hiring_manager ?? "Not assigned"}</div>
+                    <Badge variant="secondary" className="font-normal">{i.status}</Badge>
+                  </div>
+                </div>
               </Link>
             </Button>
+            <div className="flex min-w-0 items-center gap-2 border-t pt-2 [&_button]:min-h-11 lg:border-t-0 lg:pt-0 lg:[&_button]:min-h-9">
             {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
               <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
             )}
@@ -67,9 +100,13 @@ function CalendarPage() {
                 </DropdownMenu>
               );
             })()}
+            </div>
           </li>
-        ))}
-      </ul>
+        ); })}
+          </ul>
+        </section>)}
+      </div>
+      <MyCalendarCard orgId={org.orgId} />
       <CalendarSubscribe orgId={org.orgId} />
     </div>
   );
