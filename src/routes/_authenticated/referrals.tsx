@@ -47,11 +47,11 @@ function ReferralsPage() {
   const [debounced,setDebounced]=useState("");
   useEffect(()=>{const id=setTimeout(()=>setDebounced(search),250);return()=>clearTimeout(id);},[search]);
   const {data: directory,error: directoryError} = useQuery({queryKey:["referral-directory",org.orgId,debounced,storeFilter,department,sort,page],enabled:canView,queryFn:async()=>{
-    const {data,error}=await supabase.rpc("referral_employee_directory",{_org:org.orgId,_search:debounced,_store:storeFilter||undefined,_department:department||undefined,_sort:sort,_offset:page*50});
+    const {data,error}=await supabase.rpc("referral_employee_directory",{_org:org.orgId,_search:debounced,...(storeFilter?{_store:storeFilter}:{}),...(department?{_department:department}:{}),_sort:sort,_offset:page*50});
     if(error)throw error;return directorySchema.parse(data);
   }});
   const key = ["referrals", org.orgId];
-  const { data } = useQuery({
+  const { data, error: loadError } = useQuery({
     queryKey: key,
     enabled: canView,
     queryFn: async () => {
@@ -77,6 +77,7 @@ function ReferralsPage() {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   if (!canView) return <div className="p-2 text-muted-foreground">Referrals are managed by HR, recruiters and group admins.</div>;
+  if (loadError) return <p role="alert" className="text-destructive">Could not load referrals. Please try again.</p>;
   if (!data) return <div className="text-muted-foreground">Loading...</div>;
 
   const storeName = (id: string | null) => data.stores.find((s) => s.id === id)?.name ?? "All stores";
