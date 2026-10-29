@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { coveredEventStores, eventScopeOptions, eventScanCounts, parsePublicEventCoverage } from "@/lib/event-coverage";
+import { coveredEventStores, eventScopeOptions, eventScanCounts, parsePublicEventCoverage, canEditEventScope } from "@/lib/event-coverage";
 const stores = [{ id: "dallas", name: "Dallas", region_id: "north" }, { id: "plano", name: "Plano", region_id: "north" }, { id: "houston", name: "Houston", region_id: "south" }];
 const event = { coverage_mode: "stores", covered_store_ids: ["dallas", "plano"], region_id: null, store_id: null };
 describe("recruiting event coverage", () => {
+  it("GM editing is limited to assigned stores, including legacy events", () => {
+    const assigned = stores.slice(0, 2);
+    const options = { group: false, regions: [{ id: "north" }] };
+    expect(canEditEventScope(event, assigned, options, "dealer_manager", false)).toBe(true);
+    expect(canEditEventScope({ ...event, covered_store_ids: ["dallas", "houston"] }, assigned, options, "dealer_manager", false)).toBe(false);
+    expect(canEditEventScope({ ...event, coverage_mode: "legacy", covered_store_ids: [], store_id: "houston" }, assigned, options, "dealer_manager", false)).toBe(false);
+    expect(canEditEventScope({ ...event, coverage_mode: "region", region_id: "north" }, assigned, options, "hiring_manager", false)).toBe(true);
+    expect(canEditEventScope({ ...event, coverage_mode: "group" }, assigned, options, "dealer_manager", false)).toBe(false);
+  });
+  it("HR and admins can edit authorized scopes while regional leaders cannot", () => {
+    const options = { group: true, regions: [{ id: "north" }, { id: "south" }] };
+    const group = { ...event, coverage_mode: "group" };
+    expect(canEditEventScope(group, stores, options, "recruiter", false)).toBe(true);
+    expect(canEditEventScope(group, stores, options, "group_admin", false)).toBe(true);
+    expect(canEditEventScope(group, stores, options, "regional_leader", true)).toBe(true);
+    expect(canEditEventScope(event, stores, options, "regional_leader", false)).toBe(false);
+  });
   it("specific stores covers one or more selected stores only", () => {
     expect(coveredEventStores(event, stores).map((s) => s.id)).toEqual(["dallas", "plano"]);
     expect(coveredEventStores({ ...event, covered_store_ids: ["dallas"] }, stores).map((s) => s.id)).toEqual(["dallas"]);

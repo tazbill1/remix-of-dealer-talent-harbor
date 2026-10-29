@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Plus, QrCode, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { coveredEventStores, eventScopeOptions, eventScanCounts } from "@/lib/event-coverage";
+import { coveredEventStores, eventScopeOptions, eventScanCounts, canEditEventScope } from "@/lib/event-coverage";
 import { Checkbox } from "@/components/ui/checkbox";
 import { scanLink } from "@/lib/scan";
 import { QrCard } from "@/components/qr-card";
@@ -30,7 +30,7 @@ function EventsPage() {
   const qc = useQueryClient();
 
   const key = ["recruiting-events", org.orgId];
-  const { data } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const [ev, stores, jobs, counts, regions, options] = await Promise.all([
@@ -43,7 +43,7 @@ function EventsPage() {
       ]);
       if (ev.error || stores.error || jobs.error || counts.error || regions.error || options.error) throw new Error("Couldn't load recruiting events.");
       const raw = options.data as { group_allowed?: boolean; region_ids?: string[] } | null;
-      return { options: eventScopeOptions({ group_allowed: raw?.group_allowed === true, region_ids: raw?.region_ids ?? [] }, regions.data ?? []), events: (ev.data ?? []) as Ev[], stores: stores.data ?? [], jobs: jobs.data ?? [], counts: counts.data ?? [] };
+      return { regions: regions.data ?? [], options: eventScopeOptions({ group_allowed: raw?.group_allowed === true, region_ids: raw?.region_ids ?? [] }, regions.data ?? []), events: (ev.data ?? []) as Ev[], stores: stores.data ?? [], jobs: jobs.data ?? [], counts: counts.data ?? [] };
     },
   });
   const [draft, setDraft] = useState<typeof EMPTY | null>(null);
@@ -53,10 +53,11 @@ function EventsPage() {
   const storeName = (id: string | null) => (id ? stores.find((s) => s.id === id)?.name ?? "Store" : "Group-wide");
   const jobTitle = (id: string | null) => (id ? data?.jobs.find((j) => j.id === id)?.title ?? "Job" : "All jobs");
   const count = (id: string) => eventScanCounts(data?.counts ?? [], id);
-  const coverage = (ev: Ev) => ev.coverage_mode === "region" ? data?.options.regions.find((r) => r.id === ev.region_id)?.name ?? "Region" : ev.coverage_mode === "group" || (ev.coverage_mode === "legacy" && !ev.store_id) ? "Group-wide" : coveredEventStores(ev, stores).map((s) => s.name).join(", ");
+  const coverage = (ev: Ev) => ev.coverage_mode === "region" ? data?.regions.find((r) => r.id === ev.region_id)?.name ?? "Region" : ev.coverage_mode === "group" || (ev.coverage_mode === "legacy" && !ev.store_id) ? "Group-wide" : coveredEventStores(ev, stores).map((s) => s.name).join(", ");
   const scope = draft ? { ...draft, region_id: draft.region_id || null, store_id: draft.store_id || null } : null;
   const covered = scope ? coveredEventStores(scope, stores) : [];
-  const canEdit = (ev: Ev) => ev.coverage_mode === "group" || (ev.coverage_mode === "legacy" && !ev.store_id) ? !!data?.options.group : ev.coverage_mode === "region" ? !!data?.options.regions.some((r) => r.id === ev.region_id) : ev.covered_store_ids.every((id) => stores.some((s) => s.id === id));
+  const canCreate = org.isPlatformAdmin || ["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(org.role);
+  const canEdit = (ev: Ev) => !!data && canEditEventScope(ev, stores, data.options, org.role, org.isPlatformAdmin);
   const edit = (ev: Ev) => setDraft({ id: ev.id, name: ev.name, event_date: ev.event_date, location: ev.location ?? "", store_id: ev.store_id ?? "", job_id: ev.job_id ?? "", coverage_mode: ev.coverage_mode, covered_store_ids: ev.covered_store_ids, region_id: ev.region_id ?? "" });
 
   async function save(e: React.FormEvent) {
@@ -91,7 +92,7 @@ function EventsPage() {
           <h1 className="text-3xl">Recruiting events</h1>
           <p className="text-sm text-muted-foreground">Give each hiring event its own QR code. Applicants who scan it are tagged with the event.</p>
         </div>
-        <Button onClick={() => setDraft({ ...EMPTY })}><Plus />Add event</Button>
+        {canCreate && <Button disabled={isLoading || !!error} onClick={() => setDraft({ ...EMPTY })}><Plus />Add event</Button>}
       </div>
       <div className="overflow-x-auto rounded-2xl bg-background shadow-sm">
         <table className="w-full text-sm">
@@ -100,7 +101,7 @@ function EventsPage() {
             <th className="px-3 py-2 text-right">Applicants</th><th className="px-3 py-2 text-right">Hires</th><th className="px-3 py-2">Active</th><th className="px-3 py-2" />
           </tr></thead>
           <tbody className="divide-y">
-            {(data?.events ?? []).length === 0 && <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">No events yet.</td></tr>}
+            {(data?.events ?? []).length === 0 && <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">{error ? "Couldn't load recruiting events." : isLoading ? "Loading…" : "No events yet."}</td></tr>}
             {(data?.events ?? []).map((ev) => { const c = count(ev.id); return (
               <tr key={ev.id}>
                 <td className="px-3 py-2.5"><div className="font-medium">{ev.name}</div>{ev.location && <div className="text-xs text-muted-foreground">{ev.location}</div>}</td>

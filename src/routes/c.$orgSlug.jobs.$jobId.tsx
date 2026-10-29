@@ -89,7 +89,7 @@ function JobPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <div className="bg-navy px-5 py-8 text-navy-foreground">
         <div className="mx-auto max-w-3xl">
-          <Link to="/c/$orgSlug" params={{ orgSlug: org!.slug }} className="flex items-center gap-1 text-sm text-sidebar-foreground hover:underline"><ArrowLeft className="size-4" />All jobs</Link>
+          <Link to="/c/$orgSlug" params={{ orgSlug: org?.slug ?? "" }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }} className="flex items-center gap-1 text-sm text-sidebar-foreground hover:underline"><ArrowLeft className="size-4" />All jobs</Link>
           <h1 className="mt-5 text-3xl md:text-4xl">{job.title}</h1>
           <p className="mt-2 flex flex-wrap items-center gap-2 text-sidebar-foreground">
             {store?.name}{store?.city && <><MapPin className="size-4" />{store.city}{store.state ? `, ${store.state}` : ""}</>}
