@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Quick interview feedback
+- [x] Extended scorecards first with independent quick-feedback fields, authenticated author/store-scoped save and one atomically maintained timeline summary; existing kit scores/submission preserved.
+- [x] Added mobile star/check/recommendation/notes autosave form and summaries on Interviews and applicant panel, with Saved, retry errors and pending-save close protection.
+- [x] Nineteen targeted tests pass (including role/store/cross-org permission checks); signed-in 360px/390px save and reload plus panel/timeline verified. One labeled QA feedback remains on fake Alicia Freeman; duplicate QA timeline entries removed. No messaging or publishing.
+
 ## Interviews layout cleanup
 - [x] Compact mobile cards, collapsed store/status filters and Today/Upcoming/Past sections; desktop aligned candidate, time/status and actions. Existing query date range and Reschedule/calendar actions preserved.
 - [x] Signed-in checks at 360px, 390px and desktop show no horizontal overflow; Filters and Reschedule dialog work, no data saved or publishing.
