@@ -575,6 +575,20 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
     queryKey: ["events", app.id, app.status],
     queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
   });
+  const noteQc = useQueryClient();
+  const { data: noteAuthors = [] } = useQuery({
+    queryKey: ["note-authors", orgId],
+    queryFn: async () => (await supabase.from("org_members").select("user_id,email").eq("org_id", orgId)).data ?? [],
+  });
+  const authorLabel = (id: string | null) => noteAuthors.find((m) => m.user_id === id)?.email ?? "Staff member";
+  async function saveNote(note: string) {
+    const { data: saved, error } = await supabase.rpc("add_applicant_note", { _org: orgId, _app: app.id, _note: note });
+    if (error || !saved) { toast.error(error?.message ?? "Note wasn’t saved. Please try again."); return null; }
+    noteQc.setQueryData<typeof events>(["events", app.id, app.status], (previous) => [saved, ...(previous ?? [])]);
+    onRefresh();
+    toast.success("Note saved");
+    return { ...saved, author: authorLabel(saved.actor_id) };
+  }
   const { data: addedBy } = useQuery({
     queryKey: ["added-by", orgId, app.created_by],
     enabled: !!app.created_manually && !!app.created_by,
@@ -797,7 +811,7 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
 
         {tab === "notes" && (
           <>
-            <ApplicantNotes key={app.id} initialNotes={app.notes} onSave={notes => onUpdate({ notes })} />
+            <ApplicantNotes key={app.id} initialNotes={app.notes} notes={events.filter((e) => e.kind === "note").map((e) => ({ ...e, author: authorLabel(e.actor_id) }))} onSave={saveNote} />
             <div>
               <div className="mb-2 text-sm font-semibold">Timeline</div>
               <ol className="space-y-2 border-l pl-4 text-sm">
