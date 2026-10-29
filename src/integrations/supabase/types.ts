@@ -470,6 +470,87 @@ export type Database = {
           },
         ]
       }
+      bulk_sends: {
+        Row: {
+          batch_id: string
+          body: string
+          channel: string
+          created_at: string
+          email_demo: boolean
+          id: string
+          is_demo: boolean
+          org_id: string
+          queued_count: number
+          selected_count: number
+          sender_id: string
+          sent_at: string | null
+          sent_count: number
+          skipped_count: number
+          skipped_reasons: Json
+          store_id: string
+          subject: string | null
+          text_demo: boolean
+          unavailable_count: number
+        }
+        Insert: {
+          batch_id: string
+          body: string
+          channel: string
+          created_at?: string
+          email_demo?: boolean
+          id?: string
+          is_demo?: boolean
+          org_id: string
+          queued_count?: number
+          selected_count?: number
+          sender_id: string
+          sent_at?: string | null
+          sent_count?: number
+          skipped_count?: number
+          skipped_reasons?: Json
+          store_id: string
+          subject?: string | null
+          text_demo?: boolean
+          unavailable_count?: number
+        }
+        Update: {
+          batch_id?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          email_demo?: boolean
+          id?: string
+          is_demo?: boolean
+          org_id?: string
+          queued_count?: number
+          selected_count?: number
+          sender_id?: string
+          sent_at?: string | null
+          sent_count?: number
+          skipped_count?: number
+          skipped_reasons?: Json
+          store_id?: string
+          subject?: string | null
+          text_demo?: boolean
+          unavailable_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_sends_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_sends_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           city: string | null
@@ -1187,6 +1268,7 @@ export type Database = {
         Row: {
           application_id: string
           body: string
+          bulk_send_id: string | null
           campaign_id: string | null
           channel: string
           created_at: string
@@ -1210,6 +1292,7 @@ export type Database = {
         Insert: {
           application_id: string
           body: string
+          bulk_send_id?: string | null
           campaign_id?: string | null
           channel?: string
           created_at?: string
@@ -1233,6 +1316,7 @@ export type Database = {
         Update: {
           application_id?: string
           body?: string
+          bulk_send_id?: string | null
           campaign_id?: string | null
           channel?: string
           created_at?: string
@@ -1262,6 +1346,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "messages_bulk_send_id_fkey"
+            columns: ["bulk_send_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_sends"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -1274,6 +1365,7 @@ export type Database = {
         Row: {
           ai_provider: string
           automations: Json
+          bulk_messaging_enabled: boolean
           email_from_address: string | null
           email_from_name: string | null
           email_mode: string
@@ -1297,6 +1389,7 @@ export type Database = {
         Insert: {
           ai_provider?: string
           automations?: Json
+          bulk_messaging_enabled?: boolean
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
@@ -1320,6 +1413,7 @@ export type Database = {
         Update: {
           ai_provider?: string
           automations?: Json
+          bulk_messaging_enabled?: boolean
           email_from_address?: string | null
           email_from_name?: string | null
           email_mode?: string
@@ -2822,6 +2916,29 @@ export type Database = {
     }
     Functions: {
       add_business_days: { Args: { _d: string; _n: number }; Returns: string }
+      audit_bulk_unavailable: {
+        Args: { _batch: string; _count: number }
+        Returns: undefined
+      }
+      bulk_next_text_time: {
+        Args: {
+          _days: number[]
+          _end: string
+          _now: string
+          _start: string
+          _zone: string
+        }
+        Returns: string
+      }
+      bulk_phone: { Args: { _raw: string }; Returns: string }
+      bulk_render: {
+        Args: { _job: string; _name: string; _store: string; _text: string }
+        Returns: string
+      }
+      bulk_skip_reason: {
+        Args: { _app: string; _channel: string; _demo: boolean }
+        Returns: string
+      }
       can_access_application: {
         Args: { _app: string; _uid: string }
         Returns: boolean
@@ -2831,6 +2948,10 @@ export type Database = {
         Returns: boolean
       }
       can_access_store: {
+        Args: { _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
+      can_bulk_message: {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
@@ -2947,6 +3068,16 @@ export type Database = {
       seed_onboarding_template: { Args: { _org: string }; Returns: undefined }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
       seed_status_reminder_rules: { Args: { _org: string }; Returns: undefined }
+      send_bulk_applicants: {
+        Args: {
+          _applicant_ids: string[]
+          _body: string
+          _channel: string
+          _org: string
+          _subject?: string
+        }
+        Returns: Json
+      }
       store_texting_status: {
         Args: { _org: string }
         Returns: {

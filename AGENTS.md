@@ -13,6 +13,7 @@
 - Subdirectories have their own AGENTS.md (e.g. src/lib/AGENTS.md); read it before changing files there.
 - Adverse-action tracking uses authenticated HR-authorized RLS actions, database business-day calculation and optimistic saves; no messaging or applicant stage changes. Why: human notice records stay separate from hiring decisions.
 - HR consent review uses authenticated RLS reads and can_post_jobs authorization; withdrawals update only revoked_at/revoked_source and verify the returned row. Why: preserve immutable evidence and prevent silent losses.
+- Bulk sends use a database RPC, per-store audit rows and bulk-only guards; non-bulk behavior stays unchanged. Why: scoped history, consent and Demo safety; live bulk email awaits its provider.
 - Notes save per applicant and verify the returned row.
 - Onboarding: Hired trigger creates checklist; can_access_onboarding RLS; staff list /new-hires (/onboarding = group setup); new hires use /onboard/$token token RPCs, no file reads. Why: sensitive docs.
 - Calendar links open the Interview tab; per-interview RLS summaries.
