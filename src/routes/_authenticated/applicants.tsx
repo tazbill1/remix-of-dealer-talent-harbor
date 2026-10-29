@@ -1,6 +1,6 @@
 import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
 import { BulkMessageCompose, useBulkSettings } from "@/components/bulk-message-compose";
-import { canSendBulk } from "@/lib/bulk-messaging";
+import { canSendBulk, selectAllShown } from "@/lib/bulk-messaging";
 import { PossibleDuplicateTag, useOpenDuplicate } from "@/components/possible-duplicate-tag";
 import { TagOverflow } from "@/components/tag-overflow";
 import { orderCardFlags, type CardFlag } from "@/lib/card-tags";
@@ -333,6 +333,12 @@ function Applicants() {
         <label className="flex items-center gap-2">
           <Checkbox checked={showTests} onCheckedChange={(c) => set({ tests: c === true ? "1" : undefined })} />
           Show test applicants
+        </label>
+        <label className="flex items-center gap-2">
+          <Checkbox aria-label="Select all shown" disabled={isPending || sortedApps.length === 0}
+            checked={sortedApps.length > 0 && sortedApps.every((a) => checked.includes(a.id)) ? true : sortedApps.some((a) => checked.includes(a.id)) ? "indeterminate" : false}
+            onCheckedChange={(c) => setChecked(selectAllShown(sortedApps.map((a) => a.id), c === true))} />
+          Select all shown
         </label>
         {store !== "all" && store !== "shared" && (
           <span className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-foreground">
