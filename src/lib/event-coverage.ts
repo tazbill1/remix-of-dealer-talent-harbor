@@ -10,9 +10,15 @@ export function eventScanCounts(rows: { event_id: string | null; store_id: strin
   const stores = rows.filter((r) => r.event_id === eventId);
   return { stores, applicants: stores.reduce((sum, r) => sum + (r.applicants ?? 0), 0), hires: stores.reduce((sum, r) => sum + (r.hires ?? 0), 0) };
 }
-export function parsePublicEventCoverage(value: unknown): { mode: string; storeIds: string[]; name: string; orgSlug: string } | null {
+export function parsePublicEventCoverage(value: unknown): { mode: string; storeIds: string[]; name: string; orgSlug: string; stores: { id: string; name: string; brand: string | null; city: string | null; state: string | null }[] } | null {
   if (!value || typeof value !== "object") return null;
   const r = value as Record<string, unknown>;
   if (typeof r["mode"] !== "string" || typeof r["name"] !== "string" || typeof r["org_slug"] !== "string" || !Array.isArray(r["store_ids"])) return null;
-  return { mode: r["mode"], name: r["name"], orgSlug: r["org_slug"], storeIds: r["store_ids"].filter((id): id is string => typeof id === "string") };
+  const stores = Array.isArray(r["stores"]) ? r["stores"].flatMap((s: unknown) => {
+    if (!s || typeof s !== "object") return [];
+    const row = s as Record<string, unknown>;
+    if (typeof row["id"] !== "string" || typeof row["name"] !== "string") return [];
+    return [{ id: row["id"], name: row["name"], brand: typeof row["brand"] === "string" ? row["brand"] : null, city: typeof row["city"] === "string" ? row["city"] : null, state: typeof row["state"] === "string" ? row["state"] : null }];
+  }) : [];
+  return { mode: r["mode"], name: r["name"], orgSlug: r["org_slug"], storeIds: r["store_ids"].filter((id): id is string => typeof id === "string"), stores };
 }

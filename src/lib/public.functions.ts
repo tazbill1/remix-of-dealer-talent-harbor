@@ -32,7 +32,7 @@ export const getCareers = createServerFn({ method: "GET" })
     const { parsePublicEventCoverage } = await import("@/lib/event-coverage");
     const coverage = data.scan ? parsePublicEventCoverage((await sb.rpc("resolve_event_coverage", { _code: data.scan })).data) : null;
     const scoped = coverage && coverage.orgSlug === org.slug && coverage.mode !== "legacy" ? coverage : null;
-    return { org, stores: (stores ?? []).filter((s) => !scoped || scoped.storeIds.includes(s.id)), jobs: (jobs ?? []).filter((j) => !scoped || scoped.storeIds.includes(j.dealership_id)) };
+    return { org, stores: scoped ? scoped.stores : coverage?.orgSlug === org.slug ? coverage.stores : stores ?? [], jobs: (jobs ?? []).filter((j) => !scoped || scoped.storeIds.includes(j.dealership_id)) };
   });
 
 export const getPublicJob = createServerFn({ method: "GET" })
