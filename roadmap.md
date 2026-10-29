@@ -19,7 +19,8 @@
 - [x] Interviews page + add-to-calendar download
 
 ## Next
-- [ ] Database-only bulk messaging: disabled setting, scoped audit records/message links, authenticated queue RPC, Demo/Live and opt-out safeguards; no screens or sends.
+- [x] Database-only bulk messaging: disabled setting, per-store audit/message links, authenticated SQL queue RPC, opt-out/consent/Demo safeguards. Eleven database-rule tests and private rollback Demo/thread/timeline/claim flow passed; no screens or real sends.
+- [ ] Live bulk email delivery (blocked: dedicated bulk email provider not configured; preserved current one-to-one sender restriction).
 - [x] Fix explicit apply-link source priority over remembered store QR scans; preserve events/referrals. Nine source/scan tests passed, blocked-submit payload verified, and all six desktop applicant tabs fit and Onboarding opens. No applicant saved or messages sent.
 - [x] Employee referrals: Referrals page (links, QR, bonus amounts, Paid/Void, report), ?ref= apply tagging, typed-name field, Referred-by badge with HR linking, auto 30/90-day bonuses on Hired, bell alerts when due. No texts/emails.
 - [x] Add “New dealer group” on WerkandMe Admin, linking to the existing group setup page.
