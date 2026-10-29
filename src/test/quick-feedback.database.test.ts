@@ -5,7 +5,7 @@ const db = url ? postgres(url, { max: 1 }) : undefined;
 afterAll(async () => { if (db) await db.end(); });
 beforeAll(async () => {
   if (!db) return;
-  await db`create temporary table feedback_test_session(id integer)`;
+  await db`create temporary table if not exists feedback_test_session(id integer)`;
   const names = ["is_platform_admin", "has_org_role", "is_org_member", "can_access_store", "can_interview_feedback"];
   const definitions = await db`select proname,pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname=any(${names})`;
   for (const name of names) {
