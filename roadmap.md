@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Quick interview feedback
+- [ ] Extend scorecards first with scoped quick-feedback saves and timeline summary.
+- [ ] Add mobile autosave form and per-interview summaries on Interviews and applicant panel.
+- [ ] Test permissions/rules and signed-in mobile save/readback; no messaging or publishing.
+
 ## Interviews layout cleanup
 - [x] Compact mobile cards, collapsed store/status filters and Today/Upcoming/Past sections; desktop aligned candidate, time/status and actions. Existing query date range and Reschedule/calendar actions preserved.
 - [x] Signed-in checks at 360px, 390px and desktop show no horizontal overflow; Filters and Reschedule dialog work, no data saved or publishing.
