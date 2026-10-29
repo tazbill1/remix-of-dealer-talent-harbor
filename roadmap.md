@@ -1,8 +1,8 @@
 # WerkandMe Hiring roadmap
 
 ## Interviews layout cleanup
-- [ ] Compact mobile cards and collapsed filters; tighten desktop alignment without changing actions or data.
-- [ ] Verify at 360px and 390px; no publishing.
+- [x] Compact mobile cards, collapsed store/status filters and Today/Upcoming/Past sections; desktop aligned candidate, time/status and actions. Existing query date range and Reschedule/calendar actions preserved.
+- [x] Signed-in checks at 360px, 390px and desktop show no horizontal overflow; Filters and Reschedule dialog work, no data saved or publishing.
 
 ## Applicant note clarity
 - [x] Existing notes saved to applications.notes (15 nonempty before change), not timeline; authenticated read/update and event insert grants/policies confirmed. Existing roles/store scope unchanged.
