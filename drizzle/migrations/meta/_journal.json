@@ -351,6 +351,13 @@
       "when": 1793235691392,
       "tag": "0049_public_event_coverage_resolution",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793235880614,
+      "tag": "0050_event_public_store_labels",
+      "breakpoints": true
     }
   ]
 }
