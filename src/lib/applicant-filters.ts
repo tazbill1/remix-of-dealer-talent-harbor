@@ -17,7 +17,7 @@ export type ApplicantFilters = {
   q?: string;
   jobId?: string;
   source?: string;
-  applied?: string; // "any" | "today" | "7" | "30"
+  applied?: string; // "any" | "today" | "7" | "30" | "month"
   attentionOnly?: boolean;
   /** IANA time zone used for "today" (e.g. the store's). Defaults to the browser's. */
   timeZone?: string;
@@ -42,7 +42,7 @@ export function filterApplicants<T extends FilterableApp>(
   const ql = (f.q ?? "").trim().toLowerCase();
   const dayMs = 24 * 3600e3;
   return apps.filter((a) => {
-    if (f.jobId && f.jobId !== "all" && a.job_id !== f.jobId) return false;
+    if (f.jobId && f.jobId !== "all" && !f.jobId.split(",").includes(a.job_id)) return false;
     if (f.source && f.source !== "all" && (a.source ?? "") !== f.source) return false;
     if (f.attentionOnly && !a.needs_attention) return false;
     if (f.applied && f.applied !== "any") {
@@ -50,6 +50,7 @@ export function filterApplicants<T extends FilterableApp>(
       if (f.applied === "today" && dayKey(a.created_at, f.timeZone) !== dayKey(now, f.timeZone)) return false;
       if (f.applied === "7" && t < now - 7 * dayMs) return false;
       if (f.applied === "30" && t < now - 30 * dayMs) return false;
+      if (f.applied === "month" && dayKey(a.created_at, f.timeZone).slice(0, 7) !== dayKey(now, f.timeZone).slice(0, 7)) return false;
     }
     if (ql) {
       const hay = [a.full_name, a.email, a.phone ?? "", jobTitle(a.job_id)].join(" ").toLowerCase();
