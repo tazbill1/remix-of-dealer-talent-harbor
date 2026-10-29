@@ -8,7 +8,7 @@ export function portalStage(status: string): PortalStage {
   if (CLOSED.has(status)) return { step: -1, label: "Not moving forward", closed: true };
   const map: Record<string, number> = { new: 0, screening: 1, other_location: 1, hiring_event: 1, interview: 2, offer: 3, hired: 4 };
   const step = map[status] ?? 0;
-  return { step, label: PORTAL_STEPS[step], closed: false };
+  return { step, label: PORTAL_STEPS[step] ?? "Applied", closed: false };
 }
 
 /** Finished applications (hired or closed) are history; everything else is current. */
