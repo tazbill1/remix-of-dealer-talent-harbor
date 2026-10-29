@@ -573,7 +573,11 @@ function Profile({ canEditSource, doNotHireRepeat, app, questions, jobTitle, sto
   }
   const { data: events = [] } = useQuery({
     queryKey: ["events", app.id, app.status],
-    queryFn: async () => (await supabase.from("application_events").select("*").eq("application_id", app.id).order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("application_events").select("*").eq("org_id", orgId).eq("application_id", app.id).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
   const noteQc = useQueryClient();
   const { data: noteAuthors = [] } = useQuery({
