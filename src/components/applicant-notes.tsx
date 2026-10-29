@@ -8,15 +8,16 @@ export type SavedApplicantNote = { id: string; message: string; created_at: stri
 export function ApplicantNotes({ initialNotes, notes = [], onSave }: { initialNotes: string | null; notes?: SavedApplicantNote[]; onSave: (notes: string) => Promise<SavedApplicantNote | null> }) {
   const [draft, setDraft] = useState("");
   const [newNotes, setNewNotes] = useState<SavedApplicantNote[]>([]);
-  const [legacyNotes] = useState(() => {
-    let text = initialNotes ?? "";
-    for (const note of [...notes].reverse()) {
+  const [originalNotes] = useState(initialNotes ?? "");
+  const legacyNotes = (() => {
+    let text = originalNotes;
+    for (const note of [...notes].sort((a, b) => b.created_at.localeCompare(a.created_at))) {
       const suffix = `\n\n${note.message}`;
       if (text.endsWith(suffix)) text = text.slice(0, -suffix.length);
       else if (text === note.message) text = "";
     }
     return text;
-  });
+  })();
   const [saving, setSaving] = useState(false);
   const [state, setState] = useState<"idle" | "saved" | "error">("idle");
   async function save() {
