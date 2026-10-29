@@ -33,7 +33,7 @@ export function QuickFeedbackButton({ appId, interviewId, orgId }: { appId: stri
   return <><Button size="sm" variant="outline" className="min-h-11" onClick={() => setOpen(true)}>Leave feedback</Button>
     {open && <FeedbackForm orgId={orgId} interviewId={interviewId} appId={appId} existing={mine} onClose={() => setOpen(false)} />}</>;
 }
-function FeedbackForm({ orgId, interviewId, appId, existing, onClose }: { orgId: string; interviewId: string; appId: string; existing?: Card; onClose: () => void }) {
+function FeedbackForm({ orgId, interviewId, appId, existing, onClose }: { orgId: string; interviewId: string; appId: string; existing: Card | undefined; onClose: () => void }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<QuickFeedback>({ rating: existing?.feedback_rating ?? null, onTime: existing?.feedback_on_time ?? null, experience: existing?.feedback_experience ?? null, culture: existing?.feedback_culture ?? null, recommend: existing?.feedback_recommend ?? null, recommendation: existing?.feedback_recommendation ?? null, notes: existing?.feedback_notes ?? "" });
   const latest = useRef(draft);
