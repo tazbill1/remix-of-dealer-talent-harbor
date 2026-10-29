@@ -14,7 +14,7 @@ import {
 } from "@/lib/gm-assistant";
 
 const APP_FIELDS =
-  "id, full_name, status, rating, created_at, knockout_failed, ai_summary, dealership_id, jobs!inner(title, department), dealerships(name)";
+  "id, full_name, status, rating, created_at, knockout_failed, ai_summary, dealership_id, jobs!inner(title, department), dealerships!applications_dealership_id_fkey(name)";
 
 const NONE = "00000000-0000-0000-0000-000000000000";
 
@@ -174,7 +174,7 @@ export const askHiringAssistant = createServerFn({ method: "POST" })
         execute: async (f) => {
           let q = sb
             .from("applications")
-            .select("full_name, status, dealership_id, jobs!inner(title, department), dealerships(name, regions(name))")
+            .select("full_name, status, dealership_id, jobs!inner(title, department), dealerships!applications_dealership_id_fkey(name, regions(name))")
             .eq("org_id", orgId);
           if (f.role) {
             const r = clean(f.role);

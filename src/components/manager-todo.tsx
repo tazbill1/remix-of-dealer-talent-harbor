@@ -24,7 +24,7 @@ async function loadTodo(orgId: string) {
     await fetchAll<App>((f, t) =>
       supabase
         .from("applications")
-        .select("id, full_name, status, created_at, needs_attention, dealership_id, job_id, jobs(title), dealerships(name)")
+        .select("id, full_name, status, created_at, needs_attention, dealership_id, job_id, jobs(title), dealerships!applications_dealership_id_fkey(name)")
         .eq("org_id", orgId)
         .in("status", ["new", "screening", "interview", "offer", "other_location", "hiring_event"])
         .order("created_at")
