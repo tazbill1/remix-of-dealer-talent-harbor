@@ -15,6 +15,7 @@ import { deliveryLabel } from "@/lib/messaging/labels";
 import { EmailHistory } from "@/components/email-compose";
 import { useMessagingMode } from "@/lib/texting-mode";
 import { ScorecardButton, ScorecardSummary } from "@/components/interview-scorecard";
+import { QuickFeedbackButton, QuickFeedbackSummary } from "@/components/quick-interview-feedback";
 
 export function AssistantThreads({ appId, orgId, assistantName, onChanged, paused, needsAttention }: { appId: string; orgId: string; assistantName: string; onChanged: () => void; paused?: boolean; needsAttention?: string | null }) {
   const send = useServerFn(assistantMessage);
@@ -210,7 +211,8 @@ export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterview
           <li key={i.id} ref={(node) => { if (node && i.id === focusInterviewId) node.scrollIntoView({ block: "nearest" }); }} className="rounded-lg bg-secondary px-2 py-1">
             <div className="flex flex-wrap items-center justify-between gap-1">
             <span className={i.status === "cancelled" ? "text-muted-foreground line-through" : ""}>{new Date(i.starts_at).toLocaleString()} <span className="text-xs text-muted-foreground">· {i.status === "cancelled" ? "cancelled" : i.source === "werkandme" ? "booked in WerkandMe" : i.source === "self_scheduled" ? "picked by the candidate" : `found on ${i.source} calendar`}</span></span>
-            <span className="flex shrink-0 items-center">
+            <span className="flex min-w-0 flex-wrap items-center gap-1">
+              <QuickFeedbackButton interviewId={i.id} appId={appId} orgId={orgId} />
               {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
                 <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => { qc.invalidateQueries({ queryKey: ["interviews", appId] }); onChanged(); }} />
               )}
@@ -219,6 +221,7 @@ export function InterviewsPanel({ appId, orgId, title, onChanged, focusInterview
             </span>
             </div>
             <ScorecardSummary appId={appId} interviewId={i.id} />
+            <QuickFeedbackSummary appId={appId} interviewId={i.id} />
           </li>
         ))}
       </ul>

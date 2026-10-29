@@ -12,6 +12,7 @@ import { CalendarSubscribe } from "@/components/calendar-subscribe";
 import { MyCalendarCard } from "@/components/my-calendar";
 
 import { Button } from "@/components/ui/button";
+import { QuickFeedbackButton, QuickFeedbackSummary } from "@/components/quick-interview-feedback";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({ meta: [{ title: "Interviews | WerkandMe Hiring" }, { name: "description", content: "Upcoming interviews across your stores." }, { property: "og:title", content: "Interviews | WerkandMe Hiring" }, { property: "og:description", content: "Upcoming interviews across your stores." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -88,7 +89,8 @@ function CalendarPage() {
                 </div>
               </Link>
             </Button>
-            <div className="flex min-w-0 items-center gap-2 border-t pt-2 [&_button]:min-h-11 lg:border-t-0 lg:pt-0 lg:[&_button]:min-h-9">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 border-t pt-2 [&_button]:min-h-11 lg:border-t-0 lg:pt-0 lg:[&_button]:min-h-9 lg:max-w-80">
+            <QuickFeedbackButton orgId={org.orgId} appId={i.application_id} interviewId={i.id} />
             {i.status !== "cancelled" && isUpcoming(i.starts_at) && (
               <RescheduleButton interviewId={i.id} startsAt={i.starts_at} onDone={() => qc.invalidateQueries({ queryKey: ["interviews-all", org.orgId] })} />
             )}
@@ -109,6 +111,7 @@ function CalendarPage() {
               );
             })()}
             </div>
+            <div className="lg:col-span-2"><QuickFeedbackSummary appId={i.application_id} interviewId={i.id} /></div>
           </li>
         ); })}
           </ul>
