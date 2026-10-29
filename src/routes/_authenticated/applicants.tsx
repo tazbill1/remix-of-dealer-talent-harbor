@@ -1,4 +1,6 @@
 import { ApplicantViewTabs } from "@/components/applicant-view-tabs";
+import { BulkMessageCompose, useBulkSettings } from "@/components/bulk-message-compose";
+import { canSendBulk } from "@/lib/bulk-messaging";
 import { PossibleDuplicateTag, useOpenDuplicate } from "@/components/possible-duplicate-tag";
 import { TagOverflow } from "@/components/tag-overflow";
 import { orderCardFlags, type CardFlag } from "@/lib/card-tags";
@@ -135,6 +137,8 @@ function Applicants() {
   const [showEmpty, setShowEmpty] = useState(false);
   const [addingManual, setAddingManual] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
+  const [bulkMessaging, setBulkMessaging] = useState(false);
+  const { data: bulkSettings } = useBulkSettings(org.orgId);
   const [emailing, setEmailing] = useState<string[] | null>(null);
   const [bulkStatus, setBulkStatus] = useState<AppStatus>("screening");
   const toggle = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
@@ -368,9 +372,12 @@ function Applicants() {
             {STATUSES.map((s) => <option key={s} value={s} style={statusSelectStyle(s)}>{STATUS_LABEL[s]}</option>)}
           </select>
           <Button size="sm" variant="secondary" onClick={bulkMove}>Update stage</Button>
+          {canSendBulk(org, bulkSettings?.bulk_messaging_enabled ?? false) && <Button size="sm" variant="secondary" onClick={() => setBulkMessaging(true)}><Mail />Send message</Button>}
           <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setChecked([])}><X />Clear</Button>
         </div>
       )}
+
+      {bulkMessaging && canSendBulk(org, bulkSettings?.bulk_messaging_enabled ?? false) && <BulkMessageCompose orgId={org.orgId} applicationIds={checked} onClose={() => { setBulkMessaging(false); }} onSent={() => {}} />}
 
       {view === "board" ? (
         <div className="overflow-x-auto pb-4">
@@ -416,6 +423,7 @@ function Applicants() {
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
+                <th className="w-10 px-3 py-2"><Checkbox aria-label="Select all applicants" checked={sortedApps.length > 0 && sortedApps.every((a) => checked.includes(a.id))} onCheckedChange={(c) => setChecked((prev) => c ? [...new Set([...prev, ...sortedApps.map((a) => a.id)])] : prev.filter((id) => !sortedApps.some((a) => a.id === id)))} /></th>
                 {listHeaders.map((h) => (
                   <th key={h.label} className="px-3 py-2 font-medium">
                     <button className={cn(headerBtn, sort === h.asc || sort === h.desc ? "text-foreground" : "")}
@@ -429,6 +437,7 @@ function Applicants() {
             <tbody>
               {sortedApps.map((a) => (
                 <tr key={a.id} onClick={() => setSelected(a.id)} className="cursor-pointer border-b last:border-0 hover:bg-secondary/60">
+                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${a.full_name}`} checked={checked.includes(a.id)} onCheckedChange={() => toggle(a.id)} /></td>
                   <td className="px-3 py-2.5 font-medium"><span className="flex items-center gap-1">{a.full_name}{a.linkedin_url && <Linkedin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Has LinkedIn profile" />}</span></td>
                   <td className="px-3 py-2.5">{job(a.job_id)}</td>
                   <td className="px-3 py-2.5">{storeName(a.dealership_id)}</td>
@@ -439,7 +448,7 @@ function Applicants() {
                 </tr>
               ))}
               {sortedApps.length === 0 && (
-                <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">No applicants match.</td></tr>
+                <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">No applicants match.</td></tr>
               )}
             </tbody>
           </table>

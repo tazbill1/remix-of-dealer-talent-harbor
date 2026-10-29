@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown, Settings } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown, Settings, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ const sections: { id: string; label: string; items: NavItem[] }[] = [
   { id: "insights", label: "Insights", items: [
     { to: "/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/ask", label: "Ask", icon: Sparkles },
+    { to: "/sent-messages", label: "Sent messages", icon: Mail },
   ] },
   { id: "settings", label: "Settings", items: [
     { to: "/stores", label: "Stores", icon: Building2 },

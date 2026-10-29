@@ -34,6 +34,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOnboardingTemplatesRouteImport } from './routes/_authenticated/onboarding-templates'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
+import { Route as AuthenticatedSentMessagesRouteImport } from './routes/_authenticated/sent-messages'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStatusRulesRouteImport } from './routes/_authenticated/status-rules'
 import { Route as AuthenticatedStoresRouteImport } from './routes/_authenticated/stores'
@@ -200,6 +201,12 @@ const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   path: '/referrals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSentMessagesRoute =
+  AuthenticatedSentMessagesRouteImport.update({
+    id: '/sent-messages',
+    path: '/sent-messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -414,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/sent-messages': typeof AuthenticatedSentMessagesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
@@ -475,6 +483,7 @@ export interface FileRoutesByTo {
   '/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/sent-messages': typeof AuthenticatedSentMessagesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/status-rules': typeof AuthenticatedStatusRulesRoute
   '/stores': typeof AuthenticatedStoresRoute
@@ -539,6 +548,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding-templates': typeof AuthenticatedOnboardingTemplatesRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/sent-messages': typeof AuthenticatedSentMessagesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/status-rules': typeof AuthenticatedStatusRulesRoute
   '/_authenticated/stores': typeof AuthenticatedStoresRoute
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/onboarding-templates'
     | '/platform'
     | '/referrals'
+    | '/sent-messages'
     | '/settings'
     | '/status-rules'
     | '/stores'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/onboarding-templates'
     | '/platform'
     | '/referrals'
+    | '/sent-messages'
     | '/settings'
     | '/status-rules'
     | '/stores'
@@ -727,6 +739,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding-templates'
     | '/_authenticated/platform'
     | '/_authenticated/referrals'
+    | '/_authenticated/sent-messages'
     | '/_authenticated/settings'
     | '/_authenticated/status-rules'
     | '/_authenticated/stores'
@@ -976,6 +989,13 @@ declare module '@tanstack/react-router' {
       path: '/referrals'
       fullPath: '/referrals'
       preLoaderRoute: typeof AuthenticatedReferralsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sent-messages': {
+      id: '/_authenticated/sent-messages'
+      path: '/sent-messages'
+      fullPath: '/sent-messages'
+      preLoaderRoute: typeof AuthenticatedSentMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -1252,6 +1272,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingTemplatesRoute: typeof AuthenticatedOnboardingTemplatesRoute
   AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedSentMessagesRoute: typeof AuthenticatedSentMessagesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStatusRulesRoute: typeof AuthenticatedStatusRulesRoute
   AuthenticatedStoresRoute: typeof AuthenticatedStoresRoute
@@ -1280,6 +1301,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingTemplatesRoute: AuthenticatedOnboardingTemplatesRoute,
   AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedSentMessagesRoute: AuthenticatedSentMessagesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStatusRulesRoute: AuthenticatedStatusRulesRoute,
   AuthenticatedStoresRoute: AuthenticatedStoresRoute,

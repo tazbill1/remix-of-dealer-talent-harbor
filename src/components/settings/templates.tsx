@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BulkMessagingSetting } from "@/components/bulk-messaging-setting";
 
 
 type Tpl = {
@@ -96,6 +97,7 @@ export function MessageTemplatesSettings() {
 
   return (
     <div className="space-y-6">
+      <BulkMessagingSetting />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl">Templates</h1>
