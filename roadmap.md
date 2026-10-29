@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Scalable referrals
+- [ ] Database first: group signup switch, store tokens, scoped paged employee list and validated duplicate-safe signup/import.
+- [ ] Screens: public signup/link/QR, store printable signup QR, HR CSV preview/sample/import, compact search/filter/sort list, Settings-only bonus setup.
+- [ ] Verify desktop/360/390 signup, import, list, old tagging and Settings; preserve existing program data, no messages/publishing; flag demo risks.
+
 ## Store missing details
 - [x] Specific red warnings use existing required fields; above three show first two plus remainder and tap-open full list. Ten tests pass; signed-in desktop/360/390 verified in both groups, including read-only mocked overflow list; build OK.
 - [x] Filled only empty manager phones on ABC Houston/Katy/Sugar Land and empty manager names/phones on LG Mercedes Dundee/Subaru Columbus/VW Easton. Existing values and optional contacts untouched; all store warnings cleared. Both groups remain email/text practice; no sends or publishing.
