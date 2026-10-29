@@ -1,5 +1,11 @@
 # WerkandMe Hiring roadmap
 
+## Pre-demo cleanup
+- [ ] ABC email Demo/text Demo; verify simulated reschedule, bulk and automatic email history without live delivery.
+- [ ] Messages simulated label is Sent (demo); check applicant add button and red warning without unrelated styling changes.
+- [ ] Revoke pending test-gm-dallas@example.com invite.
+- [ ] Review current critical/high security and dependencies; apply safe fixes, record risky deferrals.
+
 ## Employee referral bonus clarity
 - [x] Job create/edit bonus picker is in its own bottom section with real tier amount/org payout days and HR/admin Settings link. Settings reuses existing tier/rule editors; referred applicant Details shows read-only bonus, preferring saved hire award. Public job display unchanged. Signed-in create/edit/Settings/Victor panel and public posting verified; 21 targeted tests pass, build OK. No database changes, saves, messages or publishing.
 
