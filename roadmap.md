@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Applicant note clarity
+- [ ] Verify existing note saves and role/store permissions.
+- [ ] Save individual notes atomically with author/time, immediate newest-first list, confirmation, cleared draft and errors; preserve existing notes and timeline.
+- [ ] Test permissions and signed-in save/readback; do not publish.
+
 ## Job manager accounts and escalation defaults
 - [x] Added store-scoped manager user IDs and legacy backfill before screens: 1 of 7 typed assignments matched (LG Subaru Cody); 6 unmatched left blank, 5 already blank. Derived name retained only for existing report/contact consumers.
 - [x] Job create/edit uses store-assigned GM/hiring-manager accounts; multi-store choices cover every picked store. Invite reuses unchanged admin-only TeamInvites with stores preselected. Escalation defaults store HR/recruiter/admin then group recruiter/admin, preserves explicit overrides; ABC defaults Aaron Sheeks (no saved phone).
