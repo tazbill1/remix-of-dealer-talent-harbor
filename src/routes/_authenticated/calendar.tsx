@@ -27,17 +27,25 @@ function CalendarPage() {
   const { data } = useQuery({
     queryKey: ["interviews-all", org.orgId],
     queryFn: async () => {
-      const [iv, apps, stores, jobs] = await Promise.all([
+      const [iv, apps, stores, jobs, members, scopes] = await Promise.all([
         supabase.from("interviews").select("*").eq("org_id", org.orgId).gte("starts_at", new Date(Date.now() - 86400000).toISOString()).order("starts_at"),
         supabase.from("applications").select("id, full_name, dealership_id,job_id").eq("org_id", org.orgId),
-        supabase.from("dealerships").select("id, name").eq("org_id", org.orgId),
+        supabase.from("dealerships").select("id, name,region_id").eq("org_id", org.orgId),
         supabase.from("jobs").select("id,title,hiring_manager").eq("org_id", org.orgId),
+        supabase.from("org_members").select("id,email,role").eq("org_id", org.orgId).in("role", ["dealer_manager", "hiring_manager"]),
+        supabase.from("org_member_scopes").select("member_id,dealership_id,region_id").eq("org_id", org.orgId),
       ]);
-      return { iv: iv.data ?? [], apps: apps.data ?? [], stores: stores.data ?? [], jobs: jobs.data ?? [] };
+      return { iv: iv.data ?? [], apps: apps.data ?? [], stores: stores.data ?? [], jobs: jobs.data ?? [], members: members.data ?? [], scopes: scopes.data ?? [] };
     },
   });
   const app = (id: string) => data?.apps.find((a) => a.id === id);
   const store = (id?: string) => data?.stores.find((s) => s.id === id)?.name ?? "";
+  const interviewer = (storeId?: string) => {
+    const region = data?.stores.find((s) => s.id === storeId)?.region_id;
+    const memberIds = new Set(data?.scopes.filter((s) => s.dealership_id === storeId || (region && s.region_id === region)).map((s) => s.member_id));
+    const people = data?.members.filter((m) => memberIds.has(m.id)) ?? [];
+    return people.length === 1 ? people[0]?.email ?? "Not assigned" : people.length > 1 ? "Multiple interviewers" : "Not assigned";
+  };
   const today = new Date().toDateString();
   const visible = (data?.iv ?? []).filter((i) => (storeFilter === "all" || app(i.application_id)?.dealership_id === storeFilter) && (statusFilter === "all" || i.status === statusFilter));
   const groups = ["Today", "Upcoming", "Past"].map((label) => ({ label, interviews: visible.filter((i) => {
@@ -56,7 +64,7 @@ function CalendarPage() {
         </div>}
       </div>
       <div className="space-y-5">
-        {data?.iv.length === 0 && <li className="rounded-2xl bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</li>}
+        {data && visible.length === 0 && <p className="rounded-md bg-secondary p-6 text-center text-muted-foreground">No upcoming interviews yet.</p>}
         {groups.filter((group) => group.interviews.length).map((group) => <section key={group.label} className="space-y-2">
           <h2 className="text-sm font-semibold text-muted-foreground">{group.label}</h2>
           <ul className="space-y-2">
@@ -74,7 +82,7 @@ function CalendarPage() {
                   </div>
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-start gap-2 text-sm font-medium"><CalendarDays className="mt-0.5 size-4 shrink-0 text-sapphire" /><span className="min-w-0">{new Date(i.starts_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · {i.duration_min} min</span></div>
-                    <div className="break-words text-xs font-normal text-muted-foreground">Interviewer: {job?.hiring_manager ?? "Not assigned"}</div>
+                    <div className="break-words text-xs font-normal text-muted-foreground">Interviewer: {interviewer(candidate?.dealership_id)}</div>
                     <Badge variant="secondary" className="font-normal">{i.status}</Badge>
                   </div>
                 </div>
