@@ -215,12 +215,11 @@ export const rescheduleInterview = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadEmailSettings } = await import("@/lib/email/outbox.server");
     const settings = await loadEmailSettings(supabaseAdmin, iv.org_id);
-    if (settings.email_mode !== "live") return { demo: true, note: null as string | null };
     const { emailApplicant } = await import("@/lib/email/applicant.server");
     const { emailInterviewStaff } = await import("@/lib/email/interview-staff.server");
     await emailApplicant(supabaseAdmin, iv.application_id, { kind: "interview", startsAt: data.startsAt });
-    const invite = await emailInterviewStaff(supabaseAdmin, iv.id);
-    return { demo: false, note: ("note" in invite ? invite.note : null) ?? null };
+    const invite = await emailInterviewStaff(supabaseAdmin, iv.id, true);
+    return { demo: settings.email_mode !== "live", note: ("note" in invite ? invite.note : null) ?? null };
   });
 
 /** Staff: text the candidate their booking link (e.g. to reschedule). */

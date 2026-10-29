@@ -60,7 +60,9 @@ export async function processInterviewRecording(request: Request) {
     return Response.json({ error: "Invalid recording." }, { status: 400 });
   const { data: r } = await db.from("interview_recordings").select("*").eq("id", body.id).single();
   if (!r) return Response.json({ error: "Recording not found." }, { status: 404 });
-  const { app } = await authorizeInterview(client, user.id, r.interview_id);
+  const { app, settings } = await authorizeInterview(client, user.id, r.interview_id);
+  if (!settings.interview_recording_enabled)
+    return Response.json({ error: "Interview recording is off." }, { status: 403 });
   const { data: groupSettings } = await db
     .from("messaging_settings")
     .select("recording_ai_paused_reason")

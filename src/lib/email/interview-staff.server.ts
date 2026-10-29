@@ -57,6 +57,7 @@ export async function emailInterviewStaff(db: DB, interviewId: string, moved = f
     }
     // Audit only: synchronous managed delivery, no email queue or scheduler.
     await db.from("messages").insert({ org_id: iv.org_id, application_id: app.id, channel: "email", party: "manager", direction: "out", purpose: key, to_email: recipient.email, subject, body: `${subject}\n${when} · ${iv.duration_min} minutes\n${location}\nGoogle Calendar: ${links.google}\nOutlook: ${links.outlook}`, status, provider: status === "simulated" ? "practice" : "lovable", error: failure, sent_at: ["sent", "simulated"].includes(status) ? new Date().toISOString() : null });
+    if (status === "simulated") await db.from("application_events").insert({ org_id: iv.org_id, application_id: app.id, kind: "email", message: `Staff email sent (demo): ${subject}` });
     return { status, note: failure ?? (status === "blocked" ? "Staff email was not sent because this address unsubscribed." : undefined) };
   } catch (e) {
     console.error("staff interview email failed", interviewId, e);
