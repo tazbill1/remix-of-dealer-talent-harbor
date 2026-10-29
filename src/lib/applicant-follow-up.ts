@@ -28,7 +28,7 @@ export function followUpIndex(messages: ContactMessage[], interviews: { applicat
   return index;
 }
 
-export function matchesFollowUp(row: FollowUp | undefined, filters: { contacted?: string; noReply?: string; interviewWeek?: boolean }, now = Date.now()) {
+export function matchesFollowUp(row: FollowUp | undefined, filters: { contacted?: string | undefined; noReply?: string | undefined; interviewWeek?: boolean }, now = Date.now()) {
   const last = row?.lastContacted ? Date.parse(row.lastContacted) : null;
   if (filters.contacted === "never" && last !== null) return false;
   if (filters.contacted && filters.contacted !== "never" && (last === null || last > now - Number(filters.contacted) * DAY)) return false;
