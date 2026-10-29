@@ -54,11 +54,11 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
     try {
       const latest = await eligibility.refetch();
       if (latest.error || !latest.data?.eligible) throw new Error(latest.error?.message ?? "No selected applicants can receive this message.");
-      const out = await supabase.rpc("send_bulk_applicants", { _org: orgId, _applicant_ids: applicationIds, _channel: channel, _body: body.trim(), _subject: channel === "text" ? undefined : subject.trim() });
+      const out = await supabase.rpc("send_bulk_applicants", { _org: orgId, _applicant_ids: applicationIds, _channel: channel, _body: body.trim(), ...(channel === "text" ? {} : { _subject: subject.trim() }) });
       if (out.error) throw new Error(out.error.message);
       const counts = z.object({ sent: z.number(), skipped: z.number(), queued: z.number() }).parse(out.data);
       setResult({ ...counts, emailDemo: latest.data.emailDemo, textDemo: latest.data.textDemo });
-      await Promise.all([qc.invalidateQueries({ queryKey: ["bulk-history"] }), qc.invalidateQueries({ queryKey: ["applicants", orgId] }), qc.invalidateQueries({ queryKey: ["threads"] }), qc.invalidateQueries({ queryKey: ["timeline"] })]);
+      await Promise.all([qc.invalidateQueries({ queryKey: ["bulk-history"] }), qc.invalidateQueries({ queryKey: ["applicants", orgId] }), qc.invalidateQueries({ queryKey: ["messages"] }), qc.invalidateQueries({ queryKey: ["events"] })]);
       onSent();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Could not send message."); }
     finally { setBusy(false); }

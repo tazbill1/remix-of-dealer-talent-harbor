@@ -13,7 +13,7 @@ export const bulkReadiness = createServerFn({ method: "POST" })
   .inputValidator((d: z.input<typeof selection>) => selection.parse(d))
   .handler(async ({ data, context }) => {
     const { data: settings, error } = await context.supabase.from("messaging_settings")
-      .select("bulk_messaging_enabled, mode, email_mode, texting_start, texting_end, texting_days")
+      .select("bulk_messaging_enabled, mode, email_mode, send_start, send_end, send_days")
       .eq("org_id", data.orgId).maybeSingle();
     if (error || !settings?.bulk_messaging_enabled) throw new Error("Bulk messaging is disabled.");
     const ids = [...new Set(data.applicationIds)];
@@ -48,9 +48,9 @@ export const bulkReadiness = createServerFn({ method: "POST" })
           if (ch === "text" && !demo && !row[ch]) {
             const store = await context.supabase.from("dealerships").select("timezone").eq("id", app.dealership_id).eq("org_id", data.orgId).single();
             if (store.error) throw new Error("Could not check texting hours.");
-            const window = await supabaseAdmin.rpc("bulk_next_text_time", { _now: new Date().toISOString(), _zone: store.data.timezone, _start: settings.texting_start, _end: settings.texting_end, _days: settings.texting_days });
+            const window = await supabaseAdmin.rpc("bulk_next_text_time", { _now: new Date().toISOString(), _zone: store.data.timezone, _start: settings.send_start, _end: settings.send_end, _days: settings.send_days });
             if (window.error) throw new Error("Could not check texting hours.");
-            if (!window.data) row[ch] = "No valid texting window";
+            if (!window.data) row[ch] = "No texting days are turned on";
           }
         }
         return row;
