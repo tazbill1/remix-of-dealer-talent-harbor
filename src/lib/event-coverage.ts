@@ -6,6 +6,13 @@ export function coveredEventStores(event: EventScope, stores: EventStore[]) {
 export function eventScopeOptions(options: { group_allowed: boolean; region_ids: string[] }, regions: { id: string; name: string }[]) {
   return { group: options.group_allowed, regions: regions.filter((r) => options.region_ids.includes(r.id)) };
 }
+export function canEditEventScope(event: EventScope, stores: EventStore[], options: { group: boolean; regions: { id: string }[] }, role: string, isPlatformAdmin: boolean) {
+  if (!isPlatformAdmin && !["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(role)) return false;
+  if (event.coverage_mode === "group" || (event.coverage_mode === "legacy" && !event.store_id)) return options.group;
+  if (event.coverage_mode === "region") return options.regions.some((r) => r.id === event.region_id);
+  const ids = event.coverage_mode === "legacy" ? [event.store_id] : event.covered_store_ids;
+  return ids.length > 0 && ids.every((id) => stores.some((s) => s.id === id));
+}
 export function eventScanCounts(rows: { event_id: string | null; store_id: string | null; applicants: number | null; hires: number | null }[], eventId: string) {
   const stores = rows.filter((r) => r.event_id === eventId);
   return { stores, applicants: stores.reduce((sum, r) => sum + (r.applicants ?? 0), 0), hires: stores.reduce((sum, r) => sum + (r.hires ?? 0), 0) };
