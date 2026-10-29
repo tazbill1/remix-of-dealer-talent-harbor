@@ -12,17 +12,20 @@ import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/
 
 export const Route = createFileRoute("/c/$orgSlug/")({
   validateSearch: z.object({ store: z.string().max(60).optional(), scan: z.string().max(16).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
-  loader: async ({ params }) => {
-    const d = await getCareers({ data: { slug: params.orgSlug } });
+  loaderDeps: ({ search }) => ({ scan: search.scan }),
+  loader: async ({ params, deps }) => {
+    const d = await getCareers({ data: { slug: params.orgSlug, ...(deps.scan ? { scan: deps.scan } : {}) } });
     if (!d) throw notFound();
     return d;
   },
   head: ({ loaderData }) => {
     const t = loaderData ? `Careers at ${loaderData.org.name}` : "Careers";
     const desc = loaderData ? `${loaderData.jobs.length} open jobs across ${loaderData.stores.length} dealerships at ${loaderData.org.name}.` : "Open jobs";
-    return { meta: [{ title: t }, { name: "description", content: desc }, { property: "og:title", content: t }, { property: "og:description", content: desc }] };
+    return { meta: [{ title: t }, { name: "description", content: desc }, { property: "og:title", content: t }, { property: "og:description", content: desc }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] };
   },
   component: Careers,
+  errorComponent: () => <p className="p-6 text-muted-foreground">Open jobs couldn't be loaded. Please try again.</p>,
+  notFoundComponent: () => <p className="p-6 text-muted-foreground">This careers page is unavailable.</p>,
 });
 
 function Careers() {
@@ -32,6 +35,7 @@ function Careers() {
   useEffect(() => { rememberScan(org.slug, scan); }, [org.slug, scan]);
   const [q, setQ] = useState("");
   const [store, setStore] = useState(storeParam && stores.some((x) => x.id === storeParam) ? storeParam : "all");
+  useEffect(() => { setStore(storeParam && stores.some((x) => x.id === storeParam) ? storeParam : "all"); }, [storeParam, stores]);
   const s = (id: string) => stores.find((x) => x.id === id);
   const list = jobs.filter((j) => (store === "all" || j.dealership_id === store)
     && `${j.title} ${j.department ?? ""} ${s(j.dealership_id)?.city ?? ""} ${s(j.dealership_id)?.name ?? ""}`.toLowerCase().includes(q.toLowerCase()));
@@ -56,7 +60,7 @@ function Careers() {
           {list.map((j) => {
             const st = s(j.dealership_id);
             return (
-              <Link key={j.id} to="/c/$orgSlug/jobs/$jobId" params={{ orgSlug: org.slug, jobId: j.id }}
+              <Link key={j.id} to="/c/$orgSlug/jobs/$jobId" params={{ orgSlug: org.slug, jobId: j.id }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }}
                 className="block rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>

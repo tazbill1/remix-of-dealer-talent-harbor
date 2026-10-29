@@ -19,7 +19,7 @@ function publicClient() {
 }
 
 export const getCareers = createServerFn({ method: "GET" })
-  .inputValidator((d: { slug: string }) => z.object({ slug: z.string().min(1).max(60) }).parse(d))
+  .inputValidator((d: { slug: string; scan?: string }) => z.object({ slug: z.string().min(1).max(60), scan: z.string().max(16).optional() }).parse(d))
   .handler(async ({ data }) => {
     const sb = publicClient();
     const { data: org } = await sb.from("organizations").select("id, name, slug").eq("slug", data.slug).maybeSingle();
@@ -29,7 +29,10 @@ export const getCareers = createServerFn({ method: "GET" })
       sb.from("jobs").select("id, title, department, employment_type, pay_min, pay_max, pay_period, dealership_id, created_at")
         .eq("org_id", org.id).eq("status", "open").order("created_at", { ascending: false }),
     ]);
-    return { org, stores: stores ?? [], jobs: jobs ?? [] };
+    const { parsePublicEventCoverage } = await import("@/lib/event-coverage");
+    const coverage = data.scan ? parsePublicEventCoverage((await sb.rpc("resolve_event_coverage", { _code: data.scan })).data) : null;
+    const scoped = coverage && coverage.orgSlug === org.slug && coverage.mode !== "legacy" ? coverage : null;
+    return { org, stores: (stores ?? []).filter((s) => !scoped || scoped.storeIds.includes(s.id)), jobs: (jobs ?? []).filter((j) => !scoped || scoped.storeIds.includes(j.dealership_id)) };
   });
 
 export const getPublicJob = createServerFn({ method: "GET" })
@@ -152,9 +155,13 @@ export const submitApplication = createServerFn({ method: "POST" })
       const { cleanScanCode } = await import("@/lib/scan");
       const code = cleanScanCode(data.scan);
       if (code) {
-        const { data: ev } = await supabaseAdmin.from("recruiting_events").select("id")
+        const { data: ev } = await supabaseAdmin.from("recruiting_events").select("id, coverage_mode")
           .eq("org_id", job.org_id).eq("code", code).eq("is_active", true).maybeSingle();
-        if (ev) recruitingEventId = ev.id;
+        if (ev) {
+          const { parsePublicEventCoverage } = await import("@/lib/event-coverage");
+          const scope = parsePublicEventCoverage((await supabaseAdmin.rpc("resolve_event_coverage", { _code: code })).data);
+          if (ev.coverage_mode === "legacy" || scope?.storeIds.includes(job.dealership_id)) recruitingEventId = ev.id;
+        }
         else {
           const { data: st } = await supabaseAdmin.from("dealerships").select("id").eq("org_id", job.org_id).eq("qr_code", code).maybeSingle();
           if (st) scanSource = "store_qr";
@@ -294,10 +301,10 @@ export const resolveScanCode = createServerFn({ method: "GET" })
       return j?.id ?? null;
     };
     if (code && data.kind === "event") {
-      const { data: ev } = await supabaseAdmin.from("recruiting_events").select("org_id, store_id, job_id, is_active").eq("code", code).maybeSingle();
+      const { data: ev } = await supabaseAdmin.from("recruiting_events").select("org_id, store_id, job_id, is_active, coverage_mode").eq("code", code).maybeSingle();
       if (ev) {
         const orgSlug = await slugOf(ev.org_id);
-        if (ev.is_active && orgSlug) return { active: true as const, code, scan: { kind: "event" as const, orgSlug, storeId: ev.store_id, jobId: await openJob(ev.job_id) } };
+        if (ev.is_active && orgSlug) return { active: true as const, code, scan: { kind: "event" as const, orgSlug, storeId: ev.coverage_mode === "legacy" ? ev.store_id : null, jobId: ev.coverage_mode === "legacy" ? await openJob(ev.job_id) : null } };
         return { active: false as const, orgSlug: orgSlug ?? CAREERS_ORG_SLUG };
       }
     }
