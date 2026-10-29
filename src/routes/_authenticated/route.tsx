@@ -149,7 +149,7 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
           <NotificationBell userId={me.user.id} orgId={org?.orgId ?? null} />
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
-            <SheetContent side="left" className="w-64 border-0 bg-sidebar p-0 text-sidebar-foreground">{sidebar}</SheetContent>
+            <SheetContent side="left" className="bottom-auto h-dvh max-h-dvh w-64 overflow-hidden border-0 bg-sidebar p-0 text-sidebar-foreground"><SidebarBody me={me} org={org} onPick={onPick} mobile /></SheetContent>
           </Sheet>
           </div>
         </header>
@@ -180,10 +180,10 @@ function ModeBadge({ orgId }: { orgId: string }) {
   );
 }
 
-function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void }) {
+function SidebarBody({ me, org, onPick, mobile = false }: { me: Me; org: OrgCtx | null; onPick: (id: string) => void; mobile?: boolean }) {
   const loc = useLocation();
   return (
-    <div className="flex h-full min-h-screen flex-col p-4">
+    <div className={cn("flex h-full flex-col p-4", mobile ? "min-h-0 overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] [&>a]:shrink-0 [&>select]:shrink-0" : "min-h-screen")}>
       <LogoLink light className="mb-6 h-7 self-start" />
       {me.memberships.length > 1 ? (
         <select className="mb-4 rounded-md bg-sidebar-accent px-2 py-2 text-sm text-sidebar-accent-foreground"
@@ -192,7 +192,7 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
         </select>
       ) : org ? <div className="mb-4 px-2 text-sm font-semibold text-sidebar-accent-foreground">{org.orgName}</div> : null}
       {org && <ModeBadge orgId={org.orgId} />}
-      <nav className="space-y-1 overflow-y-auto">
+      <nav className={cn("space-y-1 overflow-y-auto", mobile && "min-h-0 flex-1 overscroll-contain")}>
         {org && <NavLink item={dashboard} path={loc.pathname} />}
         {org && <NavSections org={org} path={loc.pathname} />}
         {org && (
@@ -208,11 +208,11 @@ function SidebarBody({ me, org, onPick }: { me: Me; org: OrgCtx | null; onPick: 
           </Link>
         )}
       </nav>
-      <div className="mt-auto border-t border-sidebar-border pt-4 text-xs">
+      <div className={cn("mt-auto border-t border-sidebar-border pt-4 text-xs", mobile && "shrink-0")}>
         <div className="truncate px-2">{me.user.email}</div>
-        <button onClick={() => supabase.auth.signOut()} className="mt-2 flex items-center gap-2 px-2 py-1 hover:text-sidebar-accent-foreground">
+        <Button variant="ghost" onClick={() => supabase.auth.signOut()} className="mt-2 flex h-auto justify-start gap-2 rounded-none px-2 py-1 text-xs font-normal hover:bg-transparent hover:text-sidebar-accent-foreground">
           <LogOut className="size-3.5" />Sign out
-        </button>
+        </Button>
       </div>
     </div>
   );
