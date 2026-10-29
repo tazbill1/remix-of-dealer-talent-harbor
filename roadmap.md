@@ -1,5 +1,9 @@
 # WerkandMe Hiring roadmap
 
+## Interviews layout cleanup
+- [ ] Compact mobile cards and collapsed filters; tighten desktop alignment without changing actions or data.
+- [ ] Verify at 360px and 390px; no publishing.
+
 ## Applicant note clarity
 - [x] Existing notes saved to applications.notes (15 nonempty before change), not timeline; authenticated read/update and event insert grants/policies confirmed. Existing roles/store scope unchanged.
 - [x] add_applicant_note is security invoker and atomically appends original notes plus a dated authored event; immediate saved list and timeline cache, Note saved, cleared draft and retained failed drafts. Prior notes retained with unknown author/time labeled.
