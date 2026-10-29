@@ -1,5 +1,9 @@
 # WerkandMe Hiring roadmap
 
+## Interviews layout cleanup
+- [x] Compact mobile cards, collapsed store/status filters and Today/Upcoming/Past sections; desktop aligned candidate, time/status and actions. Existing query date range and Reschedule/calendar actions preserved.
+- [x] Signed-in checks at 360px, 390px and desktop show no horizontal overflow; Filters and Reschedule dialog work, no data saved or publishing.
+
 ## Applicant note clarity
 - [x] Existing notes saved to applications.notes (15 nonempty before change), not timeline; authenticated read/update and event insert grants/policies confirmed. Existing roles/store scope unchanged.
 - [x] add_applicant_note is security invoker and atomically appends original notes plus a dated authored event; immediate saved list and timeline cache, Note saved, cleared draft and retained failed drafts. Prior notes retained with unknown author/time labeled.
