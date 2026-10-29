@@ -3,6 +3,8 @@ import { z } from "zod";
 import { suggestTier, type Tier } from "@/lib/referrals";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { managersForStores, escalationForStores, type JobContactOptions, type JobManagerOption, type JobEscalationOption } from "@/lib/job-contacts";
+import { TeamInvites } from "@/components/team-invites";
 import { toast } from "sonner";
 import { Plus, Copy, Pencil, ExternalLink, BookmarkPlus, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/jobs")({
   component: Jobs,
 });
 
-const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager: "",
+const empty = { title: "", department: "", division: "general", req_type: "replacement", target_start_date: "", hiring_manager_user_id: "",
   hiring_manager_phone: "", escalation_name: "", escalation_phone: "",
   employment_type: "FULL_TIME", pay_min: "", pay_max: "", pay_period: "YEAR", description: "",
   questions: [] as Question[], interview_kit_id: "", referral_tier_id: "" };
@@ -71,7 +73,7 @@ function EmployeeReferralBonus({ f, setF, tiers, payoutDays }: { f: Form; setF: 
   </section>;
 }
 
-function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: KitOption[] }) {
+function JobFields({ f, setF, kits, managers, escalation, onInvite, canInvite }: { f: Form; setF: (f: Form) => void; kits: KitOption[]; managers: JobManagerOption[]; escalation: JobEscalationOption | null; onInvite: () => void; canInvite: boolean }) {
   return (
     <>
       <div className="space-y-1.5"><Label>Job title</Label><Input required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
@@ -91,7 +93,13 @@ function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: 
           <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.req_type} onChange={(e) => setF({ ...f, req_type: e.target.value })}>
             {REQ_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select></div>
-        <div className="space-y-1.5"><Label>Hiring manager</Label><Input value={f.hiring_manager} onChange={(e) => setF({ ...f, hiring_manager: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Hiring manager</Label>
+          <select aria-label="Hiring manager" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.hiring_manager_user_id} onChange={(e) => e.target.value === "invite" ? onInvite() : setF({ ...f, hiring_manager_user_id: e.target.value })}>
+            <option value="">Not assigned</option>
+            {managers.map((m) => <option key={m.user_id} value={m.user_id}>{m.name}{m.email && m.email !== m.name ? ` · ${m.email}` : ""}</option>)}
+            <option value="invite" disabled={!canInvite}>Invite a manager{!canInvite ? " (group admin only)" : ""}</option>
+          </select>
+        </div>
         <div className="space-y-1.5"><Label>Target start date</Label><Input type="date" value={f.target_start_date} onChange={(e) => setF({ ...f, target_start_date: e.target.value })} /></div>
       </div>
       <fieldset className="space-y-3 border-t pt-3">
@@ -99,8 +107,8 @@ function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: 
         <p className="text-xs text-muted-foreground">These contacts override the store’s defaults. Leave blank to use the store’s contacts.</p>
         <label className="block space-y-1.5 text-sm">Hiring manager phone<Input aria-label="Hiring manager phone" type="tel" value={f.hiring_manager_phone} onChange={(e) => setF({ ...f, hiring_manager_phone: e.target.value })} /></label>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1.5 text-sm">Escalation contact name<Input aria-label="Escalation contact name" value={f.escalation_name} onChange={(e) => setF({ ...f, escalation_name: e.target.value })} /></label>
-          <label className="space-y-1.5 text-sm">Escalation contact phone<Input aria-label="Escalation contact phone" type="tel" value={f.escalation_phone} onChange={(e) => setF({ ...f, escalation_phone: e.target.value })} /></label>
+          <label className="space-y-1.5 text-sm">Escalation contact name<Input aria-label="Escalation contact name" placeholder={escalation?.name ?? ""} value={f.escalation_name} onChange={(e) => setF({ ...f, escalation_name: e.target.value })} /></label>
+          <label className="space-y-1.5 text-sm">Escalation contact phone<Input aria-label="Escalation contact phone" type="tel" placeholder={escalation?.phone ?? ""} value={f.escalation_phone} onChange={(e) => setF({ ...f, escalation_phone: e.target.value })} /></label>
         </div>
       </fieldset>
       <div className="grid grid-cols-3 gap-3">
@@ -125,7 +133,7 @@ function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: 
 
 const payload = (f: Form) => ({
   title: f.title, department: f.department || null, division: f.division, req_type: f.req_type,
-  target_start_date: f.target_start_date || null, hiring_manager: f.hiring_manager || null, employment_type: f.employment_type, pay_period: f.pay_period,
+  target_start_date: f.target_start_date || null, hiring_manager_user_id: f.hiring_manager_user_id || null, employment_type: f.employment_type, pay_period: f.pay_period,
   hiring_manager_phone: f.hiring_manager_phone || null, escalation_name: f.escalation_name || null, escalation_phone: f.escalation_phone || null,
   description: f.description, pay_min: f.pay_min ? Number(f.pay_min) : null, pay_max: f.pay_max ? Number(f.pay_max) : null,
   // Drop half-finished questions rather than failing the save.
@@ -137,6 +145,16 @@ const payload = (f: Form) => ({
 function Jobs() {
   const org = useOrg();
   const qc = useQueryClient();
+  const canInvite = org.role === "group_admin" || org.isPlatformAdmin;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const { data: contacts } = useQuery({
+    queryKey: ["job-contacts", org.orgId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("job_contact_options", { _org: org.orgId });
+      if (error) throw error;
+      return data as unknown as JobContactOptions;
+    },
+  });
   const { data } = useQuery({
     queryKey: ["jobs", org.orgId],
     queryFn: async () => {
@@ -155,6 +173,10 @@ function Jobs() {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(empty);
   const [picked, setPicked] = useState<string[]>([]);
+  const pickStores = (ids: string[]) => {
+    setPicked(ids);
+    if (!managersForStores(contacts?.managers ?? [], ids).some((m) => m.user_id === f.hiring_manager_user_id)) setF({ ...f, hiring_manager_user_id: "" });
+  };
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const filter = search.store ?? "all";
@@ -209,7 +231,7 @@ function Jobs() {
   function openJob(j: NonNullable<typeof viewing>) {
     setEf({
       title: j.title, department: j.department ?? "", division: j.division, req_type: j.req_type,
-      target_start_date: j.target_start_date ?? "", hiring_manager: j.hiring_manager ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
+      target_start_date: j.target_start_date ?? "", hiring_manager_user_id: j.hiring_manager_user_id ?? "", employment_type: j.employment_type, pay_period: j.pay_period,
       hiring_manager_phone: j.hiring_manager_phone ?? "", escalation_name: j.escalation_name ?? "", escalation_phone: j.escalation_phone ?? "",
       description: j.description ?? "", pay_min: j.pay_min != null ? String(j.pay_min) : "", pay_max: j.pay_max != null ? String(j.pay_max) : "",
       questions: parseQuestions(j.questions), interview_kit_id: j.interview_kit_id ?? "", referral_tier_id: j.referral_tier_id ?? "",
@@ -254,22 +276,22 @@ function Jobs() {
                 {templates.map((t) => (
                   <span key={t.id ?? t.title} className="flex items-center rounded-full border text-xs hover:border-sapphire">
                     <button type="button" onClick={() => applyTemplate(t)} className="px-3 py-1 hover:text-sapphire">{t.title}</button>
-                    {hr && t.id && <button type="button" aria-label={`Remove ${t.title}`} onClick={() => deleteTemplate(t.id!)} className="pr-2 text-muted-foreground hover:text-destructive"><X className="size-3" /></button>}
+                    {hr && t.id && <button type="button" aria-label={`Remove ${t.title}`} onClick={() => { if (t.id) deleteTemplate(t.id); }} className="pr-2 text-muted-foreground hover:text-destructive"><X className="size-3" /></button>}
                   </span>
                 ))}
               </div>
               {!savedTemplates.length && <p className="text-xs text-muted-foreground">Starter roles shown. {hr ? "Save your own to build your group's job bank." : ""}</p>}
             </div>
             <form onSubmit={save} className="space-y-3">
-              <JobFields f={f} setF={setF} kits={data?.kits ?? []} />
+              <JobFields f={f} setF={setF} kits={data?.kits ?? []} managers={managersForStores(contacts?.managers ?? [], picked)} escalation={escalationForStores(contacts?.escalations ?? [], picked)} onInvite={() => setInviteOpen(true)} canInvite={canInvite} />
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Stores</Label>
-                  <button type="button" className="text-xs text-sapphire" onClick={() => setPicked(picked.length === stores.length ? [] : stores.map((s) => s.id))}>
+                  <button type="button" className="text-xs text-sapphire" onClick={() => pickStores(picked.length === stores.length ? [] : stores.map((s) => s.id))}>
                     {picked.length === stores.length ? "Clear" : "Select all"}</button></div>
                 <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">
                   {stores.map((s) => (
                     <label key={s.id} className="flex items-center gap-2 text-sm">
-                      <Checkbox checked={picked.includes(s.id)} onCheckedChange={(c) => setPicked(c ? [...picked, s.id] : picked.filter((p) => p !== s.id))} />{s.name}
+                      <Checkbox checked={picked.includes(s.id)} onCheckedChange={(c) => pickStores(c ? [...picked, s.id] : picked.filter((p) => p !== s.id))} />{s.name}
                     </label>
                   ))}
                 </div>
@@ -291,7 +313,7 @@ function Jobs() {
                   <VoiceJobWriter onDraft={(j) => setEf(fromAi(j))} />
                   <JobPreview f={ef} store={storeName(viewing.dealership_id)} />
                   <form onSubmit={saveEdit} className="space-y-3">
-                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} />
+                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} managers={managersForStores(contacts?.managers ?? [], [viewing.dealership_id])} escalation={escalationForStores(contacts?.escalations ?? [], [viewing.dealership_id])} onInvite={() => setInviteOpen(true)} canInvite={canInvite} />
                     {hr && <EmployeeReferralBonus f={ef} setF={setEf} tiers={data?.tiers ?? []} payoutDays={data?.payoutDays ?? null} />}
                     <div className="flex gap-2">
                       <Button type="submit" className="flex-1">Save changes</Button>
@@ -318,6 +340,13 @@ function Jobs() {
           )}
         </DialogContent>
       </Dialog>
+
+      {canInvite && <Dialog open={inviteOpen} onOpenChange={(o) => { setInviteOpen(o); if (!o) qc.invalidateQueries({ queryKey: ["job-contacts", org.orgId] }); }}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Invite a manager</DialogTitle></DialogHeader>
+          <TeamInvites orgId={org.orgId} stores={stores} regions={[]} initialStoreIds={viewing ? [viewing.dealership_id] : picked} />
+        </DialogContent>
+      </Dialog>}
 
       <div className="rounded-2xl bg-navy p-5 text-navy-foreground">
         <p className="text-sm font-semibold">Your job feed for Indeed, ZipRecruiter and Glassdoor</p>

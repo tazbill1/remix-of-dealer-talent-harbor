@@ -26,17 +26,19 @@ export function TeamInvites({
   orgId,
   stores,
   regions,
+  initialStoreIds = [],
 }: {
   orgId: string;
   stores: Option[];
   regions: Option[];
+  initialStoreIds?: string[];
 }) {
   const qc = useQueryClient();
   const invite = useServerFn(createInvite);
   const cancel = useServerFn(cancelInvite);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("hiring_manager");
-  const [scopes, setScopes] = useState<Scope[]>([]);
+  const [scopes, setScopes] = useState<Scope[]>(initialStoreIds.map((dealership_id) => ({ dealership_id })));
   const [calendarUrl, setCalendarUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [lastLink, setLastLink] = useState<{

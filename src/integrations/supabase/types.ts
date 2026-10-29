@@ -1123,8 +1123,10 @@ export type Database = {
           employment_type: string
           escalation_name: string | null
           escalation_phone: string | null
+          escalation_user_id: string | null
           hiring_manager: string | null
           hiring_manager_phone: string | null
+          hiring_manager_user_id: string | null
           id: string
           interview_kit_id: string | null
           org_id: string
@@ -1148,8 +1150,10 @@ export type Database = {
           employment_type?: string
           escalation_name?: string | null
           escalation_phone?: string | null
+          escalation_user_id?: string | null
           hiring_manager?: string | null
           hiring_manager_phone?: string | null
+          hiring_manager_user_id?: string | null
           id?: string
           interview_kit_id?: string | null
           org_id: string
@@ -1173,8 +1177,10 @@ export type Database = {
           employment_type?: string
           escalation_name?: string | null
           escalation_phone?: string | null
+          escalation_user_id?: string | null
           hiring_manager?: string | null
           hiring_manager_phone?: string | null
+          hiring_manager_user_id?: string | null
           id?: string
           interview_kit_id?: string | null
           org_id?: string
@@ -3050,6 +3056,11 @@ export type Database = {
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
       is_store_staff_for: {
         Args: { _org: string; _store: string; _uid: string }
+        Returns: boolean
+      }
+      job_contact_options: { Args: { _org: string }; Returns: Json }
+      job_manager_is_eligible: {
+        Args: { _org: string; _store: string; _user: string }
         Returns: boolean
       }
       mark_not_duplicate: { Args: { _dup: string }; Returns: boolean }

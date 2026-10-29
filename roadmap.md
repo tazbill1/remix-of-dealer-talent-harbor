@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Job manager accounts and escalation defaults
+- [x] Added store-scoped manager user IDs and legacy backfill before screens: 1 of 7 typed assignments matched (LG Subaru Cody); 6 unmatched left blank, 5 already blank. Derived name retained only for existing report/contact consumers.
+- [x] Job create/edit uses store-assigned GM/hiring-manager accounts; multi-store choices cover every picked store. Invite reuses unchanged admin-only TeamInvites with stores preselected. Escalation defaults store HR/recruiter/admin then group recruiter/admin, preserves explicit overrides; ABC defaults Aaron Sheeks (no saved phone).
+- [x] Signed-in create/edit dropdown, invitation and escalation save/readback verified; no invites/messages sent or publishing. Store-role/cross-org and contact default/override tests added.
+
 ## Pre-demo cleanup
 - [x] ABC email/text both practice; signed-in Demo reschedule notice and Both bulk send verified in Messages/timeline. Alicia original time restored; existing applicant unsubscribe retained. Automatic Demo delivery mock proves no provider call and timeline insert. Verification added 3 simulated notices and 1 blocked notice, no live delivery.
 - [x] Messages simulated label is Sent (demo). Exactly one Add candidate button already exists; no Add applicant control. Previously Do Not Hire red warning unchanged; attention/errors also remain red, so it is not the only red element.
