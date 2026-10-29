@@ -490,6 +490,7 @@ export type Database = {
           store_id: string
           subject: string | null
           text_demo: boolean
+          unavailable_count: number
         }
         Insert: {
           batch_id: string
@@ -510,6 +511,7 @@ export type Database = {
           store_id: string
           subject?: string | null
           text_demo?: boolean
+          unavailable_count?: number
         }
         Update: {
           batch_id?: string
@@ -530,6 +532,7 @@ export type Database = {
           store_id?: string
           subject?: string | null
           text_demo?: boolean
+          unavailable_count?: number
         }
         Relationships: [
           {
@@ -2913,6 +2916,10 @@ export type Database = {
     }
     Functions: {
       add_business_days: { Args: { _d: string; _n: number }; Returns: string }
+      audit_bulk_unavailable: {
+        Args: { _batch: string; _count: number }
+        Returns: undefined
+      }
       bulk_next_text_time: {
         Args: {
           _days: number[]
