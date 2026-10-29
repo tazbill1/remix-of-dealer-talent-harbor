@@ -1,6 +1,7 @@
 # WerkandMe Hiring roadmap
 
 ## Bulk messaging screens
+- [ ] Add final bulk confirmation with separate channel counts, stores, skips, Demo notices and typed recipient count at 25+; verify without sending.
 - [x] Select all shown beside applicant counts on board/list; filtered Marcus selects 2, Needs attention selects 8, Clear verified; 7 selection/bulk tests pass.
 - [x] Added labeled demo consent for 24 ABC example.com applicants (25 ABC applications now have consent including 1 previously consented real-address record). Six real-address records untouched; text Demo/email Live unchanged; messages remain 40, bulk sends/messages 0.
 - [x] Selection-only composer with eligibility, existing templates, self-only preview and send counts; uses existing bulk RPC.
