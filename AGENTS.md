@@ -10,8 +10,8 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- Applicant follow-up architecture is in src/lib/AGENTS.md. Why: filter-only AI stays isolated.
-- Subdirectories have their own AGENTS.md (e.g. src/lib/AGENTS.md); read it before changing files there.
+- Read subdirectory AGENTS.md before edits; src/lib covers follow-up logic. Why: preserve local rules.
+- Store warnings use store-validation.ts gaps and tap-open overflow lists. Why: optional contacts stay optional.
 - Adverse-action tracking uses authenticated HR-authorized RLS actions, database business-day calculation and optimistic saves; no messaging or applicant stage changes. Why: human notice records stay separate from hiring decisions.
 - HR consent review uses authenticated RLS reads and can_post_jobs authorization; withdrawals update only revoked_at/revoked_source and verify the returned row. Why: preserve immutable evidence and prevent silent losses.
 - Bulk sends use the existing RPC and scoped audit; readiness checks caller/store access before service eligibility; self-only previews reuse staff delivery. Why: no preview writes/leaks; live bulk email awaits its provider.
