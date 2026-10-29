@@ -150,6 +150,14 @@
   body:has([data-referral-print]) [data-referral-print] a, body:has([data-referral-print]) [data-referral-print] button { display: none; }
 }
 
+/* Phones: Ask lives in the bottom bar, and Save bars take the bottom bar's place. */
+@media (max-width: 639px) {
+  .ask-launcher,
+  body:has([data-sticky-save-bar]) .bottom-tab-bar {
+    display: none;
+  }
+}
+
 /* All sticky save bars share this marker, including when Save is disabled. */
 @media (max-width: 767px) {
   body:has([data-sticky-save-bar]) .ask-launcher {

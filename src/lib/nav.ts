@@ -34,3 +34,15 @@ export function settingsTabsFor(r: NavRole) {
   // Videos: HR edit all, GMs/hiring managers their stores, regional leaders view.
   return SETTINGS_TABS.filter((t) => t.id === "videos" ? true : t.id === "referrals" || t.id === "careers" ? isHr(r) : canSeeNav(t.path, r));
 }
+
+/** Phone bottom bar: the pages managers use most, open to every role. "More" opens the full menu. */
+export const BOTTOM_TABS = [
+  { to: "/dashboard", label: "Home" },
+  { to: "/applicants", label: "Applicants" },
+  { to: "/calendar", label: "Interviews" },
+  { to: "/ask", label: "Ask" },
+] as const;
+
+export function bottomTabsFor(r: NavRole) {
+  return BOTTOM_TABS.filter((t) => canSeeNav(t.to, r));
+}

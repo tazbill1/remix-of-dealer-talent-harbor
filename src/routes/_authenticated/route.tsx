@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useLocation, useMatches, useNa
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Briefcase, Users, Building2, Globe, LogOut, Shield, Menu, CalendarDays, BarChart3, UserCog, FileText, Plug, ClipboardList, Sparkles, UserPlus, QrCode, ClipboardCheck, ChevronDown, Settings, Mail } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { AskBubble, AskProvider } from "@/components/ask-chat";
 import { NotificationBell } from "@/components/notification-bell";
-import { canSeeNav } from "@/lib/nav";
+import { bottomTabsFor, canSeeNav } from "@/lib/nav";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -148,7 +149,8 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
           <div className="flex items-center gap-1">
           <NotificationBell userId={me.user.id} orgId={org?.orgId ?? null} />
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>
+            {/* With a group, the bottom bar's More opens the menu instead. */}
+            {!org && <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button></SheetTrigger>}
             <SheetContent side="left" className="bottom-auto h-dvh max-h-dvh w-64 overflow-hidden border-0 bg-sidebar p-0 text-sidebar-foreground"><SidebarBody me={me} org={org} onPick={onPick} mobile /></SheetContent>
           </Sheet>
           </div>
@@ -156,9 +158,35 @@ function Shell({ me, org, onPick, children }: { me: Me; org: OrgCtx | null; onPi
         <div className="hidden justify-end px-4 pt-3 sm:flex md:px-8">
           <NotificationBell userId={me.user.id} orgId={org?.orgId ?? null} />
         </div>
-        <main className="flex-1 p-4 md:p-8 sm:pt-0 md:pt-0">{children}</main>
+        <main className={cn("flex-1 p-4 md:p-8 sm:pt-0 md:pt-0", org && "pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-4 md:pb-8")}>{children}</main>
       </div>
+      {org && <BottomBar org={org} onMore={() => setMobileOpen(true)} />}
     </div>
+  );
+}
+
+const TAB_ICONS: Record<string, LucideIcon> = { "/dashboard": LayoutDashboard, "/applicants": Users, "/calendar": CalendarDays, "/ask": Sparkles };
+
+/** Phone-only app-style tab bar; hidden while a page's sticky Save bar is showing (styles.css). */
+function BottomBar({ org, onMore }: { org: OrgCtx; onMore: () => void }) {
+  const loc = useLocation();
+  const tab = "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium";
+  return (
+    <nav aria-label="Main" className="bottom-tab-bar fixed inset-x-0 bottom-0 z-30 flex border-t bg-background/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur sm:hidden">
+      {bottomTabsFor(org).map((t) => {
+        const Icon = TAB_ICONS[t.to] ?? LayoutDashboard;
+        const active = isActive(t.to, loc.pathname);
+        return (
+          <Link key={t.to} to={t.to} aria-current={active ? "page" : undefined}
+            className={cn(tab, active ? "text-sapphire" : "text-muted-foreground")}>
+            <Icon className="size-5" />{t.label}
+          </Link>
+        );
+      })}
+      <button type="button" onClick={onMore} className={cn(tab, "text-muted-foreground")}>
+        <Menu className="size-5" />More
+      </button>
+    </nav>
   );
 }
 
