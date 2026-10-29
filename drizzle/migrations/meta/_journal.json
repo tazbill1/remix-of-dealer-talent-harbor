@@ -337,6 +337,13 @@
       "when": 1793233532549,
       "tag": "0047_bulk_messaging_skip_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793235642111,
+      "tag": "0048_recruiting_event_coverage",
+      "breakpoints": true
     }
   ]
 }

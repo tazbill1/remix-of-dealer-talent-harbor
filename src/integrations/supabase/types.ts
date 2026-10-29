@@ -2092,6 +2092,8 @@ export type Database = {
       recruiting_events: {
         Row: {
           code: string
+          coverage_mode: string
+          covered_store_ids: string[]
           created_at: string
           created_by: string | null
           event_date: string
@@ -2101,10 +2103,13 @@ export type Database = {
           location: string | null
           name: string
           org_id: string
+          region_id: string | null
           store_id: string | null
         }
         Insert: {
           code?: string
+          coverage_mode?: string
+          covered_store_ids?: string[]
           created_at?: string
           created_by?: string | null
           event_date: string
@@ -2114,10 +2119,13 @@ export type Database = {
           location?: string | null
           name: string
           org_id: string
+          region_id?: string | null
           store_id?: string | null
         }
         Update: {
           code?: string
+          coverage_mode?: string
+          covered_store_ids?: string[]
           created_at?: string
           created_by?: string | null
           event_date?: string
@@ -2127,6 +2135,7 @@ export type Database = {
           location?: string | null
           name?: string
           org_id?: string
+          region_id?: string | null
           store_id?: string | null
         }
         Relationships: [
@@ -2142,6 +2151,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruiting_events_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
           {
@@ -2955,6 +2971,17 @@ export type Database = {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      can_manage_event_scope: {
+        Args: {
+          _legacy_store: string
+          _mode: string
+          _org: string
+          _region: string
+          _stores: string[]
+          _uid: string
+        }
+        Returns: boolean
+      }
       can_manage_events: {
         Args: { _org: string; _store: string; _uid: string }
         Returns: boolean
@@ -2972,6 +2999,17 @@ export type Database = {
         Args: { _app: string; _org: string; _store: string; _uid: string }
         Returns: boolean
       }
+      can_read_event_scope: {
+        Args: {
+          _legacy_store: string
+          _mode: string
+          _org: string
+          _region: string
+          _stores: string[]
+          _uid: string
+        }
+        Returns: boolean
+      }
       can_see_pool_region: {
         Args: { _org: string; _region: string; _uid: string }
         Returns: boolean
@@ -2987,6 +3025,17 @@ export type Database = {
       detect_duplicates_for: {
         Args: { _id: string; _org: string; _type: string }
         Returns: number
+      }
+      event_coverage_options: { Args: { _org: string }; Returns: Json }
+      event_scope_stores: {
+        Args: {
+          _legacy_store: string
+          _mode: string
+          _org: string
+          _region: string
+          _stores: string[]
+        }
+        Returns: string[]
       }
       five_business_days_after: { Args: { _start: string }; Returns: string }
       has_org_role: {
