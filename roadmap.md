@@ -1,5 +1,9 @@
 # WerkandMe Hiring roadmap
 
+## Store missing details
+- [ ] Replace generic store warnings with actual field names and tappable full lists above three fields.
+- [ ] Fill only missing required details on the six flagged stores with pretend demo values; verify preserved existing data and unchanged sending modes; report all changes.
+
 ## Mobile sticky save bars
 - [x] Global mobile rule hides Ask whenever a marked sticky save bar is present; both existing bars and Ask respect bottom safe-area spacing. Save controls stay fixed-size while Unsaved changes can wrap.
 - [x] Automatic texts and Status rules tested at 360px/390px: dirty Save enabled, unobstructed hit-test, no bar overflow; Discard restores unchanged settings and Ask returns off save-bar pages. No settings saved or publishing; build OK.
