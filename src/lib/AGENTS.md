@@ -1,4 +1,5 @@
 ## src/lib rules
+- Staff bonus display uses referral-bonus-display.ts: pre-hire reads the job tier and org days; post-hire reads saved bonus amount/due date. Settings reuses TierSettings/ProgramRules in its HR-only referral tab without moving existing referral controls. Why: display cannot recalculate hire awards or add a second save path.
 - Event coverage uses database scope helpers and RLS-authorized options; legacy preserves old scans, new scans derive covered stores server-side, and event analytics group by each applicant's store. Why: multi-store events cannot leak access or lose attribution.
 - Applicant lists reuse Ask's provider/model/options via an authenticated filter-only function; AI sees RLS-scoped catalogs, never applicant rows, and validated output only sets URL filters. Contact/week math is pure and tested. Why: no selection, messaging, data or access changes.
 - Bulk confirmation uses fresh eligibility/channel/store counts and bulkConfirmationAllowed for typed counts at 25+ actual recipients. Why: skips and dual-channel deliveries must not confuse recipient confirmation.

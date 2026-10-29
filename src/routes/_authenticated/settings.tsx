@@ -11,6 +11,7 @@ import { MessageTemplatesSettings } from "@/components/settings/templates";
 import { AutomaticTextsSettings } from "@/components/settings/automations";
 import { OnboardingTemplatesSettings } from "@/components/settings/onboarding-templates";
 import { StoreVideosCard } from "@/components/store-videos";
+import { ReferralBonusesSettings } from "@/components/settings/referral-bonuses";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
     { property: "og:description", content: "Status rules, templates, automatic texts, onboarding templates and videos in one place." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: z.object({ tab: z.enum(["rules", "templates", "texts", "onboarding", "videos"]).optional() }),
+  validateSearch: z.object({ tab: z.enum(["rules", "templates", "texts", "onboarding", "videos", "referrals"]).optional() }),
   component: SettingsPage,
 });
 
@@ -43,6 +44,7 @@ function SettingsPage() {
       {tab === "texts" && <AutomaticTextsSettings />}
       {tab === "onboarding" && <OnboardingTemplatesSettings />}
       {tab === "videos" && <VideosTab />}
+      {tab === "referrals" && <ReferralBonusesSettings />}
     </div>
   );
 }

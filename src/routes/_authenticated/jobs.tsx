@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { suggestTier, type Tier } from "@/lib/referrals";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -57,8 +57,21 @@ type KitOption = { id: string; name: string };
 
 type TierOption = Tier;
 
-function JobFields({ f, setF, kits, tiers = [], showTier = false }: { f: Form; setF: (f: Form) => void; kits: KitOption[]; tiers?: TierOption[]; showTier?: boolean }) {
+function EmployeeReferralBonus({ f, setF, tiers, payoutDays }: { f: Form; setF: (f: Form) => void; tiers: TierOption[]; payoutDays: number | null }) {
   const suggested = suggestTier(f.title, tiers);
+  const chosen = f.referral_tier_id ? tiers.find((t) => t.id === f.referral_tier_id) : suggested;
+  return <section className="space-y-1.5 border-t pt-3" aria-label="Employee referral bonus">
+    <h3 className="text-sm font-semibold">Employee referral bonus</h3>
+    <select aria-label="Referral bonus tier" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.referral_tier_id} onChange={(e) => setF({ ...f, referral_tier_id: e.target.value })}>
+      <option value="">Suggested: {suggested ? `${suggested.name} ($${Number(suggested.amount).toLocaleString()})` : "none"}</option>
+      {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} (${Number(t.amount).toLocaleString()})</option>)}
+    </select>
+    {chosen && payoutDays !== null && <p className="text-xs text-muted-foreground">{chosen.name} · ${Number(chosen.amount).toLocaleString()} paid at {payoutDays} days if a referred employee is hired</p>}
+    <Link to="/settings" search={{ tab: "referrals" }} className="text-xs text-sapphire hover:underline">Edit tiers in Settings</Link>
+  </section>;
+}
+
+function JobFields({ f, setF, kits }: { f: Form; setF: (f: Form) => void; kits: KitOption[] }) {
   return (
     <>
       <div className="space-y-1.5"><Label>Job title</Label><Input required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
@@ -106,14 +119,6 @@ function JobFields({ f, setF, kits, tiers = [], showTier = false }: { f: Form; s
         </select>
         <p className="text-xs text-muted-foreground">The interviewer sees these questions on the scorecard. Recruiting/HR manages them under Interview kits.</p>
       </div>
-      {showTier && tiers.length > 0 && (
-        <div className="space-y-1.5 border-t pt-3"><Label>Referral bonus tier</Label>
-          <select aria-label="Referral bonus tier" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.referral_tier_id} onChange={(e) => setF({ ...f, referral_tier_id: e.target.value })}>
-            <option value="">Suggested: {suggested ? `${suggested.name} ($${Number(suggested.amount).toLocaleString()})` : "none"}</option>
-            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} (${Number(t.amount).toLocaleString()})</option>)}
-          </select>
-        </div>
-      )}
     </>
   );
 }
@@ -135,15 +140,16 @@ function Jobs() {
   const { data } = useQuery({
     queryKey: ["jobs", org.orgId],
     queryFn: async () => {
-      const [jobs, stores, apps, templates, kits, tiers] = await Promise.all([
+      const [jobs, stores, apps, templates, kits, tiers, referralSettings] = await Promise.all([
         supabase.from("jobs").select("*").eq("org_id", org.orgId).order("created_at", { ascending: false }),
         supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
         supabase.from("applications").select("job_id").eq("org_id", org.orgId),
         supabase.from("job_templates").select("*").eq("org_id", org.orgId).order("title"),
         supabase.from("interview_kits").select("id, name").eq("org_id", org.orgId).order("name"),
         supabase.from("referral_tiers").select("id, name, amount, covers, excludes, is_default, sort_order").eq("org_id", org.orgId).order("sort_order"),
+        supabase.from("referral_settings").select("payout_days").eq("org_id", org.orgId).maybeSingle(),
       ]);
-      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [], kits: kits.data ?? [], tiers: (tiers.data ?? []) as Tier[] };
+      return { jobs: jobs.data ?? [], stores: stores.data ?? [], apps: apps.data ?? [], templates: templates.data ?? [], kits: kits.data ?? [], tiers: (tiers.data ?? []) as Tier[], payoutDays: referralSettings.data?.payout_days ?? null };
     },
   });
   const [open, setOpen] = useState(false);
@@ -155,7 +161,7 @@ function Jobs() {
   const setFilter = (v: string) => navigate({ search: (prev) => ({ ...prev, store: v === "all" ? undefined : v }), replace: true });
   const statusFilter = search.status ?? "all";
   const [division, setDivision] = useState("all");
-  const hr = canPostJobs(org.role);
+  const hr = canPostJobs(org.role, org.isPlatformAdmin);
   const savedTemplates = data?.templates ?? [];
   const templates: { id?: string; title: string; department: string | null; division: string; employment_type: string; pay_min: number | null; pay_max: number | null; pay_period: string; description: string }[] =
     savedTemplates.length ? savedTemplates : STARTER_TEMPLATES.map((t) => ({ ...t }));
@@ -255,7 +261,7 @@ function Jobs() {
               {!savedTemplates.length && <p className="text-xs text-muted-foreground">Starter roles shown. {hr ? "Save your own to build your group's job bank." : ""}</p>}
             </div>
             <form onSubmit={save} className="space-y-3">
-              <JobFields f={f} setF={setF} kits={data?.kits ?? []} tiers={data?.tiers ?? []} showTier={hr} />
+              <JobFields f={f} setF={setF} kits={data?.kits ?? []} />
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Stores</Label>
                   <button type="button" className="text-xs text-sapphire" onClick={() => setPicked(picked.length === stores.length ? [] : stores.map((s) => s.id))}>
@@ -268,6 +274,7 @@ function Jobs() {
                   ))}
                 </div>
               </div>
+              {hr && <EmployeeReferralBonus f={f} setF={setF} tiers={data?.tiers ?? []} payoutDays={data?.payoutDays ?? null} />}
               <Button type="submit" className="w-full">{hr ? "Post job" : "Send request to HR"}</Button>
             </form>
           </DialogContent>
@@ -284,7 +291,8 @@ function Jobs() {
                   <VoiceJobWriter onDraft={(j) => setEf(fromAi(j))} />
                   <JobPreview f={ef} store={storeName(viewing.dealership_id)} />
                   <form onSubmit={saveEdit} className="space-y-3">
-                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} tiers={data?.tiers ?? []} showTier={hr} />
+                    <JobFields f={ef} setF={setEf} kits={data?.kits ?? []} />
+                    {hr && <EmployeeReferralBonus f={ef} setF={setEf} tiers={data?.tiers ?? []} payoutDays={data?.payoutDays ?? null} />}
                     <div className="flex gap-2">
                       <Button type="submit" className="flex-1">Save changes</Button>
                       <Button type="button" variant="outline" onClick={() => openJob(viewing)}>Cancel</Button>
