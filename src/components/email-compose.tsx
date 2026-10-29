@@ -229,7 +229,7 @@ export function EmailHistory({
   if (!emails.length) return null;
   const label = (m: (typeof emails)[number]) =>
     m.status === "simulated"
-      ? "Practice · not sent"
+      ? "Sent (demo)"
       : m.status === "blocked"
         ? `Not sent: ${m.error ?? "blocked"}`
         : m.status === "failed"

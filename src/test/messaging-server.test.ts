@@ -46,7 +46,7 @@ describe("contacts", () => {
 describe("delivery labels", () => {
   const out = { direction: "out", scheduled_for: null, error: null };
   it("describes each status in plain words", () => {
-    expect(deliveryLabel({ ...out, status: "simulated" })).toBe("Practice · not sent");
+    expect(deliveryLabel({ ...out, status: "simulated" })).toBe("Sent (demo)");
     expect(deliveryLabel({ ...out, status: "blocked", error: "This number replied STOP" })).toBe(
       "Not sent: This number replied STOP",
     );

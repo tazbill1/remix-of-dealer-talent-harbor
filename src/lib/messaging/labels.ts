@@ -20,7 +20,7 @@ export function deliveryLabel(
     case "sending":
       return "Sending…";
     case "simulated":
-      return m.error ? `Practice · not sent · ${m.error}` : "Practice · not sent";
+      return m.error ? `Sent (demo) · ${m.error}` : "Sent (demo)";
     case "sent":
       return "Sent";
     case "delivered":

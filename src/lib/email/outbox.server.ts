@@ -1,7 +1,7 @@
 /**
  * Email outbox. Emails are saved in `messages` (channel "email") next to texts, so they
  * show on the candidate's timeline and go out through the same delivery job. Practice
- * mode logs them as "Practice · not sent"; live mode sends through Lovable's delivery.
+ * mode logs them as "Sent (demo)"; live mode sends through Lovable's delivery.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -140,6 +140,10 @@ export async function deliverEmail(
       .from("messages")
       .update({ status: "simulated", provider: "practice", sent_at: sentAt })
       .eq("id", m.id);
+    if (m.purpose !== "bulk_email") await sb.from("application_events").insert({
+      org_id: m.org_id, application_id: m.application_id, kind: "email",
+      message: `Email sent (demo): ${m.subject || "(no subject)"}`, created_at: sentAt,
+    });
     return "simulated";
   }
   // Lovable's app email is one-to-one only; blasts wait for a bulk sender (Resend/SES).
