@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { canSendBulk, summarizeBulkEligibility } from "@/lib/bulk-messaging";
+import { canSendBulk, selectAllShown, summarizeBulkEligibility } from "@/lib/bulk-messaging";
 import { canSeeNav } from "@/lib/nav";
 
 describe("bulk messaging screens", () => {
+  it("Select all shown selects only the matching filtered/tab applicants", () => {
+    expect(selectAllShown(["matched-1", "matched-2", "matched-1"], true)).toEqual(["matched-1", "matched-2"]);
+  });
+  it("clearing Select all shown clears selection", () => {
+    expect(selectAllShown(["matched-1", "matched-2"], false)).toEqual([]);
+  });
   it("hides sending when the setting is off", () => {
     expect(canSendBulk({ role: "group_admin", isPlatformAdmin: false }, false)).toBe(false);
   });

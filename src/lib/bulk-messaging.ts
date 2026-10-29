@@ -1,6 +1,10 @@
 import type { NavRole } from "@/lib/nav";
 
 export type BulkChannel = "email" | "text" | "both";
+/** Select exactly the filtered/tab-visible set; hidden applicants never carry into this list. */
+export function selectAllShown(shownIds: readonly string[], selected: boolean): string[] {
+  return selected ? [...new Set(shownIds)] : [];
+}
 export function canSendBulk(r: NavRole, enabled: boolean) {
   return enabled && (r.isPlatformAdmin || ["group_admin", "recruiter", "dealer_manager", "hiring_manager"].includes(r.role));
 }
