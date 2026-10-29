@@ -28,7 +28,7 @@ describe("applicant follow-up rules", () => {
       { application_id: "a", direction: "outbound", status: "queued", created_at: daysAgo(0), sent_at: null },
       { application_id: "a", direction: "outbound", status: "failed", created_at: daysAgo(0), sent_at: null },
     ], [], now);
-    expect(index.a?.lastContacted).toBe(daysAgo(5));
+    expect(index["a"]?.lastContacted).toBe(daysAgo(5));
   });
   it("this week includes same-day and earlier weekday interviews but excludes cancellation and next week", () => {
     const index = followUpIndex([], [
@@ -36,9 +36,9 @@ describe("applicant follow-up rules", () => {
       { application_id: "cancelled", starts_at: "2026-10-30T10:00:00Z", status: "cancelled" },
       { application_id: "next", starts_at: "2026-11-02T10:00:00Z", status: "scheduled" },
     ], now, () => "America/Chicago");
-    expect(matchesFollowUp(index.today, { interviewWeek: true }, now)).toBe(true);
-    expect(matchesFollowUp(index.cancelled, { interviewWeek: true }, now)).toBe(false);
-    expect(matchesFollowUp(index.next, { interviewWeek: true }, now)).toBe(false);
+    expect(matchesFollowUp(index["today"], { interviewWeek: true }, now)).toBe(true);
+    expect(matchesFollowUp(index["cancelled"], { interviewWeek: true }, now)).toBe(false);
+    expect(matchesFollowUp(index["next"], { interviewWeek: true }, now)).toBe(false);
     expect(inCalendarWeek("2026-10-26T00:30:00Z", now, "America/Chicago")).toBe(false);
   });
   it("this month is a calendar month rather than trailing 30 days", () => {
