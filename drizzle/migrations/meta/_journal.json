@@ -323,6 +323,13 @@
       "when": 1793233459496,
       "tag": "0045_bulk_messaging_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793233500667,
+      "tag": "0046_bulk_messaging_queue_and_audit",
+      "breakpoints": true
     }
   ]
 }

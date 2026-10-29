@@ -3061,6 +3061,16 @@ export type Database = {
       seed_onboarding_template: { Args: { _org: string }; Returns: undefined }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
       seed_status_reminder_rules: { Args: { _org: string }; Returns: undefined }
+      send_bulk_applicants: {
+        Args: {
+          _applicant_ids: string[]
+          _body: string
+          _channel: string
+          _org: string
+          _subject?: string
+        }
+        Returns: Json
+      }
       store_texting_status: {
         Args: { _org: string }
         Returns: {
