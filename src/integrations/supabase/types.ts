@@ -607,6 +607,38 @@ export type Database = {
           },
         ]
       }
+      careers_settings: {
+        Row: {
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          video_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "careers_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealerships: {
         Row: {
           address: string | null
@@ -1482,6 +1514,44 @@ export type Database = {
             foreignKeyName: "messaging_settings_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          consented_at: string
+          email: string
+          id: string
+          org_id: string
+          source: string
+          unsubscribed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consented_at?: string
+          email: string
+          id?: string
+          org_id: string
+          source?: string
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consented_at?: string
+          email?: string
+          id?: string
+          org_id?: string
+          source?: string
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },

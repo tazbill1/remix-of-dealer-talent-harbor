@@ -3,6 +3,7 @@ import { MapPin, Wrench, Handshake, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/journey-faq";
 import { SITE_URL } from "@/lib/site";
+import { CareersVideo } from "@/components/careers-portal";
 
 const title = "Careers at ABC Dealer Group | Dealership jobs in sales, service and more";
 const description = "Join ABC Dealer Group. Browse open dealership jobs in sales, service, parts and the office, and apply in a minute.";
@@ -44,6 +45,7 @@ function CareersHome() {
           </div>
         </div>
       </section>
+      <CareersVideo />
       <section className="mx-auto grid max-w-5xl gap-4 px-5 py-12 md:grid-cols-3">
         {perks.map((p) => (
           <div key={p.title} className="rounded-2xl border-t-4 border-abc-red bg-abc-white p-6 shadow-sm">

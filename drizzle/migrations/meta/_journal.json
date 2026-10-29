@@ -400,6 +400,13 @@
       "when": 1793242787399,
       "tag": "0056_scalable_employee_referrals",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793302269348,
+      "tag": "0057_careers_video_newsletter",
+      "breakpoints": true
     }
   ]
 }
