@@ -3096,6 +3096,7 @@ export type Database = {
           id: string
         }[]
       }
+      resolve_event_coverage: { Args: { _code: string }; Returns: Json }
       resolve_scan: {
         Args: { _code: string }
         Returns: {
