@@ -1,7 +1,7 @@
 # WerkandMe Hiring roadmap
 
 ## Mobile menu footer
-- [ ] Use dynamic visible height and safe-area bottom spacing; scroll menu links independently while keeping email and Sign out visible. Verify small Android and iPhone-sized screens.
+- [x] Mobile menu uses dynamic visible height and safe-area bottom spacing; links scroll independently and footer stays visible. Signed-in Chromium checks at 360×640, 360×480, 375×667 and 320×480 confirmed email/Sign out visible, Sign out hit-test tappable and click returns to /auth. Six navigation tests passed; build OK. Physical Android/iPhone browser chrome not directly tested.
 
 ## Penny settings access
 - [x] Penny card now links to existing AI assistant controls in Settings > Automatic texts; compact sizing removes forced blank height for every role without changing other cards. Signed-in admin clicked through and saw enabled tone/facts/screening/handoff/pause/instructions controls; desktop/mobile card height 166px, no page errors. Eleven access/menu tests pass; no settings saved or messages sent.
