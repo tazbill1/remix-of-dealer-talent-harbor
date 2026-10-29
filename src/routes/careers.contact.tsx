@@ -54,7 +54,7 @@ function Contact() {
         <CheckCircle2 className="mx-auto size-12 text-abc-red" />
         <h1 className="mt-4 text-3xl">Thanks, we got your message!</h1>
         <p className="mt-2 text-muted-foreground">Our hiring team will reach out soon. Check your email for a confirmation.</p>
-        <Button asChild className="mt-6"><Link to="/careers/jobs">Browse open jobs</Link></Button>
+        <Button asChild className="mt-6 bg-abc-red text-abc-white hover:bg-abc-red-dark"><Link to="/careers/jobs">Browse open jobs</Link></Button>
       </div>
     );
 
@@ -81,7 +81,7 @@ function Contact() {
         <div className="space-y-1.5"><Label htmlFor="cm">Message</Label>
           <Textarea id="cm" required maxLength={2000} rows={5} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></div>
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
-        <Button type="submit" className="w-full" disabled={busy || !jobs.length}>{busy ? "Sending..." : "Send message"}</Button>
+        <Button type="submit" className="w-full bg-abc-red text-abc-white hover:bg-abc-red-dark" disabled={busy || !jobs.length}>{busy ? "Sending..." : "Send message"}</Button>
         <p className="text-xs text-muted-foreground">By sending this you agree to get replies about jobs by email.</p>
       </form>
     </div>
