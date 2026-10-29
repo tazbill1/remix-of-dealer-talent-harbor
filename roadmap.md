@@ -1,5 +1,8 @@
 # WerkandMe Hiring roadmap
 
+## Employee referral bonus clarity
+- [x] Job create/edit bonus picker is in its own bottom section with real tier amount/org payout days and HR/admin Settings link. Settings reuses existing tier/rule editors; referred applicant Details shows read-only bonus, preferring saved hire award. Public job display unchanged. Signed-in create/edit/Settings/Victor panel and public posting verified; 21 targeted tests pass, build OK. No database changes, saves, messages or publishing.
+
 ## Mobile menu footer
 - [x] Mobile menu uses dynamic visible height and safe-area bottom spacing; links scroll independently and footer stays visible. Signed-in Chromium checks at 360×640, 360×480, 375×667 and 320×480 confirmed email/Sign out visible, Sign out hit-test tappable and click returns to /auth. Six navigation tests passed; build OK. Physical Android/iPhone browser chrome not directly tested.
 

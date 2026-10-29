@@ -25,10 +25,11 @@ export const SETTINGS_TABS = [
   { id: "texts", label: "Automatic texts", path: "/automations" },
   { id: "onboarding", label: "Onboarding templates", path: "/onboarding-templates" },
   { id: "videos", label: "Videos", path: "/settings/videos" },
+  { id: "referrals", label: "Employee referral bonus", path: "/settings/referrals" },
 ] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
 
 export function settingsTabsFor(r: NavRole) {
   // Videos: HR edit all, GMs/hiring managers their stores, regional leaders view.
-  return SETTINGS_TABS.filter((t) => t.id === "videos" ? true : canSeeNav(t.path, r));
+  return SETTINGS_TABS.filter((t) => t.id === "videos" ? true : t.id === "referrals" ? isHr(r) : canSeeNav(t.path, r));
 }

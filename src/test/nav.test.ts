@@ -32,10 +32,15 @@ describe("role-based menu", () => {
 import { settingsTabsFor } from "@/lib/nav";
 describe("settings tabs", () => {
   it("HR sees every settings tab", () => {
-    expect(settingsTabsFor(hr).map((t) => t.id)).toEqual(["rules", "templates", "texts", "onboarding", "videos"]);
+    expect(settingsTabsFor(hr).map((t) => t.id)).toEqual(["rules", "templates", "texts", "onboarding", "videos", "referrals"]);
   });
   it("GMs and regional leaders only see Videos", () => {
     expect(settingsTabsFor(gm).map((t) => t.id)).toEqual(["videos"]);
     expect(settingsTabsFor(rl).map((t) => t.id)).toEqual(["videos"]);
+    expect(settingsTabsFor(hm).map((t) => t.id)).toEqual(["videos"]);
+  });
+  it("group and platform admins can edit referral tiers in Settings", () => {
+    expect(settingsTabsFor({ role: "group_admin", isPlatformAdmin: false }).some((t) => t.id === "referrals")).toBe(true);
+    expect(settingsTabsFor({ role: "dealer_manager", isPlatformAdmin: true }).some((t) => t.id === "referrals")).toBe(true);
   });
 });
