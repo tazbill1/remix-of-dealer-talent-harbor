@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Bulk messaging screens
+- [ ] Selection-only composer with eligibility, templates, preview and send counts
+- [ ] HR/admin switch and store-scoped Sent messages history
+- [ ] Enable ABC Dealer Group only, preserve channel modes, verify without sending
+
 ## Done (phase 1 foundation)
 - [x] Multi-group accounts, private data per group, WerkandMe Admin console
 - [x] Stores, jobs (post to many stores), public careers site per group
