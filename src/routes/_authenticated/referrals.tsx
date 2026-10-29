@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Download, Pencil, Plus, QrCode } from "lucide-react";
+import { Copy, Pencil, Plus, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
@@ -58,6 +58,10 @@ function ReferralsPage() {
       // Read every page for existing reports, never silently truncate at the API's 1,000-row limit.
       const allRefs: Referrer[]=[];
       for(let offset=0;;offset+=1000){const result=await supabase.from("referrers").select("id, employee_name, store_id, department, role_title, email, phone, referral_code, active").eq("org_id",org.orgId).order("id").range(offset,offset+999);if(result.error)throw result.error;allRefs.push(...result.data);if(result.data.length<1000)break;}
+      const allApps=[];
+      for(let offset=0;;offset+=1000){const result=await supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id",org.orgId).is("archived_at",null).order("id").range(offset,offset+999);if(result.error)throw result.error;allApps.push(...result.data);if(result.data.length<1000)break;}
+      const allBonuses=[];
+      for(let offset=0;;offset+=1000){const result=await supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id",org.orgId).order("id").range(offset,offset+999);if(result.error)throw result.error;allBonuses.push(...result.data);if(result.data.length<1000)break;}
       const [stores, apps, bonuses, settings, entries, drawings, members] = await Promise.all([
         supabase.from("dealerships").select("id, name, referral_signup_token").eq("org_id", org.orgId).order("name"),
         supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id", org.orgId),
@@ -68,7 +72,7 @@ function ReferralsPage() {
         supabase.from("org_members").select("user_id, email").eq("org_id", org.orgId),
       ]);
       if(stores.error||apps.error||bonuses.error||settings.error)throw new Error("Could not load referrals");
-      return { refs: allRefs, stores: stores.data ?? [], apps: apps.data ?? [], bonuses: bonuses.data ?? [],
+      return { refs: allRefs, stores: stores.data ?? [], apps: allApps, bonuses: allBonuses,
         settings: settings.data ?? {...DEFAULT_SETTINGS,self_signup_enabled:false}, entries: entries.data ?? [], drawings: drawings.data ?? [], members: members.data ?? [] };
     },
   });
