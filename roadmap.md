@@ -1,9 +1,9 @@
 # WerkandMe Hiring roadmap
 
 ## Recruiting event coverage
-- [ ] Apply additive coverage schema, legacy backfill and scoped authorization first.
-- [ ] Update event picker and public QR/short-link jobs list; preserve event attribution.
-- [ ] Verify event/store analytics, admin/GM scopes, existing links and multi-store scans.
+- [x] Applied additive coverage schema, legacy backfill and scoped authorization (stores/region/group modes, per-store applicant guard).
+- [x] Event picker (admin: stores/region/group; GM: assigned stores only) and public QR jobs list scoped to covered stores; event attribution preserved and validated.
+- [x] Verified: admin picker options, two-store event scan shows only those stores' jobs (3 roles/2 stores), legacy LG event link unchanged, per-store counts; 424 tests pass. Temporary demo events removed.
 
 ## Applicant follow-up
 - [x] Verified Ask answered authenticated Dallas interview question (4 Interviewing).
