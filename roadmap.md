@@ -1,6 +1,8 @@
 # WerkandMe Hiring roadmap
 
 ## Bulk messaging screens
+- [ ] Add Select all shown across board/list and verify filtered selection
+- [ ] Record ABC fake-applicant demo consent without sends; verify count/modes
 - [x] Selection-only composer with eligibility, existing templates, self-only preview and send counts; uses existing bulk RPC.
 - [x] HR/admin switch in Settings > Templates and RLS-scoped Sent messages history in Insights.
 - [x] ABC Dealer Group enabled only; email Live/text Demo unchanged. Authenticated board/list, three-person eligibility, merge insertion, switch/history and mobile verified; 23 tests pass, no sends/previews triggered (bulk history/message counts remain zero).
