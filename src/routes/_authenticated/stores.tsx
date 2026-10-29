@@ -9,11 +9,12 @@ import { canPostJobs } from "@/lib/jobs";
 import { StoreTextingContact } from "@/components/store-texting-contact";
 import { plural } from "@/lib/display";
 import { StoreFormFields } from "@/components/store-form-fields";
-import { storeToForm, storeValues, validateStore, storeMissingInfo, type StoreErrors } from "@/lib/store-validation";
+import { storeToForm, storeValues, validateStore, storeMissingFields, storeMissingFieldPreview, storeMissingFieldLabel, type StoreErrors } from "@/lib/store-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Route = createFileRoute("/_authenticated/stores")({
   head: () => ({ meta: [{ title: "Stores | WerkandMe Hiring" }, { name: "description", content: "Manage WerkandMe dealerships, regions and texting contacts." }, { property: "og:title", content: "Stores | WerkandMe Hiring" }, { property: "og:description", content: "Manage dealerships, regions and texting contacts." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -129,13 +130,28 @@ function Stores() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stores.map((s) => (
+        {stores.map((s) => {
+          const missing = storeMissingFields(s);
+          const { visible, remaining } = storeMissingFieldPreview(missing);
+          const warning = `Missing: ${visible.map((field) => storeMissingFieldLabel(field, s)).join(", ")}${remaining ? ` +${remaining} more` : ""}`;
+          const warningStyle = "mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive";
+          return (
           <div key={s.id} className="relative rounded-2xl bg-background p-5 shadow-sm transition hover:shadow-md">
             <Link to="/stores/$storeId" params={{ storeId: s.id }} className="absolute inset-0 rounded-2xl" aria-label={`Open ${s.name} dashboard`} />
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg">{s.name}</h3>
-                {storeMissingInfo(s) && <span className="mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Missing info</span>}
+                {missing.length > 0 && (remaining ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" className={`${warningStyle} relative z-10 h-auto max-w-full whitespace-normal text-left hover:bg-destructive/10 hover:text-destructive`} aria-label={`${warning} for ${s.name}`}>{warning}</Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="max-w-[calc(100vw-2rem)]">
+                      <p className="text-sm font-semibold">Missing:</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">{missing.map((field) => <li key={field}>{storeMissingFieldLabel(field, s)}</li>)}</ul>
+                    </PopoverContent>
+                  </Popover>
+                ) : <span className={warningStyle}>{warning}</span>)}
                 <p className="text-sm text-muted-foreground">{[s.brand, [s.city, s.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
               </div>
               {isHr && <Button variant="ghost" size="icon" className="relative z-10" aria-label="Remove store" onClick={() => remove(s.id)}><Trash2 /></Button>}
@@ -169,7 +185,7 @@ function Stores() {
               </div>
             )}
           </div>
-        ))}
+        ); })}
       </div>
     </div>
   );

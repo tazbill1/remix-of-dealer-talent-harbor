@@ -46,9 +46,28 @@ export function storeValues(f: StoreForm) {
 }
 
 type StoreLike = { name?: string | null; brand?: string | null; city?: string | null; state?: string | null; timezone?: string | null; manager_name?: string | null; manager_phone?: string | null };
+export function storeMissingFields(s: StoreLike): (keyof StoreLike)[] {
+  return REQUIRED.map(([key]) => key as keyof StoreLike).filter((key) =>
+    !s[key]?.trim() || (key === "manager_phone" && !isValidUsPhone(s[key] ?? "")),
+  );
+}
+
+export function storeMissingFieldPreview(fields: (keyof StoreLike)[]) {
+  const visible = fields.length > 3 ? fields.slice(0, 2) : fields;
+  return { visible, remaining: fields.length - visible.length };
+}
+
+export function storeMissingFieldLabel(field: keyof StoreLike, s: StoreLike): string {
+  const labels: Record<keyof StoreLike, string> = {
+    name: "store name", brand: "brand", city: "city", state: "state", timezone: "time zone",
+    manager_name: "manager name", manager_phone: "manager phone",
+  };
+  return field === "manager_phone" && s.manager_phone?.trim() && !isValidUsPhone(s.manager_phone)
+    ? "valid manager phone" : labels[field];
+}
+
 export function storeMissingInfo(s: StoreLike): boolean {
-  return !s.name?.trim() || !s.brand?.trim() || !s.city?.trim() || !s.state?.trim() || !s.timezone?.trim()
-    || !s.manager_name?.trim() || !s.manager_phone?.trim() || !isValidUsPhone(s.manager_phone);
+  return storeMissingFields(s).length > 0;
 }
 
 export function storeToForm(s?: Partial<Record<keyof StoreForm, string | null>>): StoreForm {
