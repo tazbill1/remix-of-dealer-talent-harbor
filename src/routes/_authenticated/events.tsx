@@ -57,7 +57,7 @@ function EventsPage() {
   const scope = draft ? { ...draft, region_id: draft.region_id || null, store_id: draft.store_id || null } : null;
   const covered = scope ? coveredEventStores(scope, stores) : [];
   const canEdit = (ev: Ev) => ev.coverage_mode === "group" || (ev.coverage_mode === "legacy" && !ev.store_id) ? !!data?.options.group : ev.coverage_mode === "region" ? !!data?.options.regions.some((r) => r.id === ev.region_id) : ev.covered_store_ids.every((id) => stores.some((s) => s.id === id));
-  const edit = (ev: Ev) => setDraft({ id: ev.id, name: ev.name, event_date: ev.event_date, location: ev.location ?? "", store_id: ev.store_id ?? "", job_id: ev.job_id ?? "", coverage_mode: ev.coverage_mode === "legacy" ? ev.store_id ? "stores" : "group" : ev.coverage_mode, covered_store_ids: ev.covered_store_ids, region_id: ev.region_id ?? "" });
+  const edit = (ev: Ev) => setDraft({ id: ev.id, name: ev.name, event_date: ev.event_date, location: ev.location ?? "", store_id: ev.store_id ?? "", job_id: ev.job_id ?? "", coverage_mode: ev.coverage_mode, covered_store_ids: ev.covered_store_ids, region_id: ev.region_id ?? "" });
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -67,7 +67,7 @@ function EventsPage() {
     if (draft.coverage_mode === "region" && !draft.region_id) return toast.error("Pick a region.");
     const payload = {
       org_id: org.orgId, name: draft.name.trim(), event_date: draft.event_date, location: draft.location.trim() || null,
-      store_id: draft.coverage_mode === "stores" && draft.covered_store_ids.length === 1 ? draft.covered_store_ids[0] ?? null : null, job_id: draft.job_id || null,
+      store_id: draft.coverage_mode === "legacy" ? draft.store_id || null : draft.coverage_mode === "stores" && draft.covered_store_ids.length === 1 ? draft.covered_store_ids[0] ?? null : null, job_id: draft.job_id || null,
       coverage_mode: draft.coverage_mode, covered_store_ids: draft.covered_store_ids, region_id: draft.region_id || null,
     };
     const { data: saved, error } = draft.id
@@ -126,12 +126,12 @@ function EventsPage() {
               <label className="block text-sm"><span className="font-medium">Date</span><Input type="date" value={draft.event_date} onChange={(e) => setDraft({ ...draft, event_date: e.target.value })} /></label>
               <label className="block text-sm"><span className="font-medium">Location (optional)</span><Input value={draft.location} onChange={(e) => setDraft({ ...draft, location: e.target.value })} /></label>
               <label className="block text-sm"><span className="font-medium">Store</span>
-                <select aria-label="Event coverage" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={draft.coverage_mode} onChange={(e) => setDraft({ ...draft, coverage_mode: e.target.value, covered_store_ids: [], region_id: "", job_id: "" })}>
+                <select aria-label="Event coverage" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={draft.coverage_mode === "legacy" ? draft.store_id ? "stores" : "group" : draft.coverage_mode} onChange={(e) => setDraft({ ...draft, coverage_mode: e.target.value, covered_store_ids: [], region_id: "", job_id: "" })}>
                   <option value="stores">Specific stores</option>
                   {(data?.options.regions.length ?? 0) > 0 && <option value="region">Whole region</option>}
                   {data?.options.group && <option value="group">Group-wide (all stores)</option>}
                 </select></label>
-              {draft.coverage_mode === "stores" && <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">{stores.map((s) => <label key={s.id} className="flex items-center gap-2 text-sm"><Checkbox aria-label={s.name} checked={draft.covered_store_ids.includes(s.id)} onCheckedChange={(on) => setDraft({ ...draft, job_id: "", covered_store_ids: on ? [...draft.covered_store_ids, s.id] : draft.covered_store_ids.filter((id) => id !== s.id) })} />{s.name}</label>)}</div>}
+              {(draft.coverage_mode === "stores" || (draft.coverage_mode === "legacy" && !!draft.store_id)) && <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">{stores.map((s) => <label key={s.id} className="flex items-center gap-2 text-sm"><Checkbox aria-label={s.name} checked={draft.covered_store_ids.includes(s.id)} onCheckedChange={(on) => setDraft({ ...draft, coverage_mode: "stores", job_id: "", covered_store_ids: on ? [...draft.covered_store_ids, s.id] : draft.covered_store_ids.filter((id) => id !== s.id) })} />{s.name}</label>)}</div>}
               {draft.coverage_mode === "region" && <select aria-label="Event region" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={draft.region_id} onChange={(e) => setDraft({ ...draft, region_id: e.target.value, job_id: "" })}><option value="">Pick a region...</option>{data?.options.regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>}
               <label className="block text-sm"><span className="font-medium">Job (optional)</span>
                 <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={draft.job_id} onChange={(e) => setDraft({ ...draft, job_id: e.target.value })}>
