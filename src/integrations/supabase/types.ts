@@ -624,6 +624,7 @@ export type Database = {
           name: string
           org_id: string
           qr_code: string
+          referral_signup_token: string
           region_id: string | null
           sms_number: string | null
           state: string | null
@@ -645,6 +646,7 @@ export type Database = {
           name: string
           org_id: string
           qr_code?: string
+          referral_signup_token?: string
           region_id?: string | null
           sms_number?: string | null
           state?: string | null
@@ -666,6 +668,7 @@ export type Database = {
           name?: string
           org_id?: string
           qr_code?: string
+          referral_signup_token?: string
           region_id?: string | null
           sms_number?: string | null
           state?: string | null
@@ -2410,6 +2413,7 @@ export type Database = {
           org_id: string
           payout_days: number
           require_before_hire: boolean
+          self_signup_enabled: boolean
           updated_at: string
           updated_by: string | null
         }
@@ -2423,6 +2427,7 @@ export type Database = {
           org_id: string
           payout_days?: number
           require_before_hire?: boolean
+          self_signup_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -2436,6 +2441,7 @@ export type Database = {
           org_id?: string
           payout_days?: number
           require_before_hire?: boolean
+          self_signup_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -2448,6 +2454,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referral_signup_limits: {
+        Row: {
+          attempts: number
+          rate_key: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          rate_key: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          rate_key?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       referral_tiers: {
         Row: {
@@ -3108,6 +3132,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_referral_employees: {
+        Args: { _org: string; _rows: Json }
+        Returns: Json
+      }
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
       is_store_staff_for: {
@@ -3152,6 +3180,29 @@ export type Database = {
         Args: { _org: string; _quarter: string }
         Returns: string
       }
+      referral_employee_directory: {
+        Args: {
+          _department?: string
+          _offset?: number
+          _org: string
+          _search?: string
+          _sort?: string
+          _store?: string
+        }
+        Returns: Json
+      }
+      referral_employee_signup: {
+        Args: {
+          _email: string
+          _first: string
+          _last: string
+          _phone: string
+          _rate_key: string
+          _role: string
+          _token: string
+        }
+        Returns: Json
+      }
       referral_word_match: {
         Args: { _text: string; _words: string[] }
         Returns: boolean
@@ -3162,6 +3213,18 @@ export type Database = {
           employee_name: string
           id: string
         }[]
+      }
+      register_referral_employee: {
+        Args: {
+          _department: string
+          _email: string
+          _name: string
+          _org: string
+          _phone: string
+          _role: string
+          _store: string
+        }
+        Returns: Json
       }
       resolve_event_coverage: { Args: { _code: string }; Returns: Json }
       resolve_scan: {

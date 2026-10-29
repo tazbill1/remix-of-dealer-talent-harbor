@@ -16,6 +16,7 @@ describe("role-based menu", () => {
   it("GMs keep stores, onboarding and events", () => {
     for (const p of ["/stores", "/new-hires", "/events", "/applicants"]) expect(canSeeNav(p, gm)).toBe(true);
   });
+  it("GMs and hiring managers can open their scoped referrals",()=>{expect(canSeeNav("/referrals",gm)).toBe(true);expect(canSeeNav("/referrals",hm)).toBe(true);});
   it("HR sees settings but Team stays group-admin only", () => {
     expect(canSeeNav("/status-rules", hr)).toBe(true);
     expect(canSeeNav("/team", hr)).toBe(false);

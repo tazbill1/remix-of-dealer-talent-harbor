@@ -17,9 +17,15 @@
     "rolldown": "1.2.1",
     "source-map-js": "1.2.2",
     "js-yaml": "4.3.2",
-    "@tanstack/router-generator": { "zod": "4.6.6" },
-    "@tanstack/router-plugin": { "zod": "4.6.6" },
-    "@tanstack/start-plugin-core": { "zod": "4.6.6" }
+    "@tanstack/router-generator": {
+      "zod": "4.6.6"
+    },
+    "@tanstack/router-plugin": {
+      "zod": "4.6.6"
+    },
+    "@tanstack/start-plugin-core": {
+      "zod": "4.6.6"
+    }
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.103",
@@ -73,6 +79,7 @@
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.575.0",
+    "papaparse": "^5.7.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",
@@ -94,6 +101,7 @@
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.16.5",
+    "@types/papaparse": "^5.5.2",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

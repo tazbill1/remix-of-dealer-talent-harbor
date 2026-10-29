@@ -15,7 +15,7 @@
 - Adverse-action tracking uses authenticated HR-authorized RLS actions, database business-day calculation and optimistic saves; no messaging or applicant stage changes. Why: human notice records stay separate from hiring decisions.
 - HR consent review uses authenticated RLS reads and can_post_jobs authorization; withdrawals update only revoked_at/revoked_source and verify the returned row. Why: preserve immutable evidence and prevent silent losses.
 - Bulk sends use the existing RPC and scoped audit; readiness checks caller/store access before service eligibility; self-only previews reuse staff delivery. Why: no preview writes/leaks; live bulk email awaits its provider.
-- Notes save per applicant and verify the returned row.
+- Referral enrollment rules: src/lib/AGENTS.md. Why: stable codes, scoped imports.
 - Onboarding: Hired trigger creates checklist; can_access_onboarding RLS; staff list /new-hires (/onboarding = group setup); new hires use /onboard/$token token RPCs, no file reads. Why: sensitive docs.
 - Calendar links open the Interview tab; per-interview RLS summaries.
 - Reports use separate authenticated RLS reads, RPC-verified roles and explicit manager assignments; math is in reports.ts and PDF capture uses semantic blocks. Why: preserve Analytics, deny unassigned managers, avoid chart splits.

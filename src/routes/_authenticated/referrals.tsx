@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Download, Pencil, Plus, QrCode } from "lucide-react";
+import { Copy, Pencil, Plus, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { canPostJobs } from "@/lib/jobs";
 import { isTestName } from "@/lib/display";
 import { bonusStatusLabel, bonusTotals, referralLink, referralReport, type ReportRow } from "@/lib/referrals";
-import { DEFAULT_SETTINGS, DrawingList, ProgramRules, TierSettings, TotalsTable, type TierRow } from "@/components/referral-program";
+import { DEFAULT_SETTINGS, DrawingList, TotalsTable } from "@/components/referral-program";
+import { directorySchema } from "@/lib/referral-enrollment";
+import { ReferralCsvUpload, StoreReferralSignup } from "@/components/referral-enrollment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,25 +41,37 @@ function ReferralsPage() {
   const org = useOrg();
   const qc = useQueryClient();
   const isHr = org.isPlatformAdmin || canPostJobs(org.role);
-  const canView = isHr || org.role === "regional_leader";
+  const manager = org.role === "dealer_manager" || org.role === "hiring_manager";
+  const canView = isHr || manager || org.role === "regional_leader";
+  const [search,setSearch] = useState(""), [storeFilter,setStoreFilter] = useState(""), [department,setDepartment] = useState(""), [sort,setSort] = useState("referrals"), [page,setPage] = useState(0);
+  const [debounced,setDebounced]=useState("");
+  useEffect(()=>{const id=setTimeout(()=>setDebounced(search),250);return()=>clearTimeout(id);},[search]);
+  const {data: directory,error: directoryError} = useQuery({queryKey:["referral-directory",org.orgId,debounced,storeFilter,department,sort,page],enabled:canView,queryFn:async()=>{
+    const {data,error}=await supabase.rpc("referral_employee_directory",{_org:org.orgId,_search:debounced,...(storeFilter?{_store:storeFilter}:{}),...(department?{_department:department}:{}),_sort:sort,_offset:page*50});
+    if(error)throw error;return directorySchema.parse(data);
+  }});
   const key = ["referrals", org.orgId];
-  const { data } = useQuery({
+  const { data, error: loadError } = useQuery({
     queryKey: key,
     enabled: canView,
     queryFn: async () => {
-      const [refs, stores, apps, bonuses, settings, tiers, entries, drawings, members] = await Promise.all([
-        supabase.from("referrers").select("id, employee_name, store_id, department, role_title, email, phone, referral_code, active").eq("org_id", org.orgId).order("employee_name"),
-        supabase.from("dealerships").select("id, name").eq("org_id", org.orgId).order("name"),
-        supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id", org.orgId),
-        supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id", org.orgId).order("due_date"),
-        supabase.from("referral_settings").select("payout_days, full_time_only, require_before_hire, excluded_roles, drawing_enabled, drawing_amount").eq("org_id", org.orgId).maybeSingle(),
-        supabase.from("referral_tiers").select("id, name, amount, covers, excludes, is_default, sort_order").eq("org_id", org.orgId).order("sort_order"),
+      // Read every page for existing reports, never silently truncate at the API's 1,000-row limit.
+      const allRefs: Referrer[]=[];
+      for(let offset=0;;offset+=1000){const result=await supabase.from("referrers").select("id, employee_name, store_id, department, role_title, email, phone, referral_code, active").eq("org_id",org.orgId).order("id").range(offset,offset+999);if(result.error)throw result.error;allRefs.push(...result.data);if(result.data.length<1000)break;}
+      const allApps=[];
+      for(let offset=0;;offset+=1000){const result=await supabase.from("applications").select("id, status, source, dealership_id, referrer_id, referred_by_text, full_name").eq("org_id",org.orgId).is("archived_at",null).order("id").range(offset,offset+999);if(result.error)throw result.error;allApps.push(...result.data);if(result.data.length<1000)break;}
+      const allBonuses=[];
+      for(let offset=0;;offset+=1000){const result=await supabase.from("referral_bonuses").select("id, applicant_id, referrer_id, amount, payout_stage, due_date, status, paid_at, tier_name, ineligible_reason").eq("org_id",org.orgId).order("id").range(offset,offset+999);if(result.error)throw result.error;allBonuses.push(...result.data);if(result.data.length<1000)break;}
+      const [stores, settings, entries, drawings, members] = await Promise.all([
+        supabase.from("dealerships").select("id, name, referral_signup_token").eq("org_id", org.orgId).order("name"),
+        supabase.from("referral_settings").select("payout_days, full_time_only, require_before_hire, excluded_roles, drawing_enabled, drawing_amount, self_signup_enabled").eq("org_id", org.orgId).maybeSingle(),
         supabase.from("referral_drawing_entries").select("id, quarter, applicant_id, referrer_id").eq("org_id", org.orgId).order("created_at"),
         supabase.from("referral_drawings").select("quarter, amount, winner_entry_id, entry_count, picked_by, picked_at").eq("org_id", org.orgId),
         supabase.from("org_members").select("user_id, email").eq("org_id", org.orgId),
       ]);
-      return { refs: (refs.data ?? []) as Referrer[], stores: stores.data ?? [], apps: apps.data ?? [], bonuses: bonuses.data ?? [],
-        settings: settings.data ?? DEFAULT_SETTINGS, tiers: (tiers.data ?? []) as TierRow[], entries: entries.data ?? [], drawings: drawings.data ?? [], members: members.data ?? [] };
+      if(stores.error||settings.error)throw new Error("Could not load referrals");
+      return { refs: allRefs, stores: stores.data ?? [], apps: allApps, bonuses: allBonuses,
+        settings: settings.data ?? {...DEFAULT_SETTINGS,self_signup_enabled:false}, entries: entries.data ?? [], drawings: drawings.data ?? [], members: members.data ?? [] };
     },
   });
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -65,6 +79,7 @@ function ReferralsPage() {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   if (!canView) return <div className="p-2 text-muted-foreground">Referrals are managed by HR, recruiters and group admins.</div>;
+  if (loadError) return <p role="alert" className="text-destructive">Could not load referrals. Please try again.</p>;
   if (!data) return <div className="text-muted-foreground">Loading...</div>;
 
   const storeName = (id: string | null) => data.stores.find((s) => s.id === id)?.name ?? "All stores";
@@ -75,7 +90,7 @@ function ReferralsPage() {
   const realIds = new Set(realApps.map((a) => a.id));
   const totals = bonusTotals(data.bonuses.filter((b) => realIds.has(b.applicant_id)), new Map(data.apps.map((a) => [a.id, a.dealership_id])), data.stores);
   const memberEmail = (uid: string | null) => data.members.find((m) => m.user_id === uid)?.email ?? "HR";
-  const refresh = () => qc.invalidateQueries({ queryKey: key });
+  const refresh = () => {qc.invalidateQueries({ queryKey: key });qc.invalidateQueries({ queryKey: ["referral-directory",org.orgId] });};
 
   async function save(d: Draft) {
     if (!d.employee_name.trim()) return toast.error("Add the employee's name.");
@@ -108,26 +123,35 @@ function ReferralsPage() {
           <h1 className="text-3xl">Referrals</h1>
           <p className="text-sm text-muted-foreground">Give each employee a personal link and QR code. Referred applicants are tagged automatically.</p>
         </div>
-        {isHr && <Button onClick={() => setDraft({ ...EMPTY })}><Plus />Add employee</Button>}
+        {isHr && <div className="flex flex-wrap gap-2"><ReferralCsvUpload orgId={org.orgId} onSaved={refresh}/><Button onClick={() => setDraft({ ...EMPTY })}><Plus />Add employee</Button></div>}
       </div>
 
       <section className="space-y-3">
         <h2 className="text-xl">Employees who refer</h2>
-        <div className="divide-y rounded-2xl border bg-background">
-          {data.refs.length === 0 && <p className="p-4 text-sm text-muted-foreground">No employees yet. Add one to get their referral link.</p>}
-          {data.refs.map((r) => {
+        {(isHr||manager)&&<StoreReferralSignup stores={data.stores}/>}
+        {isHr&&<Link to="/settings" search={{tab:"referrals"}} className="inline-block text-sm text-sapphire underline">Employee referral bonus settings</Link>}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <Input aria-label="Search employees" placeholder="Search employees" value={search} onChange={e=>{setSearch(e.target.value);setPage(0);}}/>
+          <select aria-label="Filter employees by store" className={selectCls} value={storeFilter} onChange={e=>{setStoreFilter(e.target.value);setPage(0);}}><option value="">All stores</option>{data.stores.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>
+          <select aria-label="Filter employees by department" className={selectCls} value={department} onChange={e=>{setDepartment(e.target.value);setPage(0);}}><option value="">All departments</option>{[...new Set(data.refs.flatMap(r=>r.department?[r.department]:[]))].sort().map(d=><option key={d}>{d}</option>)}</select>
+          <select aria-label="Sort employees" className={selectCls} value={sort} onChange={e=>{setSort(e.target.value);setPage(0);}}><option value="referrals">Most referrals</option><option value="hires">Most hires</option><option value="name">Name</option></select>
+        </div>
+        {directoryError&&<p role="alert" className="text-destructive">Could not load employees. Please try again.</p>}
+        <div className="divide-y rounded-md border bg-background">
+          {directory?.total === 0 && <p className="p-4 text-sm text-muted-foreground">No matching employees.</p>}
+          {directory?.rows.map((r) => {
             const link = referralLink(origin, org.orgSlug, r.referral_code);
             return (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
+              <div key={r.id} data-employee-row className="grid min-w-0 gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
                 <div className="min-w-0">
                   <div className={cn("font-semibold", !r.active && "text-muted-foreground line-through")}>{r.employee_name}</div>
                   <div className="text-xs text-muted-foreground">{storeName(r.store_id)}{r.role_title ? ` · ${r.role_title}` : ""}{r.department ? ` · ${r.department}` : ""} · Code {r.referral_code}{r.active ? "" : " · Inactive"}</div>
-                  <div className="truncate text-xs text-sapphire">{link}</div>
                 </div>
+                <div className="text-xs text-muted-foreground">{r.referrals} referrals · {r.hires} hires</div>
                 <div className="flex flex-wrap gap-1">
                   <Button size="sm" variant="outline" onClick={() => copy(link, "Referral link")}><Copy />Copy link</Button>
                   <Button size="sm" variant="outline" onClick={() => setQrFor(r)}><QrCode />QR code</Button>
-                  {isHr && <Button size="sm" variant="ghost" aria-label={`Edit ${r.employee_name}`} onClick={() => setDraft({
+                  {(isHr||manager) && <Button size="sm" variant="ghost" aria-label={`Edit ${r.employee_name}`} onClick={() => setDraft({
                     id: r.id, employee_name: r.employee_name, store_id: r.store_id ?? "", department: r.department ?? "", role_title: r.role_title ?? "",
                     email: r.email ?? "", phone: r.phone ?? "", active: r.active,
                   })}><Pencil />Edit</Button>}
@@ -136,14 +160,11 @@ function ReferralsPage() {
             );
           })}
         </div>
+        {!!directory&&<div className="flex items-center justify-between gap-2"><Button variant="outline" disabled={page===0} onClick={()=>setPage(page-1)}>Previous</Button><span className="text-xs">{directory.total} employees · Page {page+1} / {Math.max(1,Math.ceil(directory.total/50))}</span><Button variant="outline" disabled={(page+1)*50>=directory.total} onClick={()=>setPage(page+1)}>Next</Button></div>}
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl">Bonuses</h2>
-        <h3 className="font-semibold">Bonus tiers</h3>
-        <TierSettings key={data.tiers.map((t) => t.id).join()} orgId={org.orgId} tiers={data.tiers} canEdit={isHr} onSaved={refresh} />
-        <h3 className="font-semibold">Program rules</h3>
-        <ProgramRules orgId={org.orgId} initial={data.settings} canEdit={isHr} onSaved={refresh} />
         <div className="overflow-x-auto rounded-2xl border bg-background">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground"><tr>
@@ -204,7 +225,7 @@ function ReferralsPage() {
               <div className="space-y-1.5"><Label htmlFor="rn">Employee name</Label><Input id="rn" required value={draft.employee_name} onChange={(e) => setDraft({ ...draft, employee_name: e.target.value })} /></div>
               <div className="space-y-1.5"><Label htmlFor="rs">Store (optional)</Label>
                 <select id="rs" className={selectCls} value={draft.store_id} onChange={(e) => setDraft({ ...draft, store_id: e.target.value })}>
-                  <option value="">All stores</option>{data.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {isHr&&<option value="">All stores</option>}{data.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select></div>
               <div className="space-y-1.5"><Label htmlFor="rr">Role / title (optional)</Label><Input id="rr" placeholder="e.g. Service Technician" value={draft.role_title} onChange={(e) => setDraft({ ...draft, role_title: e.target.value })} /></div>
               <div className="space-y-1.5"><Label htmlFor="rd">Department (optional)</Label><Input id="rd" value={draft.department} onChange={(e) => setDraft({ ...draft, department: e.target.value })} /></div>

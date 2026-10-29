@@ -136,6 +136,13 @@
 
 .integration-card { height: 30rem; }
 
+@media print {
+  body:has([data-referral-print]) * { visibility: hidden; }
+  body:has([data-referral-print]) [data-referral-print], body:has([data-referral-print]) [data-referral-print] * { visibility: visible; }
+  body:has([data-referral-print]) [data-referral-print] { position: fixed; inset: 0; padding: 2rem; }
+  body:has([data-referral-print]) [data-referral-print] a, body:has([data-referral-print]) [data-referral-print] button { display: none; }
+}
+
 /* All sticky save bars share this marker, including when Save is disabled. */
 @media (max-width: 767px) {
   body:has([data-sticky-save-bar]) .ask-launcher {

@@ -1,5 +1,11 @@
 # WerkandMe Hiring roadmap
 
+## Scalable referrals
+- [x] Database first applied/verified: group signup switch (ABC ON, LG OFF), 13 store tokens, indexes, service-only duplicate-safe signup and durable limit, HR-only 250-row import batches, RLS directory pages 50 employees; assigned managers may edit only accessible stores.
+- [x] Public /refer/join/$token returns personal link/QR; Referrals has store signup link/printable QR, HR CSV preview/sample/import and compact search/store/department/sort list with Copy/QR/Edit. Bonus tiers/rules moved exclusively to Settings > Employee referral bonus; existing data unchanged.
+- [x] 41 targeted tests pass, including 1,200-row CSV preview; desktop/360/390 actual signup/reuse, search/store/sort/department, edits, duplicate CSV, QR/sample downloads, print sheet and Settings verified. One CSV employee imported; one signup employee created. Existing Bill Jones code displayed and stored on one fake QA applicant; later submits intercepted and preserved QR attribution. The early test unexpectedly saved that fake applicant and generated one simulated confirmation plus one blocked SMS (no delivery); records retained. Build OK, not published.
+- [ ] Manager-account browser QA awaits another user's approved session; source/RLS inspected but no real manager browser verification. Large real 1,000+ directory/import load not exercised against production data; pure 1,200-row preview tested. Shared store tokens intentionally provide unverified instant signup/duplicate link recovery; use staff-only distribution. Published signup URLs will not work until app changes are published.
+
 ## Store missing details
 - [x] Specific red warnings use existing required fields; above three show first two plus remainder and tap-open full list. Ten tests pass; signed-in desktop/360/390 verified in both groups, including read-only mocked overflow list; build OK.
 - [x] Filled only empty manager phones on ABC Houston/Katy/Sugar Land and empty manager names/phones on LG Mercedes Dundee/Subaru Columbus/VW Easton. Existing values and optional contacts untouched; all store warnings cleared. Both groups remain email/text practice; no sends or publishing.

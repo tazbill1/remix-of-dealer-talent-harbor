@@ -55,6 +55,7 @@ import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authen
 import { Route as ApiSmsInboundRouteImport } from './routes/api/sms/inbound'
 import { Route as ApiSmsStatusRouteImport } from './routes/api/sms/status'
 import { Route as COrgSlugIndexRouteImport } from './routes/c.$orgSlug.index'
+import { Route as ReferJoinTokenRouteImport } from './routes/refer.join.$token'
 import { Route as ApiPublicBoldsignWebhookRouteImport } from './routes/api/public/boldsign/webhook'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronEscalateRouteImport } from './routes/api/public/cron/escalate'
@@ -309,6 +310,11 @@ const COrgSlugIndexRoute = COrgSlugIndexRouteImport.update({
   path: '/c/$orgSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferJoinTokenRoute = ReferJoinTokenRouteImport.update({
+  id: '/refer/join/$token',
+  path: '/refer/join/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBoldsignWebhookRoute =
   ApiPublicBoldsignWebhookRouteImport.update({
     id: '/api/public/boldsign/webhook',
@@ -441,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
+  '/refer/join/$token': typeof ReferJoinTokenRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
+  '/refer/join/$token': typeof ReferJoinTokenRoute
   '/c/$orgSlug': typeof COrgSlugIndexRoute
   '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
@@ -568,6 +576,7 @@ export interface FileRoutesById {
   '/_authenticated/stores_/$storeId': typeof AuthenticatedStoresStoreIdRoute
   '/api/sms/inbound': typeof ApiSmsInboundRoute
   '/api/sms/status': typeof ApiSmsStatusRoute
+  '/refer/join/$token': typeof ReferJoinTokenRoute
   '/c/$orgSlug/': typeof COrgSlugIndexRoute
   '/api/public/boldsign/webhook': typeof ApiPublicBoldsignWebhookRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
@@ -633,6 +642,7 @@ export interface FileRouteTypes {
     | '/stores/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
+    | '/refer/join/$token'
     | '/c/$orgSlug/'
     | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
@@ -695,6 +705,7 @@ export interface FileRouteTypes {
     | '/stores/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
+    | '/refer/join/$token'
     | '/c/$orgSlug'
     | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
@@ -759,6 +770,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stores_/$storeId'
     | '/api/sms/inbound'
     | '/api/sms/status'
+    | '/refer/join/$token'
     | '/c/$orgSlug/'
     | '/api/public/boldsign/webhook'
     | '/api/public/calendar/$token'
@@ -795,6 +807,7 @@ export interface RootRouteChildren {
   UTokenRoute: typeof UTokenRoute
   ApiSmsInboundRoute: typeof ApiSmsInboundRoute
   ApiSmsStatusRoute: typeof ApiSmsStatusRoute
+  ReferJoinTokenRoute: typeof ReferJoinTokenRoute
   COrgSlugIndexRoute: typeof COrgSlugIndexRoute
   ApiPublicBoldsignWebhookRoute: typeof ApiPublicBoldsignWebhookRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
@@ -1138,6 +1151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof COrgSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/refer/join/$token': {
+      id: '/refer/join/$token'
+      path: '/refer/join/$token'
+      fullPath: '/refer/join/$token'
+      preLoaderRoute: typeof ReferJoinTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/boldsign/webhook': {
       id: '/api/public/boldsign/webhook'
       path: '/api/public/boldsign/webhook'
@@ -1346,6 +1366,7 @@ const rootRouteChildren: RootRouteChildren = {
   UTokenRoute: UTokenRoute,
   ApiSmsInboundRoute: ApiSmsInboundRoute,
   ApiSmsStatusRoute: ApiSmsStatusRoute,
+  ReferJoinTokenRoute: ReferJoinTokenRoute,
   COrgSlugIndexRoute: COrgSlugIndexRoute,
   ApiPublicBoldsignWebhookRoute: ApiPublicBoldsignWebhookRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
