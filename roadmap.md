@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## End-to-end notes/interviews/feedback QA
+- [ ] Admin desktop/360/390: notes save/list, filters/no overflow, Reschedule and feedback save/summary/timeline.
+- [ ] Store-manager desktop/360/390: same flows for assigned stores and deny other-store feedback.
+- [ ] Fix only verified regressions; no real messages or publishing.
+
 ## Quick interview feedback
 - [x] Extended scorecards first with independent quick-feedback fields, authenticated author/store-scoped save and one atomically maintained timeline summary; existing kit scores/submission preserved.
 - [x] Added mobile star/check/recommendation/notes autosave form and summaries on Interviews and applicant panel, with Saved, retry errors and pending-save close protection.
