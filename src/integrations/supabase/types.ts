@@ -3225,6 +3225,39 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      save_quick_interview_feedback: {
+        Args: { _feedback: Json; _interview: string; _org: string }
+        Returns: {
+          answers: Json
+          application_id: string
+          author_id: string
+          author_name: string | null
+          created_at: string
+          feedback_culture: boolean | null
+          feedback_event_id: string | null
+          feedback_experience: boolean | null
+          feedback_notes: string | null
+          feedback_on_time: boolean | null
+          feedback_rating: number | null
+          feedback_recommend: boolean | null
+          feedback_recommendation: string | null
+          feedback_updated_at: string | null
+          id: string
+          interview_id: string
+          kit_id: string | null
+          notes: string | null
+          org_id: string
+          recommendation: string | null
+          submitted_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "interview_scorecards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       seed_onboarding_template: { Args: { _org: string }; Returns: undefined }
       seed_referral_program: { Args: { _org: string }; Returns: undefined }
       seed_status_reminder_rules: { Args: { _org: string }; Returns: undefined }
