@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Applicant note clarity
+- [x] Existing notes saved to applications.notes (15 nonempty before change), not timeline; authenticated read/update and event insert grants/policies confirmed. Existing roles/store scope unchanged.
+- [x] add_applicant_note is security invoker and atomically appends original notes plus a dated authored event; immediate saved list and timeline cache, Note saved, cleared draft and retained failed drafts. Prior notes retained with unknown author/time labeled.
+- [x] Eleven tests pass including every staff role and unassigned/cross-org denials. Signed-in Marcus Delgado QA note saved, shown immediately, and reloaded successfully; one clearly labeled QA note retained on fake applicant. No messages, other applicants or publishing.
+
 ## Job manager accounts and escalation defaults
 - [x] Added store-scoped manager user IDs and legacy backfill before screens: 1 of 7 typed assignments matched (LG Subaru Cody); 6 unmatched left blank, 5 already blank. Derived name retained only for existing report/contact consumers.
 - [x] Job create/edit uses store-assigned GM/hiring-manager accounts; multi-store choices cover every picked store. Invite reuses unchanged admin-only TeamInvites with stores preselected. Escalation defaults store HR/recruiter/admin then group recruiter/admin, preserves explicit overrides; ABC defaults Aaron Sheeks (no saved phone).

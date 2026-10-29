@@ -4,19 +4,20 @@ import { ApplicantNotes } from "@/components/applicant-notes";
 afterEach(cleanup);
 describe("Applicant notes", () => {
   it("saves the typed note on an explicit click and confirms success", async () => {
-    const save = vi.fn().mockResolvedValue(true);
+    const save = vi.fn().mockResolvedValue({ id: "1", message: "Call after 4 pm", created_at: "2026-10-29T02:00:00Z", author: "Staff member" });
     render(<ApplicantNotes initialNotes="" onSave={save}/>);
     fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "Call after 4 pm" } });
     fireEvent.click(screen.getByRole("button", { name: "Save notes" }));
     await waitFor(() => expect(save).toHaveBeenCalledWith("Call after 4 pm"));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Notes saved"));
+    await waitFor(() => expect((screen.getByLabelText("Notes") as HTMLTextAreaElement).value).toBe(""));
+    expect(screen.getByRole("list", { name: "Saved notes" }).textContent).toContain("Call after 4 pm");
   });
   it("retains the draft and allows retry after a rejected save", async () => {
-    const save = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const save = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "2", message: "New note", created_at: "2026-10-29T02:00:00Z", author: "Staff member" });
     render(<ApplicantNotes initialNotes="Old note" onSave={save}/>);
     fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "New note" } });
     fireEvent.click(screen.getByRole("button", { name: "Save notes" }));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toContain("weren’t saved"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save notes" })).not.toBeDisabled());
     expect((screen.getByLabelText("Notes") as HTMLTextAreaElement).value).toBe("New note");
     fireEvent.click(screen.getByRole("button", { name: "Save notes" }));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
@@ -26,7 +27,7 @@ describe("Applicant notes", () => {
     const {rerender}=render(<ApplicantNotes key="a" initialNotes="Jane's note" onSave={save}/>);
     fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "Jane's draft" } });
     rerender(<ApplicantNotes key="b" initialNotes="Sam's note" onSave={save}/>);
-    expect((screen.getByLabelText("Notes") as HTMLTextAreaElement).value).toBe("Sam's note");
+    expect((screen.getByLabelText("Notes") as HTMLTextAreaElement).value).toBe("");
     expect(save).not.toHaveBeenCalled();
   });
 });

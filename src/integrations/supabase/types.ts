@@ -2937,6 +2937,24 @@ export type Database = {
       }
     }
     Functions: {
+      add_applicant_note: {
+        Args: { _app: string; _note: string; _org: string }
+        Returns: {
+          actor_id: string | null
+          application_id: string
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          org_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "application_events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       add_business_days: { Args: { _d: string; _n: number }; Returns: string }
       audit_bulk_unavailable: {
         Args: { _batch: string; _count: number }
