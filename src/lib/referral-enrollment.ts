@@ -30,7 +30,9 @@ export function previewEmployees(csv: string, stores: { id: string; name: string
   const parsed = Papa.parse<Record<string,string>>(csv, { header: true, skipEmptyLines: "greedy", transformHeader: (s) => s.replace(/^\uFEFF/, "").trim().toLowerCase() });
   if (parsed.data.length > 5000) throw new Error("Upload at most 5,000 employees at a time.");
   if (!["name", "store", "role"].every((h) => parsed.meta.fields?.includes(h))) throw new Error("CSV needs name, store and role columns, plus email or phone.");
-  const seen = [...existing];
+  const names=new Set(existing.map(e=>`${e.store_id}|${norm(e.employee_name)}`));
+  const emails=new Set(existing.filter(e=>e.email).map(e=>norm(e.email)));
+  const phones=new Set(existing.filter(e=>e.phone).map(e=>phone(e.phone)));
   return parsed.data.map((r, i) => {
     const store = stores.filter((s) => norm(s.name) === norm(r["store"] ?? "") || s.id === r["store"]?.trim());
     const result = employeeSchema.safeParse({ name: r["name"] ?? "", store_id: store[0]?.id ?? "", role: r["role"] ?? "", department: r["department"] ?? "", email: r["email"] ?? "", phone: r["phone"] ?? "" });
@@ -38,8 +40,10 @@ export function previewEmployees(csv: string, stores: { id: string; name: string
     if (store.length !== 1) errors.push("Store must match one store in this group.");
     if (!result.success) errors.push(...result.error.issues.filter((e) => e.path[0] !== "store_id").map((e) => `${e.path[0]}: ${e.message}`));
     if (errors.length || !result.success) return { row: i+2, input: null, name: r["name"] ?? "", store: r["store"] ?? "", status: "error", errors };
-    const duplicate = employeeDuplicate(result.data, seen);
-    if (!duplicate) seen.push({ employee_name: result.data.name, store_id: result.data.store_id, email: result.data.email, phone: result.data.phone });
+    const input=result.data;
+    const nameKey=`${input.store_id}|${norm(input.name)}`;
+    const duplicate=names.has(nameKey)||(!!input.email&&emails.has(norm(input.email)))||(!!input.phone&&phones.has(phone(input.phone)));
+    if (!duplicate) {names.add(nameKey);if(input.email)emails.add(norm(input.email));if(input.phone)phones.add(phone(input.phone));}
     return { row: i+2, input: result.data, name: result.data.name, store: r["store"] ?? "", status: duplicate ? "duplicate" : "ready", errors: [] };
   });
 }
