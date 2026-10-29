@@ -1,10 +1,11 @@
 # WerkandMe Hiring roadmap
 
 ## Pre-demo cleanup
-- [ ] ABC email Demo/text Demo; verify simulated reschedule, bulk and automatic email history without live delivery.
-- [ ] Messages simulated label is Sent (demo); check applicant add button and red warning without unrelated styling changes.
-- [ ] Revoke pending test-gm-dallas@example.com invite.
-- [ ] Review current critical/high security and dependencies; apply safe fixes, record risky deferrals.
+- [x] ABC email/text both practice; signed-in Demo reschedule notice and Both bulk send verified in Messages/timeline. Alicia original time restored; existing applicant unsubscribe retained. Automatic Demo delivery mock proves no provider call and timeline insert. Verification added 3 simulated notices and 1 blocked notice, no live delivery.
+- [x] Messages simulated label is Sent (demo). Exactly one Add candidate button already exists; no Add applicant control. Previously Do Not Hire red warning unchanged; attention/errors also remain red, so it is not the only red element.
+- [x] Revoked pending test-gm-dallas@example.com invite; checked saved revoked_at.
+- [x] Current persisted scans have no active findings; fresh basic scan clear (no deep code scan). All public tables have RLS. Manual review fixed recording processing while disabled; regression rejects authorized reader with 403 before AI. Patched source-map-js 1.2.2, js-yaml 4.3.2 and transitive Zod 4.6.6; rescanned. All 433 tests pass; build OK. No finding IDs available to mark fixed; no ignores or publishing.
+- [ ] Direct Zod 3 high memory-exhaustion advisory remains: scanner requires major upgrade to 4.6.6, deferred before demo due schema/form compatibility risk. Moderate Seroval advisories outside requested critical/high scope remain; coordinated framework update later.
 
 ## Employee referral bonus clarity
 - [x] Job create/edit bonus picker is in its own bottom section with real tier amount/org payout days and HR/admin Settings link. Settings reuses existing tier/rule editors; referred applicant Details shows read-only bonus, preferring saved hire award. Public job display unchanged. Signed-in create/edit/Settings/Victor panel and public posting verified; 21 targeted tests pass, build OK. No database changes, saves, messages or publishing.
