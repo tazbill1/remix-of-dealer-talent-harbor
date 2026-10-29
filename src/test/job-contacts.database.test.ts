@@ -12,7 +12,11 @@ beforeAll(async () => {
   await db.unsafe(String(fn["definition"]).replace("FUNCTION public.", "FUNCTION pg_temp.").replace("SECURITY DEFINER", "SECURITY INVOKER"));
   const [guard] = await db`select pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname='guard_job_contacts'`;
   if (!guard) throw new Error("Missing job contact guard");
-  await db.unsafe(String(guard["definition"]).replace("FUNCTION public.", "FUNCTION pg_temp.").replace("SECURITY DEFINER", "SECURITY INVOKER").replaceAll("public.job_manager_is_eligible(", "pg_temp.job_manager_is_eligible("));
+  // Diagnostics cannot read auth. Supply display-only fixtures privately without widening grants.
+  await db`create temporary table if not exists job_contact_users (id uuid,raw_user_meta_data jsonb,phone text)`;
+  await db`delete from job_contact_users`;
+  await db`insert into job_contact_users select user_id,jsonb_build_object('full_name',case email when 'tom@werkandme.com' then 'Tom Azbill' when 'aaron@akillion.us' then 'Aaron Sheeks' else email end),null from public.org_members`;
+  await db.unsafe(String(guard["definition"]).replace("FUNCTION public.", "FUNCTION pg_temp.").replace("SECURITY DEFINER", "SECURITY INVOKER").replaceAll("public.job_manager_is_eligible(", "pg_temp.job_manager_is_eligible(").replaceAll("auth.users", "pg_temp.job_contact_users"));
   await db`create temporary table if not exists job_contact_guard_test (like public.jobs including defaults)`;
   await db`create or replace trigger job_contact_guard_test before insert or update on job_contact_guard_test for each row execute function pg_temp.guard_job_contacts()`;
 });
