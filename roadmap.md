@@ -1,8 +1,8 @@
 # WerkandMe Hiring roadmap
 
 ## Mobile sticky save bars
-- [ ] Keep Ask clear of all sticky save bars; add bottom safe-area spacing without changing actions.
-- [ ] Verify Automatic texts and Status rules at 360px/390px, including dirty and discarded states; no publishing.
+- [x] Global mobile rule hides Ask whenever a marked sticky save bar is present; both existing bars and Ask respect bottom safe-area spacing. Save controls stay fixed-size while Unsaved changes can wrap.
+- [x] Automatic texts and Status rules tested at 360px/390px: dirty Save enabled, unobstructed hit-test, no bar overflow; Discard restores unchanged settings and Ask returns off save-bar pages. No settings saved or publishing; build OK.
 
 ## End-to-end notes/interviews/feedback QA
 - [x] Admin desktop/360/390: notes saved/cleared/listed, store/status filters worked, feedback Saved/reloaded and one timeline summary verified. Real Demo reschedule updated the same interview and was restored; no real messages.
