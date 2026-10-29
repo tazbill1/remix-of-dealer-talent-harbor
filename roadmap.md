@@ -1,5 +1,10 @@
 # WerkandMe Hiring roadmap
 
+## Recruiting event coverage
+- [ ] Apply additive coverage schema, legacy backfill and scoped authorization first.
+- [ ] Update event picker and public QR/short-link jobs list; preserve event attribution.
+- [ ] Verify event/store analytics, admin/GM scopes, existing links and multi-store scans.
+
 ## Applicant follow-up
 - [x] Verified Ask answered authenticated Dallas interview question (4 Interviewing).
 - [x] Quick chips and last-contacted filters; tested sent/demo versus queued/failed, unanswered contacts, calendar week and month boundaries.
