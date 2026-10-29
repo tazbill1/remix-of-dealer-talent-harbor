@@ -40,4 +40,12 @@ describe.skipIf(!db)("quick feedback database permissions", () => {
   it("unassigned GMs cannot save", () => check("dealer_manager",false,false));
   it("unassigned hiring managers cannot save", () => check("hiring_manager",false,false));
   it("regional leaders cannot save quick feedback", () => check("regional_leader",true,false));
+  it("platform admins can see group feedback without membership", async () => {
+    if (!db) return;
+    const [admin] = await db`select user_id from public.platform_admins limit 1`;
+    const [iv] = await db`select id,org_id from public.interviews limit 1`;
+    if (!admin || !iv) throw new Error("Missing admin/interview fixtures");
+    const [allowed] = await db`select pg_temp.can_interview_feedback(${iv["org_id"]},${iv["id"]},${admin["user_id"]}) allowed`;
+    expect(allowed?.["allowed"]).toBe(true);
+  });
 });

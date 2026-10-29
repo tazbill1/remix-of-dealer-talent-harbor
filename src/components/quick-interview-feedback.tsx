@@ -25,12 +25,12 @@ export function QuickFeedbackSummary({ appId, interviewId }: { appId: string; in
 export function QuickFeedbackButton({ appId, interviewId, orgId }: { appId: string; interviewId: string; orgId: string }) {
   const [open, setOpen] = useState(false);
   const { data: me } = useQuery(meQuery);
-  const { data: cards = [] } = useFeedback(appId);
+  const { data: cards = [], isPending, isError } = useFeedback(appId);
   const { data: allowed } = useQuery({ queryKey: ["can-feedback", orgId, interviewId, me?.user.id], enabled: !!me,
     queryFn: async () => { if (!me) return false; const { data, error } = await supabase.rpc("can_interview_feedback", { _org: orgId, _interview: interviewId, _uid: me.user.id }); if (error) throw error; return data; } });
   if (!allowed) return null;
   const mine = cards.find((c) => c.interview_id === interviewId && c.author_id === me?.user.id);
-  return <><Button size="sm" variant="outline" className="min-h-11" onClick={() => setOpen(true)}>Leave feedback</Button>
+  return <><Button size="sm" variant="outline" className="min-h-11" disabled={isPending || isError} onClick={() => setOpen(true)}>Leave feedback</Button>
     {open && <FeedbackForm orgId={orgId} interviewId={interviewId} appId={appId} existing={mine} onClose={() => setOpen(false)} />}</>;
 }
 function FeedbackForm({ orgId, interviewId, appId, existing, onClose }: { orgId: string; interviewId: string; appId: string; existing: Card | undefined; onClose: () => void }) {
@@ -58,7 +58,7 @@ function FeedbackForm({ orgId, interviewId, appId, existing, onClose }: { orgId:
     });
   }
   function change(patch: Partial<QuickFeedback>) { const next = { ...latest.current, ...patch }; latest.current = next; setDraft(next); save(next); }
-  return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}><DialogContent className="max-h-[90dvh] overflow-y-auto p-4 sm:p-6">
+  return <Dialog open onOpenChange={(open) => { if (!open && status !== "Saving…" && !error) onClose(); }}><DialogContent className="max-h-[90dvh] overflow-y-auto p-4 sm:p-6">
     <DialogHeader><DialogTitle>Leave feedback</DialogTitle></DialogHeader>
     <div className="space-y-4">
       <div className="flex min-h-5 items-center justify-between text-sm"><span>Overall rating</span><span role="status" className="text-muted-foreground">{status}</span></div>

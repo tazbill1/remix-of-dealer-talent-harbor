@@ -102,7 +102,7 @@ export function ScorecardButton({
   const [open, setOpen] = useState(false);
   const { data: me } = useQuery(meQuery);
   const { data: cards = [] } = useScorecards(appId);
-  const mine = cards.find((c) => c.interview_id === interviewId && c.author_id === me?.user.id);
+  const mine = cards.find((c) => c.interview_id === interviewId && c.author_id === me?.user.id && (c.submitted_at || c.kit_id || c.notes || c.recommendation || parseAnswers(c.answers).length > 0));
   return (
     <>
       <Button
