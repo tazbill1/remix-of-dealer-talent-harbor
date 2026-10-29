@@ -64,3 +64,14 @@ describe("list AI filter-only contract", () => {
     expect(Object.keys(patch)).not.toContain("applicant"); expect(Object.keys(patch)).not.toContain("selected");
   });
 });
+describe("follow-up: stored message directions", () => {
+  it("reads the saved 'out'/'in' directions for No reply in 3+ days", () => {
+    const now = Date.now(); const ago = (d: number) => new Date(now - d * 86400000).toISOString();
+    const idx = followUpIndex([{ application_id: "x", direction: "out", status: "sent", created_at: ago(4), sent_at: ago(4) }], [], now);
+    expect(matchesFollowUp(idx["x"], { noReply: "3" }, now)).toBe(true);
+    const replied = followUpIndex([
+      { application_id: "y", direction: "out", status: "sent", created_at: ago(4), sent_at: ago(4) },
+      { application_id: "y", direction: "in", status: "received", created_at: ago(3), sent_at: null }], [], now);
+    expect(matchesFollowUp(replied["y"], { noReply: "3" }, now)).toBe(false);
+  });
+});

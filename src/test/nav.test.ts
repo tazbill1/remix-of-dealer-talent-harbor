@@ -33,7 +33,7 @@ describe("role-based menu", () => {
 import { settingsTabsFor } from "@/lib/nav";
 describe("settings tabs", () => {
   it("HR sees every settings tab", () => {
-    expect(settingsTabsFor(hr).map((t) => t.id)).toEqual(["rules", "templates", "texts", "onboarding", "videos", "referrals"]);
+    expect(settingsTabsFor(hr).map((t) => t.id)).toEqual(["rules", "templates", "texts", "onboarding", "videos", "referrals", "careers"]);
   });
   it("GMs and regional leaders only see Videos", () => {
     expect(settingsTabsFor(gm).map((t) => t.id)).toEqual(["videos"]);

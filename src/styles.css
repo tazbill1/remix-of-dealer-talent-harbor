@@ -40,6 +40,13 @@
   --color-ultramarine: var(--ultramarine);
   --color-lime: var(--lime);
   --color-chartreuse: var(--chartreuse);
+  --color-abc-red: oklch(0.55 0.22 27);
+  --color-abc-red-dark: oklch(0.45 0.19 27);
+  --color-abc-black: oklch(0.17 0.005 270);
+  --color-abc-yellow: oklch(0.86 0.17 92);
+  --color-abc-gray: oklch(0.93 0.004 270);
+  --color-abc-gray-dark: oklch(0.55 0.01 270);
+  --color-abc-white: oklch(1 0 0);
   --color-success: var(--lime);
   --color-status-connected: var(--status-connected);
   --color-status-connected-foreground: var(--status-connected-foreground);

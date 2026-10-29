@@ -16,11 +16,11 @@ export function followUpIndex(messages: ContactMessage[], interviews: { applicat
   const row = (id: string) => index[id] ?? (index[id] = { lastContacted: null, lastReply: null, interviewThisWeek: false });
   for (const m of messages) {
     const r = row(m.application_id);
-    if (m.direction === "outbound" && ["sent", "delivered", "simulated"].includes(m.status)) {
+    if ((m.direction === "out" || m.direction === "outbound") && ["sent", "delivered", "simulated"].includes(m.status)) {
       const at = m.sent_at ?? m.created_at;
       if (!r.lastContacted || Date.parse(at) > Date.parse(r.lastContacted)) r.lastContacted = at;
     }
-    if (m.direction === "inbound" && m.status !== "failed") {
+    if ((m.direction === "in" || m.direction === "inbound") && m.status !== "failed") {
       if (!r.lastReply || Date.parse(m.created_at) > Date.parse(r.lastReply)) r.lastReply = m.created_at;
     }
   }
