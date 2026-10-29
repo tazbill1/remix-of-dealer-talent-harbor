@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { bulkReadiness, previewBulkMessage } from "@/lib/bulk-messaging.functions";
-import { bulkReasonLabel, type BulkChannel } from "@/lib/bulk-messaging";
+import { bulkConfirmationAllowed, bulkReasonLabel, type BulkChannel } from "@/lib/bulk-messaging";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +30,8 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
   const [template, setTemplate] = useState("");
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [confirmation, setConfirmation] = useState<Awaited<ReturnType<typeof bulkReadiness>> | null>(null);
+  const [typedCount, setTypedCount] = useState("");
   const [result, setResult] = useState<{ sent: number; skipped: number; queued: number; emailDemo: boolean; textDemo: boolean } | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const { data: templates = [] } = useQuery({ queryKey: ["bulk-templates", orgId], queryFn: async () => {
@@ -48,12 +50,30 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
     setBody(body.slice(0, start) + field + body.slice(end));
     requestAnimationFrame(() => { textarea.current?.focus(); textarea.current?.setSelectionRange(start + field.length, start + field.length); });
   }
+  async function review() {
+    if (!valid || busy) return;
+    setBusy(true);
+    try {
+      const latest = await eligibility.refetch();
+      if (latest.error || !latest.data?.eligible) throw new Error(latest.error?.message ?? "No selected applicants can receive this message.");
+      setTypedCount("");
+      setConfirmation(latest.data);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Could not check recipients."); }
+    finally { setBusy(false); }
+  }
   async function send() {
+    if (!confirmation || !bulkConfirmationAllowed(confirmation.eligible, typedCount)) return;
     if (!valid || !ready?.eligible || busy) return;
     setBusy(true);
     try {
       const latest = await eligibility.refetch();
       if (latest.error || !latest.data?.eligible) throw new Error(latest.error?.message ?? "No selected applicants can receive this message.");
+      if (JSON.stringify(latest.data) !== JSON.stringify(confirmation)) {
+        setConfirmation(latest.data);
+        setTypedCount("");
+        toast.info("Recipient counts or modes changed. Please confirm the updated details.");
+        return;
+      }
       const out = await supabase.rpc("send_bulk_applicants", { _org: orgId, _applicant_ids: applicationIds, _channel: channel, _body: body.trim(), ...(channel === "text" ? {} : { _subject: subject.trim() }) });
       if (out.error) throw new Error(out.error.message);
       const counts = z.object({ sent: z.number(), skipped: z.number(), queued: z.number() }).parse(out.data);
@@ -80,6 +100,14 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
         <p>{result.sent} sent · {result.skipped} skipped · {result.queued} queued</p>
         {channel === "both" && <p className="text-sm text-muted-foreground">{modes} · Counts are individual email/text deliveries.</p>}
         <Button onClick={onClose}>Done</Button>
+      </div> : confirmation ? <div className="space-y-4">
+        <p className="font-medium">You're about to send {confirmation.perChannel.map((c) => `${c.sending} ${c.channel === "email" ? (c.sending === 1 ? "email" : "emails") : (c.sending === 1 ? "text message" : "text messages")}${(c.channel === "email" ? confirmation.emailDemo : confirmation.textDemo) ? " (demo, nothing real will go out)" : ""}`).join(" and ")} to {confirmation.eligible} {confirmation.eligible === 1 ? "applicant" : "applicants"} at {confirmation.storeCount} {confirmation.storeCount === 1 ? "store" : "stores"}. Are you sure?</p>
+        <div className="space-y-1 text-sm">
+          {confirmation.perChannel.map((c) => <p key={c.channel}>{c.channel === "email" ? "Emails" : "Text messages"}: {c.sending} sending · {c.skipped} skipped</p>)}
+          <p>{confirmation.skipped} {confirmation.skipped === 1 ? "applicant" : "applicants"} skipped entirely{Object.keys(confirmation.reasons).length > 0 && ` (${Object.entries(confirmation.reasons).map(([r, n]) => `${n} ${bulkReasonLabel(r)}`).join(", ")})`}</p>
+        </div>
+        {confirmation.eligible >= 25 && <label className="block space-y-2 text-sm">Type {confirmation.eligible} to confirm the number of recipients<Input aria-label="Number of recipients" inputMode="numeric" autoComplete="off" value={typedCount} disabled={busy} onChange={(e) => setTypedCount(e.target.value)} /></label>}
+        <div className="flex justify-end gap-2"><Button variant="outline" disabled={busy} onClick={() => { setConfirmation(null); setTypedCount(""); }}>Cancel</Button><Button disabled={busy || !bulkConfirmationAllowed(confirmation.eligible, typedCount)} onClick={send}>{busy ? <Loader2 className="animate-spin" /> : <Send />}Send {confirmation.perChannel.reduce((n, c) => n + c.sending, 0)} messages</Button></div>
       </div> : <fieldset className="space-y-4" disabled={busy || previewing}>
         <div className="flex gap-1" role="group" aria-label="Message channel">
           {(["email", "text", "both"] as const).map((c) => <Button key={c} size="sm" variant={channel === c ? "default" : "outline"} aria-pressed={channel === c} onClick={() => { setChannel(c); setTemplate(""); }}>{c === "email" ? <Mail /> : c === "text" ? <MessageSquare /> : <Send />}{c === "email" ? "Email" : c === "text" ? "Text" : "Both"}</Button>)}
@@ -100,7 +128,7 @@ export function BulkMessageCompose({ orgId, applicationIds, onClose, onSent }: {
             <p className="text-muted-foreground">{modes}</p>
           </>}
         </div>
-        <div className="flex justify-end gap-2"><Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={send} disabled={!valid || !ready?.eligible || eligibility.isFetching || busy}>{busy ? <Loader2 className="animate-spin" /> : <Send />}Send message</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={review} disabled={!valid || !ready?.eligible || eligibility.isFetching || busy}>{busy ? <Loader2 className="animate-spin" /> : <Send />}Send message</Button></div>
       </fieldset>}
     </DialogContent>
   </Dialog>;

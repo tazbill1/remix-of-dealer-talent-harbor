@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { canSendBulk, selectAllShown, summarizeBulkEligibility } from "@/lib/bulk-messaging";
+import { bulkConfirmationAllowed, canSendBulk, selectAllShown, summarizeBulkEligibility } from "@/lib/bulk-messaging";
 import { canSeeNav } from "@/lib/nav";
 
 describe("bulk messaging screens", () => {
+  it("3 recipients do not require a typed count", () => {
+    expect(bulkConfirmationAllowed(3, "")).toBe(true);
+  });
+  it("25 recipients require exactly 25", () => {
+    expect(bulkConfirmationAllowed(25, "")).toBe(false);
+    expect(bulkConfirmationAllowed(25, "24")).toBe(false);
+    expect(bulkConfirmationAllowed(25, "25")).toBe(true);
+  });
+  it("30 recipients require exactly 30, not the number of channel deliveries", () => {
+    expect(bulkConfirmationAllowed(30, "60")).toBe(false);
+    expect(bulkConfirmationAllowed(30, "30")).toBe(true);
+  });
+  it("confirmation counts stores with actual recipients and separate channel skips", () => {
+    const result = summarizeBulkEligibility([{ storeId: "a", email: null, text: null }, { storeId: "b", email: null, text: "Text opt-out" }, { storeId: "c", email: "Do Not Hire", text: "Do Not Hire" }], "both");
+    expect(result.storeCount).toBe(2);
+    expect(result.perChannel).toEqual([{ channel: "email", sending: 2, skipped: 1 }, { channel: "text", sending: 1, skipped: 2 }]);
+  });
   it("Select all shown selects only the matching filtered/tab applicants", () => {
     expect(selectAllShown(["matched-1", "matched-2", "matched-1"], true)).toEqual(["matched-1", "matched-2"]);
   });

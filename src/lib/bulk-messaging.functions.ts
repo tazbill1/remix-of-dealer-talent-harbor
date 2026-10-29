@@ -34,11 +34,11 @@ export const bulkReadiness = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const byId = new Map(apps.filter((a) => allowed.has(a.dealership_id)).map((a) => [a.id, a]));
     const channels = data.channel === "both" ? ["email", "text"] as const : [data.channel];
-    const rows: { email?: string | null; text?: string | null }[] = [];
+    const rows: { email?: string | null; text?: string | null; storeId?: string }[] = [];
     for (let i = 0; i < ids.length; i += 3) {
       rows.push(...await Promise.all(ids.slice(i, i + 3).map(async (id) => {
         const app = byId.get(id);
-        const row: { email?: string | null; text?: string | null } = {};
+        const row: { email?: string | null; text?: string | null; storeId?: string } = app ? { storeId: app.dealership_id } : {};
         for (const ch of channels) {
           if (!app) { row[ch] = "Applicant unavailable"; continue; }
           const demo = ch === "email" ? settings.email_mode !== "live" : settings.mode !== "live";
