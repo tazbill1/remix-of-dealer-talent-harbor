@@ -9,7 +9,7 @@ afterAll(async () => { if (db) await db.end(); });
 // diagnostics role cannot execute protected public functions; do not widen grants.
 beforeAll(async () => {
   if (!db) return;
-  await db`create temporary table bulk_test_session (id integer)`;
+  await db`create temporary table if not exists bulk_test_session (id integer)`;
   const functions = await db`select proname, pg_get_functiondef(oid) as definition from pg_proc where pronamespace='public'::regnamespace and proname in ('can_bulk_message','has_org_role','is_platform_admin','bulk_render','bulk_next_text_time') order by case proname when 'is_platform_admin' then 0 when 'has_org_role' then 1 else 2 end`;
   for (const fn of functions) {
     let definition = String(fn.definition).replace(/FUNCTION public\./, 'FUNCTION pg_temp.').replace('SECURITY DEFINER', 'SECURITY INVOKER');
