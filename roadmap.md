@@ -1,8 +1,8 @@
 # WerkandMe Hiring roadmap
 
 ## Store missing details
-- [ ] Replace generic store warnings with actual field names and tappable full lists above three fields.
-- [ ] Fill only missing required details on the six flagged stores with pretend demo values; verify preserved existing data and unchanged sending modes; report all changes.
+- [x] Specific red warnings use existing required fields; above three show first two plus remainder and tap-open full list. Ten tests pass; signed-in desktop/360/390 verified in both groups, including read-only mocked overflow list; build OK.
+- [x] Filled only empty manager phones on ABC Houston/Katy/Sugar Land and empty manager names/phones on LG Mercedes Dundee/Subaru Columbus/VW Easton. Existing values and optional contacts untouched; all store warnings cleared. Both groups remain email/text practice; no sends or publishing.
 
 ## Mobile sticky save bars
 - [x] Global mobile rule hides Ask whenever a marked sticky save bar is present; both existing bars and Ask respect bottom safe-area spacing. Save controls stay fixed-size while Unsaved changes can wrap.
