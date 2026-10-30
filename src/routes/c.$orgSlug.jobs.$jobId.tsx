@@ -84,23 +84,30 @@ function JobPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-muted">
+  const b = branded;
+  const backCls = `flex items-center gap-1 text-sm hover:underline ${b ? "text-abc-white/80" : "text-sidebar-foreground"}`;
+  const page = (
+    <div className={b ? "" : "min-h-screen bg-muted"}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div className="bg-navy px-5 py-8 text-navy-foreground">
-        <div className="mx-auto max-w-3xl">
-          <Link to="/c/$orgSlug" params={{ orgSlug: org?.slug ?? "" }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }} className="flex items-center gap-1 text-sm text-sidebar-foreground hover:underline"><ArrowLeft className="size-4" />All jobs</Link>
+      <div className={b ? "bg-abc-black px-5 py-10 text-abc-white" : "bg-navy px-5 py-8 text-navy-foreground"}>
+        <div className="mx-auto max-w-5xl">
+          {b
+            ? <Link to="/careers/jobs" className={backCls}><ArrowLeft className="size-4" />Back to job listings</Link>
+            : <Link to="/c/$orgSlug" params={{ orgSlug: org?.slug ?? "" }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }} className={backCls}><ArrowLeft className="size-4" />All jobs</Link>}
           <h1 className="mt-5 text-3xl md:text-4xl">{job.title}</h1>
-          <p className="mt-2 flex flex-wrap items-center gap-2 text-sidebar-foreground">
+          <p className={`mt-3 flex flex-wrap items-center gap-2 ${b ? "text-abc-white/80" : "text-sidebar-foreground"}`}>
             {store?.name}{store?.city && <><MapPin className="size-4" />{store.city}{store.state ? `, ${store.state}` : ""}</>}
-            {pay && <span className="rounded-full bg-sidebar-accent px-3 py-0.5 text-sm font-semibold text-ultramarine">{pay}</span>}
+            {pay && <span className={b ? "rounded-full bg-abc-yellow px-3 py-0.5 text-sm font-semibold text-abc-black" : "rounded-full bg-sidebar-accent px-3 py-0.5 text-sm font-semibold text-ultramarine"}>{pay}</span>}
           </p>
         </div>
       </div>
-      <div className="mx-auto grid max-w-3xl gap-6 px-5 py-8 md:grid-cols-5">
-        <div className="whitespace-pre-line text-sm leading-relaxed md:col-span-3">{job.description || "Come join a great team!"}</div>
-        <form onSubmit={apply} className="h-fit space-y-3 rounded-2xl bg-background p-5 shadow-sm md:col-span-2">
-          <h2 className="text-xl">Apply in a minute</h2>
+      <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 sm:px-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
+        <section className={`min-w-0 rounded-2xl bg-background p-5 shadow-sm sm:p-6 ${b ? "border-t-4 border-abc-red" : ""}`}>
+          <h2 className="mb-3 text-lg font-semibold">About this job</h2>
+          <div className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{job.description || "Come join a great team!"}</div>
+        </section>
+        <form onSubmit={apply} className={`h-fit space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6 lg:sticky lg:top-6 ${b ? "border-t-4 border-abc-yellow" : ""}`}>
+          <h2 className="text-xl font-semibold">Apply in a minute</h2>
           <div className="space-y-1.5"><Label htmlFor="n">Full name</Label><Input id="n" required value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
