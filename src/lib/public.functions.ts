@@ -24,8 +24,10 @@ export const getCareers = createServerFn({ method: "GET" })
     const sb = publicClient();
     const { data: org } = await sb.from("organizations").select("id, name, slug").eq("slug", data.slug).maybeSingle();
     if (!org) return null;
+    const { supabaseAdmin: adm } = await import("@/integrations/supabase/client.server");
+    // Public store columns only; anonymous RLS on dealerships is intentionally closed.
     const [{ data: stores }, { data: jobs }] = await Promise.all([
-      sb.from("dealerships").select("id, name, brand, city, state").eq("org_id", org.id).order("name"),
+      adm.from("dealerships").select("id, name, brand, city, state").eq("org_id", org.id).order("name"),
       sb.from("jobs").select("id, title, department, employment_type, pay_min, pay_max, pay_period, dealership_id, created_at")
         .eq("org_id", org.id).eq("status", "open").order("created_at", { ascending: false }),
     ]);
@@ -50,7 +52,7 @@ export const getPublicJob = createServerFn({ method: "GET" })
     const { data: q } = await supabaseAdmin.from("jobs").select("questions").eq("id", job.id).maybeSingle();
     const questions = toPublic(parseQuestions(q?.questions));
     const [{ data: store }, { data: org }] = await Promise.all([
-      sb.from("dealerships").select("id, name, brand, city, state, address, assistant_name").eq("id", job.dealership_id).maybeSingle(),
+      supabaseAdmin.from("dealerships").select("id, name, brand, city, state, address, assistant_name").eq("id", job.dealership_id).maybeSingle(),
       sb.from("organizations").select("id, name, slug").eq("id", job.org_id).maybeSingle(),
     ]);
     return { job, store, org, questions };
