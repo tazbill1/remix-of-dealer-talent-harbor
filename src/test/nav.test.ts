@@ -45,3 +45,10 @@ describe("settings tabs", () => {
     expect(settingsTabsFor({ role: "dealer_manager", isPlatformAdmin: true }).some((t) => t.id === "referrals")).toBe(true);
   });
 });
+
+import { bottomTabsFor } from "@/lib/nav";
+describe("phone bottom bar", () => {
+  it("every role gets Home, Applicants, Interviews and Ask", () => {
+    for (const r of [gm, hm, hr, rl]) expect(bottomTabsFor(r).map((t) => t.label)).toEqual(["Home", "Applicants", "Interviews", "Ask"]);
+  });
+});
