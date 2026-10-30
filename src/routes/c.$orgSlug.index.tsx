@@ -1,9 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { rememberReferral } from "@/lib/referral-capture";
 import { rememberScan } from "@/lib/scan";
 import { MapPin, Search } from "lucide-react";
+import { CAREERS_ORG_SLUG } from "@/lib/site";
 import { getCareers } from "@/lib/public.functions";
 import { formatPay } from "@/lib/jobs";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,9 @@ import { Journey, FaqList, candidateJourney, candidateFaqs } from "@/components/
 export const Route = createFileRoute("/c/$orgSlug/")({
   validateSearch: z.object({ store: z.string().max(60).optional(), scan: z.string().max(16).optional(), ref: z.string().max(20).optional(), via: z.string().max(10).optional() }),
   loaderDeps: ({ search }) => ({ scan: search.scan }),
+  beforeLoad: ({ params, search }) => {
+    if (params.orgSlug === CAREERS_ORG_SLUG && !search.ref && !search.scan) throw redirect({ to: "/careers/jobs", search: search.store ? { store: search.store } : {} });
+  },
   loader: async ({ params, deps }) => {
     const d = await getCareers({ data: { slug: params.orgSlug, ...(deps.scan ? { scan: deps.scan } : {}) } });
     if (!d) throw notFound();
