@@ -15,6 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand";
+import { CareersShell } from "@/components/careers-shell";
+import { CAREERS_ORG_SLUG } from "@/lib/site";
 
 // Linked from the texting opt-in. Carriers check that these are on the form.
 const SMS_TERMS_URL = "/terms";
@@ -55,6 +57,7 @@ function JobPage() {
   const [smsConsent, setSmsConsent] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const branded = org?.slug === CAREERS_ORG_SLUG;
   const pay = formatPay(job.pay_min, job.pay_max, job.pay_period);
 
   const jsonLd = {
@@ -84,23 +87,30 @@ function JobPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-muted">
+  const b = branded;
+  const backCls = `flex items-center gap-1 text-sm hover:underline ${b ? "text-abc-white/80" : "text-sidebar-foreground"}`;
+  const page = (
+    <div className={b ? "" : "min-h-screen bg-muted"}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div className="bg-navy px-5 py-8 text-navy-foreground">
-        <div className="mx-auto max-w-3xl">
-          <Link to="/c/$orgSlug" params={{ orgSlug: org?.slug ?? "" }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }} className="flex items-center gap-1 text-sm text-sidebar-foreground hover:underline"><ArrowLeft className="size-4" />All jobs</Link>
+      <div className={b ? "bg-abc-black px-5 py-10 text-abc-white" : "bg-navy px-5 py-8 text-navy-foreground"}>
+        <div className="mx-auto max-w-5xl">
+          {b
+            ? <Link to="/careers/jobs" className={backCls}><ArrowLeft className="size-4" />Back to job listings</Link>
+            : <Link to="/c/$orgSlug" params={{ orgSlug: org?.slug ?? "" }} search={{ ...(scan ? { scan } : {}), ...(ref ? { ref } : {}), ...(via ? { via } : {}) }} className={backCls}><ArrowLeft className="size-4" />All jobs</Link>}
           <h1 className="mt-5 text-3xl md:text-4xl">{job.title}</h1>
-          <p className="mt-2 flex flex-wrap items-center gap-2 text-sidebar-foreground">
+          <p className={`mt-3 flex flex-wrap items-center gap-2 ${b ? "text-abc-white/80" : "text-sidebar-foreground"}`}>
             {store?.name}{store?.city && <><MapPin className="size-4" />{store.city}{store.state ? `, ${store.state}` : ""}</>}
-            {pay && <span className="rounded-full bg-sidebar-accent px-3 py-0.5 text-sm font-semibold text-ultramarine">{pay}</span>}
+            {pay && <span className={b ? "rounded-full bg-abc-yellow px-3 py-0.5 text-sm font-semibold text-abc-black" : "rounded-full bg-sidebar-accent px-3 py-0.5 text-sm font-semibold text-ultramarine"}>{pay}</span>}
           </p>
         </div>
       </div>
-      <div className="mx-auto grid max-w-3xl gap-6 px-5 py-8 md:grid-cols-5">
-        <div className="whitespace-pre-line text-sm leading-relaxed md:col-span-3">{job.description || "Come join a great team!"}</div>
-        <form onSubmit={apply} className="h-fit space-y-3 rounded-2xl bg-background p-5 shadow-sm md:col-span-2">
-          <h2 className="text-xl">Apply in a minute</h2>
+      <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 sm:px-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
+        <section className={`min-w-0 rounded-2xl bg-background p-5 shadow-sm sm:p-6 ${b ? "border-t-4 border-abc-red" : ""}`}>
+          <h2 className="mb-3 text-lg font-semibold">About this job</h2>
+          <div className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{job.description || "Come join a great team!"}</div>
+        </section>
+        <form onSubmit={apply} className={`h-fit space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6 lg:sticky lg:top-6 ${b ? "border-t-4 border-abc-yellow" : ""}`}>
+          <h2 className="text-xl font-semibold">Apply in a minute</h2>
           <div className="space-y-1.5"><Label htmlFor="n">Full name</Label><Input id="n" required value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="p">Mobile phone</Label><Input id="p" type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
@@ -119,7 +129,7 @@ function JobPage() {
                   {(["yes", "no"] as const).map((v) => (
                     <button key={v} type="button" role="radio" aria-checked={answers[q.id] === v}
                       onClick={() => setAnswers({ ...answers, [q.id]: v })}
-                      className={`flex-1 rounded-md border px-3 py-2 text-sm ${answers[q.id] === v ? "border-sapphire bg-sapphire text-primary-foreground" : "bg-background"}`}>
+                      className={`flex-1 rounded-md border px-3 py-2 text-sm ${answers[q.id] === v ? (b ? "border-abc-red bg-abc-red text-abc-white" : "border-sapphire bg-sapphire text-primary-foreground") : "bg-background"}`}>
                       {v === "yes" ? "Yes" : "No"}
                     </button>
                   ))}
@@ -155,11 +165,12 @@ function JobPage() {
             {AI_NOTICE_TEXT.replace(/^How we use AI: /, "")}{" "}
             <Link to="/ai-notice" target="_blank" className="underline">Learn more</Link>
           </p>
-          <Button type="submit" className="w-full" disabled={busy}>{busy ? "Sending..." : "Submit application"}</Button>
+          <Button type="submit" className={`w-full ${b ? "bg-abc-red text-abc-white hover:bg-abc-red-dark" : ""}`} disabled={busy}>{busy ? "Sending..." : "Submit application"}</Button>
           <p className="text-xs text-muted-foreground">By applying you agree to get updates about this job by email.</p>
         </form>
       </div>
-      <footer className="flex items-center justify-center gap-2 pb-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>
+      {!b && <footer className="flex items-center justify-center gap-2 pb-8 text-xs text-muted-foreground">Powered by <Logo className="h-4" /></footer>}
     </div>
   );
+  return b ? <CareersShell>{page}</CareersShell> : page;
 }
